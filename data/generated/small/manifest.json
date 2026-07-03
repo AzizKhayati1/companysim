@@ -1,0 +1,18 @@
+{
+  "dataset_name": "small",
+  "headcount": 500,
+  "org_name": "Acme Corp",
+  "reference_date": "2026-07-01",
+  "row_counts": {
+    "compensation_history": 969,
+    "departments": 9,
+    "employees": 500,
+    "hire_events": 500,
+    "human_factors": 500,
+    "performance_history": 3258,
+    "reporting_lines": 499,
+    "teams": 79,
+    "wellness_snapshots": 4584
+  },
+  "seed": 42
+}

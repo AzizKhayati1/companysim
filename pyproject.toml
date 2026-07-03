@@ -1,0 +1,52 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "companysim"
+version = "0.1.0"
+description = "Digital Workforce Twin — agent-based organizational simulation platform"
+readme = "README.md"
+requires-python = ">=3.11"
+authors = [{ name = "companysim contributors" }]
+license = { text = "MIT" }
+dependencies = [
+    "numpy>=1.26",
+    "pandas>=2.2",
+    "faker>=25.0",
+    "pydantic>=2.7",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0",
+    "ruff>=0.5",
+    "httpx2",
+]
+ml = [
+    "scikit-learn>=1.5",
+    "mlflow>=2.14",
+]
+viz = [
+    "streamlit>=1.35",
+    "plotly>=5.22",
+]
+api = [
+    "fastapi>=0.111",
+    "uvicorn[standard]>=0.30",
+    "sqlalchemy>=2.0",
+]
+
+[project.scripts]
+companysim = "companysim.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra"

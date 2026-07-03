@@ -1,0 +1,80 @@
+team_id,name,department_id,planned_size,manager_employee_id,actual_size
+team_0000,Engineering Team 1,dept_00,6,emp_000004,6
+team_0001,Engineering Team 2,dept_00,6,emp_000010,6
+team_0002,Engineering Team 3,dept_00,8,emp_000012,8
+team_0003,Engineering Team 4,dept_00,7,emp_000026,7
+team_0004,Engineering Team 5,dept_00,7,emp_000031,7
+team_0005,Engineering Team 6,dept_00,7,emp_000037,7
+team_0006,Engineering Team 7,dept_00,11,emp_000046,11
+team_0007,Engineering Team 8,dept_00,6,emp_000056,6
+team_0008,Engineering Team 9,dept_00,5,emp_000061,5
+team_0009,Engineering Team 10,dept_00,5,emp_000064,5
+team_0010,Engineering Team 11,dept_00,8,emp_000068,8
+team_0011,Engineering Team 12,dept_00,9,emp_000076,9
+team_0012,Engineering Team 13,dept_00,6,emp_000085,6
+team_0013,Engineering Team 14,dept_00,5,emp_000092,5
+team_0014,Engineering Team 15,dept_00,5,emp_000096,5
+team_0015,Engineering Team 16,dept_00,8,emp_000108,8
+team_0016,Engineering Team 17,dept_00,8,emp_000113,8
+team_0017,Engineering Team 18,dept_00,8,emp_000118,8
+team_0018,Engineering Team 19,dept_00,5,emp_000127,5
+team_0019,Product Team 20,dept_01,7,emp_000130,7
+team_0020,Product Team 21,dept_01,7,emp_000140,7
+team_0021,Product Team 22,dept_01,7,emp_000146,7
+team_0022,Product Team 23,dept_01,8,emp_000151,8
+team_0023,Product Team 24,dept_01,7,emp_000159,7
+team_0024,Product Team 25,dept_01,8,emp_000173,8
+team_0025,Product Team 26,dept_01,6,emp_000174,6
+team_0026,Design Team 27,dept_02,7,emp_000185,7
+team_0027,Design Team 28,dept_02,8,emp_000191,8
+team_0028,Design Team 29,dept_02,4,emp_000195,4
+team_0029,Design Team 30,dept_02,6,emp_000199,6
+team_0030,Sales Team 31,dept_03,6,emp_000205,6
+team_0031,Sales Team 32,dept_03,5,emp_000214,5
+team_0032,Sales Team 33,dept_03,6,emp_000219,6
+team_0033,Sales Team 34,dept_03,9,emp_000228,9
+team_0034,Sales Team 35,dept_03,5,emp_000234,5
+team_0035,Sales Team 36,dept_03,8,emp_000236,8
+team_0036,Sales Team 37,dept_03,3,emp_000245,3
+team_0037,Sales Team 38,dept_03,6,emp_000251,6
+team_0038,Sales Team 39,dept_03,7,emp_000255,7
+team_0039,Sales Team 40,dept_03,8,emp_000264,8
+team_0040,Sales Team 41,dept_03,8,emp_000271,8
+team_0041,Sales Team 42,dept_03,5,emp_000276,5
+team_0042,Marketing Team 43,dept_04,6,emp_000282,6
+team_0043,Marketing Team 44,dept_04,6,emp_000291,6
+team_0044,Marketing Team 45,dept_04,8,emp_000296,8
+team_0045,Marketing Team 46,dept_04,6,emp_000302,6
+team_0046,Marketing Team 47,dept_04,4,emp_000308,4
+team_0047,Marketing Team 48,dept_04,4,emp_000314,4
+team_0048,Marketing Team 49,dept_04,5,emp_000315,5
+team_0049,Marketing Team 50,dept_04,7,emp_000325,7
+team_0050,Marketing Team 51,dept_04,7,emp_000328,7
+team_0051,Marketing Team 52,dept_04,8,emp_000335,8
+team_0052,Marketing Team 53,dept_04,5,emp_000346,5
+team_0053,Customer Success Team 54,dept_05,7,emp_000353,7
+team_0054,Customer Success Team 55,dept_05,8,emp_000357,8
+team_0055,Customer Success Team 56,dept_05,6,emp_000362,6
+team_0056,Customer Success Team 57,dept_05,7,emp_000372,7
+team_0057,Customer Success Team 58,dept_05,5,emp_000377,5
+team_0058,Customer Success Team 59,dept_05,6,emp_000385,6
+team_0059,Customer Success Team 60,dept_05,6,emp_000389,6
+team_0060,Customer Success Team 61,dept_05,4,emp_000395,4
+team_0061,Customer Success Team 62,dept_05,7,emp_000396,7
+team_0062,Customer Success Team 63,dept_05,3,emp_000403,3
+team_0063,Finance Team 64,dept_06,7,emp_000406,7
+team_0064,Finance Team 65,dept_06,7,emp_000414,7
+team_0065,Finance Team 66,dept_06,7,emp_000421,7
+team_0066,Finance Team 67,dept_06,8,emp_000434,8
+team_0067,Finance Team 68,dept_06,5,emp_000437,5
+team_0068,People Team 69,dept_07,6,emp_000443,6
+team_0069,People Team 70,dept_07,6,emp_000448,6
+team_0070,People Team 71,dept_07,3,emp_000453,3
+team_0071,People Team 72,dept_07,4,emp_000457,4
+team_0072,People Team 73,dept_07,4,emp_000461,4
+team_0073,People Team 74,dept_07,4,emp_000466,4
+team_0074,Operations Team 75,dept_08,7,emp_000471,7
+team_0075,Operations Team 76,dept_08,5,emp_000475,5
+team_0076,Operations Team 77,dept_08,6,emp_000479,6
+team_0077,Operations Team 78,dept_08,9,emp_000485,9
+team_0078,Operations Team 79,dept_08,6,emp_000499,6

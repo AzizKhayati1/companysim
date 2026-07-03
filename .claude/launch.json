@@ -1,0 +1,24 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "dashboard",
+      "runtimeExecutable": "D:\\companysim\\.venv\\Scripts\\streamlit.exe",
+      "runtimeArgs": ["run", "src/companysim/dashboard/app.py", "--server.headless", "true", "--server.port", "8511"],
+      "port": 8511
+    },
+    {
+      "name": "api",
+      "runtimeExecutable": "D:\\companysim\\.venv\\Scripts\\uvicorn.exe",
+      "runtimeArgs": ["companysim.api.main:app", "--reload", "--port", "8611"],
+      "port": 8611
+    },
+    {
+      "name": "webapp",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "dev", "--", "--port", "5173"],
+      "cwd": "webapp",
+      "port": 5173
+    }
+  ]
+}

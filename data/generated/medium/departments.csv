@@ -1,0 +1,10 @@
+department_id,name,job_family,salary_multiplier,head_employee_id
+dept_00,Engineering,Technology,1.15,emp_000427
+dept_01,Product,Technology,1.1,emp_001905
+dept_02,Design,Design,1.0,emp_002222
+dept_03,Sales,Go-to-Market,1.05,emp_002553
+dept_04,Marketing,Go-to-Market,0.92,emp_003513
+dept_05,Customer Success,Go-to-Market,0.88,emp_003859
+dept_06,Finance,General & Administrative,1.0,emp_004179
+dept_07,People,General & Administrative,0.9,emp_004380
+dept_08,Operations,General & Administrative,0.9,emp_004721

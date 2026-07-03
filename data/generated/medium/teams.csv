@@ -1,0 +1,773 @@
+team_id,name,department_id,planned_size,manager_employee_id,actual_size
+team_0000,Engineering Team 1,dept_00,5,emp_000004,5
+team_0001,Engineering Team 2,dept_00,8,emp_000006,8
+team_0002,Engineering Team 3,dept_00,6,emp_000014,6
+team_0003,Engineering Team 4,dept_00,6,emp_000020,6
+team_0004,Engineering Team 5,dept_00,10,emp_000028,10
+team_0005,Engineering Team 6,dept_00,5,emp_000038,5
+team_0006,Engineering Team 7,dept_00,3,emp_000042,3
+team_0007,Engineering Team 8,dept_00,7,emp_000046,7
+team_0008,Engineering Team 9,dept_00,2,emp_000050,2
+team_0009,Engineering Team 10,dept_00,7,emp_000057,7
+team_0010,Engineering Team 11,dept_00,8,emp_000064,8
+team_0011,Engineering Team 12,dept_00,7,emp_000070,7
+team_0012,Engineering Team 13,dept_00,7,emp_000075,7
+team_0013,Engineering Team 14,dept_00,2,emp_000081,2
+team_0014,Engineering Team 15,dept_00,8,emp_000088,8
+team_0015,Engineering Team 16,dept_00,7,emp_000091,7
+team_0016,Engineering Team 17,dept_00,4,emp_000100,4
+team_0017,Engineering Team 18,dept_00,10,emp_000105,10
+team_0018,Engineering Team 19,dept_00,4,emp_000112,4
+team_0019,Engineering Team 20,dept_00,3,emp_000117,3
+team_0020,Engineering Team 21,dept_00,3,emp_000119,3
+team_0021,Engineering Team 22,dept_00,7,emp_000122,7
+team_0022,Engineering Team 23,dept_00,7,emp_000130,7
+team_0023,Engineering Team 24,dept_00,7,emp_000142,7
+team_0024,Engineering Team 25,dept_00,6,emp_000146,6
+team_0025,Engineering Team 26,dept_00,5,emp_000150,5
+team_0026,Engineering Team 27,dept_00,8,emp_000155,8
+team_0027,Engineering Team 28,dept_00,5,emp_000163,5
+team_0028,Engineering Team 29,dept_00,4,emp_000167,4
+team_0029,Engineering Team 30,dept_00,9,emp_000173,9
+team_0030,Engineering Team 31,dept_00,7,emp_000183,7
+team_0031,Engineering Team 32,dept_00,7,emp_000193,7
+team_0032,Engineering Team 33,dept_00,8,emp_000195,8
+team_0033,Engineering Team 34,dept_00,5,emp_000204,5
+team_0034,Engineering Team 35,dept_00,5,emp_000208,5
+team_0035,Engineering Team 36,dept_00,8,emp_000214,8
+team_0036,Engineering Team 37,dept_00,5,emp_000220,5
+team_0037,Engineering Team 38,dept_00,7,emp_000226,7
+team_0038,Engineering Team 39,dept_00,6,emp_000233,6
+team_0039,Engineering Team 40,dept_00,4,emp_000241,4
+team_0040,Engineering Team 41,dept_00,8,emp_000248,8
+team_0041,Engineering Team 42,dept_00,4,emp_000252,4
+team_0042,Engineering Team 43,dept_00,7,emp_000257,7
+team_0043,Engineering Team 44,dept_00,7,emp_000263,7
+team_0044,Engineering Team 45,dept_00,9,emp_000271,9
+team_0045,Engineering Team 46,dept_00,4,emp_000278,4
+team_0046,Engineering Team 47,dept_00,5,emp_000285,5
+team_0047,Engineering Team 48,dept_00,6,emp_000288,6
+team_0048,Engineering Team 49,dept_00,7,emp_000297,7
+team_0049,Engineering Team 50,dept_00,8,emp_000303,8
+team_0050,Engineering Team 51,dept_00,7,emp_000313,7
+team_0051,Engineering Team 52,dept_00,7,emp_000316,7
+team_0052,Engineering Team 53,dept_00,9,emp_000321,9
+team_0053,Engineering Team 54,dept_00,11,emp_000332,11
+team_0054,Engineering Team 55,dept_00,4,emp_000343,4
+team_0055,Engineering Team 56,dept_00,6,emp_000348,6
+team_0056,Engineering Team 57,dept_00,8,emp_000352,8
+team_0057,Engineering Team 58,dept_00,7,emp_000360,7
+team_0058,Engineering Team 59,dept_00,9,emp_000366,9
+team_0059,Engineering Team 60,dept_00,6,emp_000377,6
+team_0060,Engineering Team 61,dept_00,4,emp_000383,4
+team_0061,Engineering Team 62,dept_00,8,emp_000387,8
+team_0062,Engineering Team 63,dept_00,2,emp_000393,2
+team_0063,Engineering Team 64,dept_00,6,emp_000400,6
+team_0064,Engineering Team 65,dept_00,11,emp_000401,11
+team_0065,Engineering Team 66,dept_00,7,emp_000412,7
+team_0066,Engineering Team 67,dept_00,7,emp_000419,7
+team_0067,Engineering Team 68,dept_00,5,emp_000427,5
+team_0068,Engineering Team 69,dept_00,6,emp_000432,6
+team_0069,Engineering Team 70,dept_00,6,emp_000437,6
+team_0070,Engineering Team 71,dept_00,10,emp_000450,10
+team_0071,Engineering Team 72,dept_00,4,emp_000453,4
+team_0072,Engineering Team 73,dept_00,2,emp_000458,2
+team_0073,Engineering Team 74,dept_00,7,emp_000460,7
+team_0074,Engineering Team 75,dept_00,10,emp_000472,10
+team_0075,Engineering Team 76,dept_00,5,emp_000480,5
+team_0076,Engineering Team 77,dept_00,3,emp_000481,3
+team_0077,Engineering Team 78,dept_00,4,emp_000484,4
+team_0078,Engineering Team 79,dept_00,7,emp_000490,7
+team_0079,Engineering Team 80,dept_00,5,emp_000495,5
+team_0080,Engineering Team 81,dept_00,7,emp_000506,7
+team_0081,Engineering Team 82,dept_00,2,emp_000508,2
+team_0082,Engineering Team 83,dept_00,5,emp_000509,5
+team_0083,Engineering Team 84,dept_00,8,emp_000517,8
+team_0084,Engineering Team 85,dept_00,6,emp_000522,6
+team_0085,Engineering Team 86,dept_00,4,emp_000528,4
+team_0086,Engineering Team 87,dept_00,9,emp_000532,9
+team_0087,Engineering Team 88,dept_00,8,emp_000545,8
+team_0088,Engineering Team 89,dept_00,6,emp_000554,6
+team_0089,Engineering Team 90,dept_00,5,emp_000555,5
+team_0090,Engineering Team 91,dept_00,9,emp_000565,9
+team_0091,Engineering Team 92,dept_00,5,emp_000570,5
+team_0092,Engineering Team 93,dept_00,6,emp_000574,6
+team_0093,Engineering Team 94,dept_00,10,emp_000580,10
+team_0094,Engineering Team 95,dept_00,7,emp_000592,7
+team_0095,Engineering Team 96,dept_00,6,emp_000602,6
+team_0096,Engineering Team 97,dept_00,3,emp_000604,3
+team_0097,Engineering Team 98,dept_00,7,emp_000606,7
+team_0098,Engineering Team 99,dept_00,6,emp_000616,6
+team_0099,Engineering Team 100,dept_00,5,emp_000621,5
+team_0100,Engineering Team 101,dept_00,8,emp_000627,8
+team_0101,Engineering Team 102,dept_00,4,emp_000635,4
+team_0102,Engineering Team 103,dept_00,3,emp_000636,3
+team_0103,Engineering Team 104,dept_00,5,emp_000639,5
+team_0104,Engineering Team 105,dept_00,6,emp_000646,6
+team_0105,Engineering Team 106,dept_00,3,emp_000652,3
+team_0106,Engineering Team 107,dept_00,4,emp_000656,4
+team_0107,Engineering Team 108,dept_00,5,emp_000658,5
+team_0108,Engineering Team 109,dept_00,6,emp_000666,6
+team_0109,Engineering Team 110,dept_00,5,emp_000668,5
+team_0110,Engineering Team 111,dept_00,8,emp_000673,8
+team_0111,Engineering Team 112,dept_00,2,emp_000681,2
+team_0112,Engineering Team 113,dept_00,7,emp_000686,7
+team_0113,Engineering Team 114,dept_00,5,emp_000691,5
+team_0114,Engineering Team 115,dept_00,7,emp_000701,7
+team_0115,Engineering Team 116,dept_00,10,emp_000702,10
+team_0116,Engineering Team 117,dept_00,6,emp_000712,6
+team_0117,Engineering Team 118,dept_00,7,emp_000721,7
+team_0118,Engineering Team 119,dept_00,8,emp_000730,8
+team_0119,Engineering Team 120,dept_00,4,emp_000734,4
+team_0120,Engineering Team 121,dept_00,8,emp_000742,8
+team_0121,Engineering Team 122,dept_00,8,emp_000749,8
+team_0122,Engineering Team 123,dept_00,6,emp_000754,6
+team_0123,Engineering Team 124,dept_00,8,emp_000764,8
+team_0124,Engineering Team 125,dept_00,7,emp_000773,7
+team_0125,Engineering Team 126,dept_00,5,emp_000778,5
+team_0126,Engineering Team 127,dept_00,4,emp_000780,4
+team_0127,Engineering Team 128,dept_00,8,emp_000790,8
+team_0128,Engineering Team 129,dept_00,10,emp_000791,10
+team_0129,Engineering Team 130,dept_00,5,emp_000803,5
+team_0130,Engineering Team 131,dept_00,7,emp_000811,7
+team_0131,Engineering Team 132,dept_00,4,emp_000813,4
+team_0132,Engineering Team 133,dept_00,5,emp_000819,5
+team_0133,Engineering Team 134,dept_00,5,emp_000822,5
+team_0134,Engineering Team 135,dept_00,4,emp_000829,4
+team_0135,Engineering Team 136,dept_00,6,emp_000832,6
+team_0136,Engineering Team 137,dept_00,8,emp_000843,8
+team_0137,Engineering Team 138,dept_00,7,emp_000848,7
+team_0138,Engineering Team 139,dept_00,5,emp_000854,5
+team_0139,Engineering Team 140,dept_00,9,emp_000864,9
+team_0140,Engineering Team 141,dept_00,7,emp_000868,7
+team_0141,Engineering Team 142,dept_00,10,emp_000873,10
+team_0142,Engineering Team 143,dept_00,4,emp_000885,4
+team_0143,Engineering Team 144,dept_00,12,emp_000894,12
+team_0144,Engineering Team 145,dept_00,6,emp_000900,6
+team_0145,Engineering Team 146,dept_00,4,emp_000908,4
+team_0146,Engineering Team 147,dept_00,4,emp_000912,4
+team_0147,Engineering Team 148,dept_00,8,emp_000918,8
+team_0148,Engineering Team 149,dept_00,8,emp_000922,8
+team_0149,Engineering Team 150,dept_00,8,emp_000934,8
+team_0150,Engineering Team 151,dept_00,8,emp_000939,8
+team_0151,Engineering Team 152,dept_00,4,emp_000945,4
+team_0152,Engineering Team 153,dept_00,6,emp_000954,6
+team_0153,Engineering Team 154,dept_00,2,emp_000955,2
+team_0154,Engineering Team 155,dept_00,5,emp_000961,5
+team_0155,Engineering Team 156,dept_00,8,emp_000966,8
+team_0156,Engineering Team 157,dept_00,3,emp_000971,3
+team_0157,Engineering Team 158,dept_00,11,emp_000980,11
+team_0158,Engineering Team 159,dept_00,9,emp_000987,9
+team_0159,Engineering Team 160,dept_00,4,emp_000993,4
+team_0160,Engineering Team 161,dept_00,8,emp_000997,8
+team_0161,Engineering Team 162,dept_00,7,emp_001010,7
+team_0162,Engineering Team 163,dept_00,6,emp_001013,6
+team_0163,Engineering Team 164,dept_00,8,emp_001021,8
+team_0164,Engineering Team 165,dept_00,6,emp_001029,6
+team_0165,Engineering Team 166,dept_00,6,emp_001034,6
+team_0166,Engineering Team 167,dept_00,7,emp_001040,7
+team_0167,Engineering Team 168,dept_00,7,emp_001051,7
+team_0168,Engineering Team 169,dept_00,7,emp_001053,7
+team_0169,Engineering Team 170,dept_00,7,emp_001059,7
+team_0170,Engineering Team 171,dept_00,8,emp_001069,8
+team_0171,Engineering Team 172,dept_00,8,emp_001074,8
+team_0172,Engineering Team 173,dept_00,4,emp_001082,4
+team_0173,Engineering Team 174,dept_00,5,emp_001086,5
+team_0174,Engineering Team 175,dept_00,9,emp_001092,9
+team_0175,Engineering Team 176,dept_00,10,emp_001107,10
+team_0176,Engineering Team 177,dept_00,8,emp_001115,8
+team_0177,Engineering Team 178,dept_00,6,emp_001118,6
+team_0178,Engineering Team 179,dept_00,8,emp_001129,8
+team_0179,Engineering Team 180,dept_00,8,emp_001132,8
+team_0180,Engineering Team 181,dept_00,3,emp_001141,3
+team_0181,Engineering Team 182,dept_00,7,emp_001147,7
+team_0182,Engineering Team 183,dept_00,4,emp_001151,4
+team_0183,Engineering Team 184,dept_00,6,emp_001155,6
+team_0184,Engineering Team 185,dept_00,7,emp_001165,7
+team_0185,Engineering Team 186,dept_00,10,emp_001171,10
+team_0186,Engineering Team 187,dept_00,2,emp_001177,2
+team_0187,Engineering Team 188,dept_00,6,emp_001183,6
+team_0188,Engineering Team 189,dept_00,8,emp_001190,8
+team_0189,Engineering Team 190,dept_00,8,emp_001195,8
+team_0190,Engineering Team 191,dept_00,8,emp_001201,8
+team_0191,Engineering Team 192,dept_00,5,emp_001210,5
+team_0192,Engineering Team 193,dept_00,6,emp_001214,6
+team_0193,Engineering Team 194,dept_00,6,emp_001222,6
+team_0194,Engineering Team 195,dept_00,9,emp_001229,9
+team_0195,Engineering Team 196,dept_00,6,emp_001236,6
+team_0196,Engineering Team 197,dept_00,7,emp_001244,7
+team_0197,Engineering Team 198,dept_00,7,emp_001248,7
+team_0198,Engineering Team 199,dept_00,4,emp_001255,4
+team_0199,Engineering Team 200,dept_00,8,emp_001259,8
+team_0200,Engineering Team 201,dept_00,4,emp_001267,4
+team_0201,Engineering Team 202,dept_00,7,emp_001273,7
+team_0202,Engineering Team 203,dept_00,5,emp_001279,5
+team_0203,Engineering Team 204,dept_00,9,emp_001284,9
+team_0204,Engineering Team 205,dept_00,7,emp_001295,7
+team_0205,Engineering Team 206,dept_00,10,emp_001308,10
+team_0206,Engineering Team 207,dept_00,2,emp_001309,2
+team_0207,Engineering Team 208,dept_00,9,emp_001311,9
+team_0208,Engineering Team 209,dept_00,8,emp_001321,8
+team_0209,Engineering Team 210,dept_00,7,emp_001328,7
+team_0210,Engineering Team 211,dept_00,11,emp_001338,11
+team_0211,Engineering Team 212,dept_00,4,emp_001349,4
+team_0212,Engineering Team 213,dept_00,7,emp_001354,7
+team_0213,Engineering Team 214,dept_00,9,emp_001363,9
+team_0214,Engineering Team 215,dept_00,8,emp_001372,8
+team_0215,Engineering Team 216,dept_00,6,emp_001378,6
+team_0216,Engineering Team 217,dept_00,8,emp_001382,8
+team_0217,Engineering Team 218,dept_00,6,emp_001390,6
+team_0218,Engineering Team 219,dept_00,6,emp_001397,6
+team_0219,Engineering Team 220,dept_00,5,emp_001401,5
+team_0220,Engineering Team 221,dept_00,9,emp_001406,9
+team_0221,Engineering Team 222,dept_00,7,emp_001415,7
+team_0222,Engineering Team 223,dept_00,12,emp_001421,12
+team_0223,Engineering Team 224,dept_00,8,emp_001434,8
+team_0224,Engineering Team 225,dept_00,4,emp_001444,4
+team_0225,Engineering Team 226,dept_00,8,emp_001448,8
+team_0226,Engineering Team 227,dept_00,4,emp_001456,4
+team_0227,Engineering Team 228,dept_00,6,emp_001458,6
+team_0228,Engineering Team 229,dept_00,7,emp_001466,7
+team_0229,Engineering Team 230,dept_00,4,emp_001470,4
+team_0230,Engineering Team 231,dept_00,5,emp_001478,5
+team_0231,Engineering Team 232,dept_00,5,emp_001480,5
+team_0232,Engineering Team 233,dept_00,7,emp_001488,7
+team_0233,Engineering Team 234,dept_00,6,emp_001492,6
+team_0234,Engineering Team 235,dept_00,6,emp_001498,6
+team_0235,Engineering Team 236,dept_00,10,emp_001507,10
+team_0236,Engineering Team 237,dept_00,2,emp_001513,2
+team_0237,Product Team 238,dept_01,7,emp_001517,7
+team_0238,Product Team 239,dept_01,9,emp_001528,9
+team_0239,Product Team 240,dept_01,10,emp_001531,10
+team_0240,Product Team 241,dept_01,9,emp_001542,9
+team_0241,Product Team 242,dept_01,4,emp_001551,4
+team_0242,Product Team 243,dept_01,8,emp_001554,8
+team_0243,Product Team 244,dept_01,8,emp_001568,8
+team_0244,Product Team 245,dept_01,8,emp_001570,8
+team_0245,Product Team 246,dept_01,6,emp_001579,6
+team_0246,Product Team 247,dept_01,7,emp_001584,7
+team_0247,Product Team 248,dept_01,5,emp_001593,5
+team_0248,Product Team 249,dept_01,6,emp_001601,6
+team_0249,Product Team 250,dept_01,4,emp_001602,4
+team_0250,Product Team 251,dept_01,9,emp_001606,9
+team_0251,Product Team 252,dept_01,5,emp_001619,5
+team_0252,Product Team 253,dept_01,5,emp_001620,5
+team_0253,Product Team 254,dept_01,7,emp_001628,7
+team_0254,Product Team 255,dept_01,7,emp_001635,7
+team_0255,Product Team 256,dept_01,5,emp_001640,5
+team_0256,Product Team 257,dept_01,7,emp_001645,7
+team_0257,Product Team 258,dept_01,5,emp_001655,5
+team_0258,Product Team 259,dept_01,8,emp_001659,8
+team_0259,Product Team 260,dept_01,6,emp_001667,6
+team_0260,Product Team 261,dept_01,7,emp_001670,7
+team_0261,Product Team 262,dept_01,6,emp_001677,6
+team_0262,Product Team 263,dept_01,5,emp_001687,5
+team_0263,Product Team 264,dept_01,7,emp_001692,7
+team_0264,Product Team 265,dept_01,3,emp_001697,3
+team_0265,Product Team 266,dept_01,9,emp_001704,9
+team_0266,Product Team 267,dept_01,6,emp_001707,6
+team_0267,Product Team 268,dept_01,11,emp_001717,11
+team_0268,Product Team 269,dept_01,8,emp_001724,8
+team_0269,Product Team 270,dept_01,6,emp_001732,6
+team_0270,Product Team 271,dept_01,5,emp_001741,5
+team_0271,Product Team 272,dept_01,8,emp_001748,8
+team_0272,Product Team 273,dept_01,7,emp_001753,7
+team_0273,Product Team 274,dept_01,7,emp_001763,7
+team_0274,Product Team 275,dept_01,8,emp_001765,8
+team_0275,Product Team 276,dept_01,7,emp_001775,7
+team_0276,Product Team 277,dept_01,9,emp_001783,9
+team_0277,Product Team 278,dept_01,5,emp_001790,5
+team_0278,Product Team 279,dept_01,6,emp_001796,6
+team_0279,Product Team 280,dept_01,8,emp_001803,8
+team_0280,Product Team 281,dept_01,5,emp_001809,5
+team_0281,Product Team 282,dept_01,7,emp_001817,7
+team_0282,Product Team 283,dept_01,10,emp_001824,10
+team_0283,Product Team 284,dept_01,7,emp_001830,7
+team_0284,Product Team 285,dept_01,6,emp_001839,6
+team_0285,Product Team 286,dept_01,9,emp_001847,9
+team_0286,Product Team 287,dept_01,4,emp_001855,4
+team_0287,Product Team 288,dept_01,6,emp_001861,6
+team_0288,Product Team 289,dept_01,9,emp_001864,9
+team_0289,Product Team 290,dept_01,5,emp_001873,5
+team_0290,Product Team 291,dept_01,7,emp_001881,7
+team_0291,Product Team 292,dept_01,6,emp_001883,6
+team_0292,Product Team 293,dept_01,10,emp_001890,10
+team_0293,Product Team 294,dept_01,4,emp_001902,4
+team_0294,Product Team 295,dept_01,5,emp_001905,5
+team_0295,Product Team 296,dept_01,6,emp_001912,6
+team_0296,Product Team 297,dept_01,7,emp_001918,7
+team_0297,Product Team 298,dept_01,8,emp_001928,8
+team_0298,Product Team 299,dept_01,7,emp_001934,7
+team_0299,Product Team 300,dept_01,9,emp_001944,9
+team_0300,Product Team 301,dept_01,8,emp_001951,8
+team_0301,Product Team 302,dept_01,4,emp_001953,4
+team_0302,Product Team 303,dept_01,4,emp_001960,4
+team_0303,Product Team 304,dept_01,5,emp_001961,5
+team_0304,Product Team 305,dept_01,5,emp_001966,5
+team_0305,Product Team 306,dept_01,2,emp_001972,2
+team_0306,Design Team 307,dept_02,9,emp_001976,9
+team_0307,Design Team 308,dept_02,5,emp_001982,5
+team_0308,Design Team 309,dept_02,9,emp_001987,9
+team_0309,Design Team 310,dept_02,9,emp_001996,9
+team_0310,Design Team 311,dept_02,7,emp_002007,7
+team_0311,Design Team 312,dept_02,5,emp_002013,5
+team_0312,Design Team 313,dept_02,9,emp_002023,9
+team_0313,Design Team 314,dept_02,5,emp_002027,5
+team_0314,Design Team 315,dept_02,7,emp_002034,7
+team_0315,Design Team 316,dept_02,7,emp_002044,7
+team_0316,Design Team 317,dept_02,9,emp_002047,9
+team_0317,Design Team 318,dept_02,7,emp_002056,7
+team_0318,Design Team 319,dept_02,7,emp_002061,7
+team_0319,Design Team 320,dept_02,9,emp_002068,9
+team_0320,Design Team 321,dept_02,6,emp_002080,6
+team_0321,Design Team 322,dept_02,8,emp_002086,8
+team_0322,Design Team 323,dept_02,7,emp_002096,7
+team_0323,Design Team 324,dept_02,7,emp_002098,7
+team_0324,Design Team 325,dept_02,4,emp_002106,4
+team_0325,Design Team 326,dept_02,6,emp_002110,6
+team_0326,Design Team 327,dept_02,4,emp_002115,4
+team_0327,Design Team 328,dept_02,8,emp_002122,8
+team_0328,Design Team 329,dept_02,11,emp_002136,11
+team_0329,Design Team 330,dept_02,6,emp_002138,6
+team_0330,Design Team 331,dept_02,8,emp_002145,8
+team_0331,Design Team 332,dept_02,9,emp_002156,9
+team_0332,Design Team 333,dept_02,4,emp_002164,4
+team_0333,Design Team 334,dept_02,8,emp_002171,8
+team_0334,Design Team 335,dept_02,6,emp_002174,6
+team_0335,Design Team 336,dept_02,6,emp_002180,6
+team_0336,Design Team 337,dept_02,8,emp_002188,8
+team_0337,Design Team 338,dept_02,5,emp_002195,5
+team_0338,Design Team 339,dept_02,5,emp_002198,5
+team_0339,Design Team 340,dept_02,8,emp_002206,8
+team_0340,Design Team 341,dept_02,9,emp_002213,9
+team_0341,Design Team 342,dept_02,7,emp_002222,7
+team_0342,Design Team 343,dept_02,8,emp_002232,8
+team_0343,Design Team 344,dept_02,4,emp_002235,4
+team_0344,Design Team 345,dept_02,6,emp_002239,6
+team_0345,Design Team 346,dept_02,7,emp_002246,7
+team_0346,Design Team 347,dept_02,5,emp_002255,5
+team_0347,Design Team 348,dept_02,8,emp_002259,8
+team_0348,Design Team 349,dept_02,7,emp_002267,7
+team_0349,Design Team 350,dept_02,7,emp_002273,7
+team_0350,Design Team 351,dept_02,5,emp_002279,5
+team_0351,Sales Team 352,dept_03,9,emp_002291,9
+team_0352,Sales Team 353,dept_03,4,emp_002294,4
+team_0353,Sales Team 354,dept_03,5,emp_002299,5
+team_0354,Sales Team 355,dept_03,8,emp_002303,8
+team_0355,Sales Team 356,dept_03,6,emp_002315,6
+team_0356,Sales Team 357,dept_03,10,emp_002321,10
+team_0357,Sales Team 358,dept_03,9,emp_002327,9
+team_0358,Sales Team 359,dept_03,5,emp_002335,5
+team_0359,Sales Team 360,dept_03,5,emp_002340,5
+team_0360,Sales Team 361,dept_03,4,emp_002345,4
+team_0361,Sales Team 362,dept_03,7,emp_002355,7
+team_0362,Sales Team 363,dept_03,5,emp_002356,5
+team_0363,Sales Team 364,dept_03,5,emp_002364,5
+team_0364,Sales Team 365,dept_03,4,emp_002367,4
+team_0365,Sales Team 366,dept_03,8,emp_002375,8
+team_0366,Sales Team 367,dept_03,5,emp_002382,5
+team_0367,Sales Team 368,dept_03,5,emp_002386,5
+team_0368,Sales Team 369,dept_03,3,emp_002390,3
+team_0369,Sales Team 370,dept_03,7,emp_002392,7
+team_0370,Sales Team 371,dept_03,7,emp_002398,7
+team_0371,Sales Team 372,dept_03,8,emp_002407,8
+team_0372,Sales Team 373,dept_03,9,emp_002416,9
+team_0373,Sales Team 374,dept_03,7,emp_002423,7
+team_0374,Sales Team 375,dept_03,6,emp_002429,6
+team_0375,Sales Team 376,dept_03,3,emp_002436,3
+team_0376,Sales Team 377,dept_03,7,emp_002439,7
+team_0377,Sales Team 378,dept_03,7,emp_002450,7
+team_0378,Sales Team 379,dept_03,7,emp_002458,7
+team_0379,Sales Team 380,dept_03,3,emp_002460,3
+team_0380,Sales Team 381,dept_03,9,emp_002463,9
+team_0381,Sales Team 382,dept_03,8,emp_002478,8
+team_0382,Sales Team 383,dept_03,6,emp_002483,6
+team_0383,Sales Team 384,dept_03,6,emp_002490,6
+team_0384,Sales Team 385,dept_03,3,emp_002491,3
+team_0385,Sales Team 386,dept_03,7,emp_002500,7
+team_0386,Sales Team 387,dept_03,6,emp_002504,6
+team_0387,Sales Team 388,dept_03,4,emp_002510,4
+team_0388,Sales Team 389,dept_03,10,emp_002513,10
+team_0389,Sales Team 390,dept_03,10,emp_002527,10
+team_0390,Sales Team 391,dept_03,8,emp_002535,8
+team_0391,Sales Team 392,dept_03,6,emp_002540,6
+team_0392,Sales Team 393,dept_03,4,emp_002546,4
+team_0393,Sales Team 394,dept_03,6,emp_002553,6
+team_0394,Sales Team 395,dept_03,7,emp_002555,7
+team_0395,Sales Team 396,dept_03,6,emp_002565,6
+team_0396,Sales Team 397,dept_03,6,emp_002570,6
+team_0397,Sales Team 398,dept_03,7,emp_002580,7
+team_0398,Sales Team 399,dept_03,4,emp_002581,4
+team_0399,Sales Team 400,dept_03,8,emp_002587,8
+team_0400,Sales Team 401,dept_03,9,emp_002593,9
+team_0401,Sales Team 402,dept_03,6,emp_002603,6
+team_0402,Sales Team 403,dept_03,5,emp_002609,5
+team_0403,Sales Team 404,dept_03,11,emp_002613,11
+team_0404,Sales Team 405,dept_03,9,emp_002628,9
+team_0405,Sales Team 406,dept_03,2,emp_002634,2
+team_0406,Sales Team 407,dept_03,6,emp_002640,6
+team_0407,Sales Team 408,dept_03,4,emp_002643,4
+team_0408,Sales Team 409,dept_03,5,emp_002645,5
+team_0409,Sales Team 410,dept_03,5,emp_002652,5
+team_0410,Sales Team 411,dept_03,7,emp_002658,7
+team_0411,Sales Team 412,dept_03,6,emp_002662,6
+team_0412,Sales Team 413,dept_03,4,emp_002670,4
+team_0413,Sales Team 414,dept_03,4,emp_002675,4
+team_0414,Sales Team 415,dept_03,2,emp_002677,2
+team_0415,Sales Team 416,dept_03,6,emp_002678,6
+team_0416,Sales Team 417,dept_03,7,emp_002686,7
+team_0417,Sales Team 418,dept_03,8,emp_002693,8
+team_0418,Sales Team 419,dept_03,8,emp_002704,8
+team_0419,Sales Team 420,dept_03,7,emp_002709,7
+team_0420,Sales Team 421,dept_03,6,emp_002718,6
+team_0421,Sales Team 422,dept_03,11,emp_002722,11
+team_0422,Sales Team 423,dept_03,5,emp_002735,5
+team_0423,Sales Team 424,dept_03,4,emp_002737,4
+team_0424,Sales Team 425,dept_03,6,emp_002741,6
+team_0425,Sales Team 426,dept_03,7,emp_002747,7
+team_0426,Sales Team 427,dept_03,9,emp_002757,9
+team_0427,Sales Team 428,dept_03,6,emp_002764,6
+team_0428,Sales Team 429,dept_03,3,emp_002770,3
+team_0429,Sales Team 430,dept_03,8,emp_002772,8
+team_0430,Sales Team 431,dept_03,6,emp_002779,6
+team_0431,Sales Team 432,dept_03,4,emp_002787,4
+team_0432,Sales Team 433,dept_03,5,emp_002792,5
+team_0433,Sales Team 434,dept_03,7,emp_002798,7
+team_0434,Sales Team 435,dept_03,3,emp_002801,3
+team_0435,Sales Team 436,dept_03,9,emp_002804,9
+team_0436,Sales Team 437,dept_03,6,emp_002813,6
+team_0437,Sales Team 438,dept_03,7,emp_002820,7
+team_0438,Sales Team 439,dept_03,9,emp_002832,9
+team_0439,Sales Team 440,dept_03,5,emp_002835,5
+team_0440,Sales Team 441,dept_03,7,emp_002841,7
+team_0441,Sales Team 442,dept_03,6,emp_002848,6
+team_0442,Sales Team 443,dept_03,7,emp_002855,7
+team_0443,Sales Team 444,dept_03,11,emp_002860,11
+team_0444,Sales Team 445,dept_03,4,emp_002871,4
+team_0445,Sales Team 446,dept_03,6,emp_002877,6
+team_0446,Sales Team 447,dept_03,11,emp_002882,11
+team_0447,Sales Team 448,dept_03,5,emp_002895,5
+team_0448,Sales Team 449,dept_03,10,emp_002901,10
+team_0449,Sales Team 450,dept_03,7,emp_002910,7
+team_0450,Sales Team 451,dept_03,9,emp_002915,9
+team_0451,Sales Team 452,dept_03,8,emp_002925,8
+team_0452,Sales Team 453,dept_03,7,emp_002934,7
+team_0453,Sales Team 454,dept_03,5,emp_002938,5
+team_0454,Sales Team 455,dept_03,6,emp_002947,6
+team_0455,Sales Team 456,dept_03,8,emp_002953,8
+team_0456,Sales Team 457,dept_03,6,emp_002958,6
+team_0457,Sales Team 458,dept_03,4,emp_002965,4
+team_0458,Sales Team 459,dept_03,5,emp_002971,5
+team_0459,Sales Team 460,dept_03,9,emp_002979,9
+team_0460,Sales Team 461,dept_03,10,emp_002982,10
+team_0461,Sales Team 462,dept_03,5,emp_002993,5
+team_0462,Sales Team 463,dept_03,6,emp_002996,6
+team_0463,Sales Team 464,dept_03,9,emp_003008,9
+team_0464,Sales Team 465,dept_03,7,emp_003012,7
+team_0465,Sales Team 466,dept_03,7,emp_003018,7
+team_0466,Sales Team 467,dept_03,8,emp_003030,8
+team_0467,Sales Team 468,dept_03,4,emp_003036,4
+team_0468,Sales Team 469,dept_03,5,emp_003037,5
+team_0469,Sales Team 470,dept_03,8,emp_003042,8
+team_0470,Sales Team 471,dept_03,7,emp_003050,7
+team_0471,Sales Team 472,dept_03,7,emp_003062,7
+team_0472,Sales Team 473,dept_03,7,emp_003065,7
+team_0473,Sales Team 474,dept_03,1,emp_003071,1
+team_0474,Marketing Team 475,dept_04,7,emp_003077,7
+team_0475,Marketing Team 476,dept_04,9,emp_003082,9
+team_0476,Marketing Team 477,dept_04,8,emp_003092,8
+team_0477,Marketing Team 478,dept_04,8,emp_003103,8
+team_0478,Marketing Team 479,dept_04,5,emp_003107,5
+team_0479,Marketing Team 480,dept_04,6,emp_003111,6
+team_0480,Marketing Team 481,dept_04,6,emp_003120,6
+team_0481,Marketing Team 482,dept_04,5,emp_003124,5
+team_0482,Marketing Team 483,dept_04,5,emp_003128,5
+team_0483,Marketing Team 484,dept_04,8,emp_003136,8
+team_0484,Marketing Team 485,dept_04,8,emp_003141,8
+team_0485,Marketing Team 486,dept_04,8,emp_003149,8
+team_0486,Marketing Team 487,dept_04,10,emp_003160,10
+team_0487,Marketing Team 488,dept_04,7,emp_003169,7
+team_0488,Marketing Team 489,dept_04,7,emp_003172,7
+team_0489,Marketing Team 490,dept_04,7,emp_003181,7
+team_0490,Marketing Team 491,dept_04,3,emp_003188,3
+team_0491,Marketing Team 492,dept_04,4,emp_003191,4
+team_0492,Marketing Team 493,dept_04,7,emp_003199,7
+team_0493,Marketing Team 494,dept_04,6,emp_003204,6
+team_0494,Marketing Team 495,dept_04,6,emp_003209,6
+team_0495,Marketing Team 496,dept_04,4,emp_003215,4
+team_0496,Marketing Team 497,dept_04,7,emp_003221,7
+team_0497,Marketing Team 498,dept_04,6,emp_003228,6
+team_0498,Marketing Team 499,dept_04,7,emp_003229,7
+team_0499,Marketing Team 500,dept_04,7,emp_003242,7
+team_0500,Marketing Team 501,dept_04,3,emp_003244,3
+team_0501,Marketing Team 502,dept_04,9,emp_003249,9
+team_0502,Marketing Team 503,dept_04,4,emp_003256,4
+team_0503,Marketing Team 504,dept_04,6,emp_003261,6
+team_0504,Marketing Team 505,dept_04,6,emp_003270,6
+team_0505,Marketing Team 506,dept_04,9,emp_003277,9
+team_0506,Marketing Team 507,dept_04,7,emp_003285,7
+team_0507,Marketing Team 508,dept_04,8,emp_003288,8
+team_0508,Marketing Team 509,dept_04,7,emp_003295,7
+team_0509,Marketing Team 510,dept_04,6,emp_003305,6
+team_0510,Marketing Team 511,dept_04,5,emp_003310,5
+team_0511,Marketing Team 512,dept_04,6,emp_003314,6
+team_0512,Marketing Team 513,dept_04,7,emp_003324,7
+team_0513,Marketing Team 514,dept_04,7,emp_003326,7
+team_0514,Marketing Team 515,dept_04,5,emp_003335,5
+team_0515,Marketing Team 516,dept_04,9,emp_003341,9
+team_0516,Marketing Team 517,dept_04,7,emp_003352,7
+team_0517,Marketing Team 518,dept_04,4,emp_003356,4
+team_0518,Marketing Team 519,dept_04,9,emp_003358,9
+team_0519,Marketing Team 520,dept_04,3,emp_003368,3
+team_0520,Marketing Team 521,dept_04,7,emp_003374,7
+team_0521,Marketing Team 522,dept_04,5,emp_003380,5
+team_0522,Marketing Team 523,dept_04,10,emp_003382,10
+team_0523,Marketing Team 524,dept_04,8,emp_003398,8
+team_0524,Marketing Team 525,dept_04,4,emp_003402,4
+team_0525,Marketing Team 526,dept_04,9,emp_003411,9
+team_0526,Marketing Team 527,dept_04,2,emp_003414,2
+team_0527,Marketing Team 528,dept_04,8,emp_003417,8
+team_0528,Marketing Team 529,dept_04,6,emp_003428,6
+team_0529,Marketing Team 530,dept_04,5,emp_003431,5
+team_0530,Marketing Team 531,dept_04,8,emp_003440,8
+team_0531,Marketing Team 532,dept_04,8,emp_003445,8
+team_0532,Marketing Team 533,dept_04,7,emp_003450,7
+team_0533,Marketing Team 534,dept_04,7,emp_003458,7
+team_0534,Marketing Team 535,dept_04,7,emp_003466,7
+team_0535,Marketing Team 536,dept_04,6,emp_003471,6
+team_0536,Marketing Team 537,dept_04,8,emp_003478,8
+team_0537,Marketing Team 538,dept_04,3,emp_003485,3
+team_0538,Marketing Team 539,dept_04,2,emp_003489,2
+team_0539,Marketing Team 540,dept_04,7,emp_003496,7
+team_0540,Marketing Team 541,dept_04,7,emp_003497,7
+team_0541,Marketing Team 542,dept_04,5,emp_003504,5
+team_0542,Marketing Team 543,dept_04,4,emp_003511,4
+team_0543,Marketing Team 544,dept_04,9,emp_003513,9
+team_0544,Marketing Team 545,dept_04,5,emp_003524,5
+team_0545,Marketing Team 546,dept_04,5,emp_003530,5
+team_0546,Marketing Team 547,dept_04,5,emp_003534,5
+team_0547,Marketing Team 548,dept_04,8,emp_003538,8
+team_0548,Marketing Team 549,dept_04,2,emp_003545,2
+team_0549,Marketing Team 550,dept_04,6,emp_003552,6
+team_0550,Marketing Team 551,dept_04,5,emp_003553,5
+team_0551,Marketing Team 552,dept_04,6,emp_003562,6
+team_0552,Marketing Team 553,dept_04,8,emp_003570,8
+team_0553,Marketing Team 554,dept_04,6,emp_003573,6
+team_0554,Marketing Team 555,dept_04,3,emp_003580,3
+team_0555,Customer Success Team 556,dept_05,3,emp_003582,3
+team_0556,Customer Success Team 557,dept_05,5,emp_003585,5
+team_0557,Customer Success Team 558,dept_05,4,emp_003591,4
+team_0558,Customer Success Team 559,dept_05,7,emp_003594,7
+team_0559,Customer Success Team 560,dept_05,6,emp_003601,6
+team_0560,Customer Success Team 561,dept_05,6,emp_003608,6
+team_0561,Customer Success Team 562,dept_05,7,emp_003615,7
+team_0562,Customer Success Team 563,dept_05,5,emp_003620,5
+team_0563,Customer Success Team 564,dept_05,4,emp_003624,4
+team_0564,Customer Success Team 565,dept_05,2,emp_003628,2
+team_0565,Customer Success Team 566,dept_05,6,emp_003632,6
+team_0566,Customer Success Team 567,dept_05,6,emp_003637,6
+team_0567,Customer Success Team 568,dept_05,6,emp_003643,6
+team_0568,Customer Success Team 569,dept_05,5,emp_003648,5
+team_0569,Customer Success Team 570,dept_05,9,emp_003656,9
+team_0570,Customer Success Team 571,dept_05,5,emp_003665,5
+team_0571,Customer Success Team 572,dept_05,10,emp_003676,10
+team_0572,Customer Success Team 573,dept_05,6,emp_003679,6
+team_0573,Customer Success Team 574,dept_05,5,emp_003684,5
+team_0574,Customer Success Team 575,dept_05,6,emp_003691,6
+team_0575,Customer Success Team 576,dept_05,6,emp_003694,6
+team_0576,Customer Success Team 577,dept_05,7,emp_003705,7
+team_0577,Customer Success Team 578,dept_05,10,emp_003709,10
+team_0578,Customer Success Team 579,dept_05,7,emp_003723,7
+team_0579,Customer Success Team 580,dept_05,8,emp_003725,8
+team_0580,Customer Success Team 581,dept_05,8,emp_003737,8
+team_0581,Customer Success Team 582,dept_05,7,emp_003740,7
+team_0582,Customer Success Team 583,dept_05,10,emp_003748,10
+team_0583,Customer Success Team 584,dept_05,6,emp_003759,6
+team_0584,Customer Success Team 585,dept_05,5,emp_003765,5
+team_0585,Customer Success Team 586,dept_05,4,emp_003770,4
+team_0586,Customer Success Team 587,dept_05,6,emp_003774,6
+team_0587,Customer Success Team 588,dept_05,2,emp_003778,2
+team_0588,Customer Success Team 589,dept_05,8,emp_003780,8
+team_0589,Customer Success Team 590,dept_05,5,emp_003792,5
+team_0590,Customer Success Team 591,dept_05,8,emp_003798,8
+team_0591,Customer Success Team 592,dept_05,7,emp_003803,7
+team_0592,Customer Success Team 593,dept_05,4,emp_003811,4
+team_0593,Customer Success Team 594,dept_05,11,emp_003819,11
+team_0594,Customer Success Team 595,dept_05,5,emp_003825,5
+team_0595,Customer Success Team 596,dept_05,5,emp_003831,5
+team_0596,Customer Success Team 597,dept_05,6,emp_003833,6
+team_0597,Customer Success Team 598,dept_05,7,emp_003843,7
+team_0598,Customer Success Team 599,dept_05,4,emp_003847,4
+team_0599,Customer Success Team 600,dept_05,8,emp_003853,8
+team_0600,Customer Success Team 601,dept_05,7,emp_003859,7
+team_0601,Customer Success Team 602,dept_05,6,emp_003866,6
+team_0602,Customer Success Team 603,dept_05,4,emp_003873,4
+team_0603,Customer Success Team 604,dept_05,7,emp_003877,7
+team_0604,Customer Success Team 605,dept_05,6,emp_003884,6
+team_0605,Customer Success Team 606,dept_05,2,emp_003889,2
+team_0606,Customer Success Team 607,dept_05,7,emp_003891,7
+team_0607,Customer Success Team 608,dept_05,5,emp_003898,5
+team_0608,Customer Success Team 609,dept_05,6,emp_003904,6
+team_0609,Customer Success Team 610,dept_05,5,emp_003911,5
+team_0610,Customer Success Team 611,dept_05,6,emp_003917,6
+team_0611,Customer Success Team 612,dept_05,6,emp_003924,6
+team_0612,Customer Success Team 613,dept_05,6,emp_003930,6
+team_0613,Customer Success Team 614,dept_05,6,emp_003931,6
+team_0614,Customer Success Team 615,dept_05,5,emp_003940,5
+team_0615,Customer Success Team 616,dept_05,8,emp_003944,8
+team_0616,Customer Success Team 617,dept_05,7,emp_003952,7
+team_0617,Customer Success Team 618,dept_05,8,emp_003958,8
+team_0618,Customer Success Team 619,dept_05,9,emp_003969,9
+team_0619,Customer Success Team 620,dept_05,5,emp_003974,5
+team_0620,Customer Success Team 621,dept_05,7,emp_003980,7
+team_0621,Customer Success Team 622,dept_05,5,emp_003986,5
+team_0622,Customer Success Team 623,dept_05,5,emp_003991,5
+team_0623,Customer Success Team 624,dept_05,9,emp_003998,9
+team_0624,Customer Success Team 625,dept_05,5,emp_004005,5
+team_0625,Customer Success Team 626,dept_05,11,emp_004016,11
+team_0626,Customer Success Team 627,dept_05,11,emp_004022,11
+team_0627,Customer Success Team 628,dept_05,2,emp_004033,2
+team_0628,Customer Success Team 629,dept_05,8,emp_004036,8
+team_0629,Customer Success Team 630,dept_05,2,emp_004042,2
+team_0630,Finance Team 631,dept_06,8,emp_004049,8
+team_0631,Finance Team 632,dept_06,7,emp_004052,7
+team_0632,Finance Team 633,dept_06,2,emp_004059,2
+team_0633,Finance Team 634,dept_06,7,emp_004064,7
+team_0634,Finance Team 635,dept_06,9,emp_004070,9
+team_0635,Finance Team 636,dept_06,7,emp_004078,7
+team_0636,Finance Team 637,dept_06,10,emp_004093,10
+team_0637,Finance Team 638,dept_06,5,emp_004098,5
+team_0638,Finance Team 639,dept_06,10,emp_004103,10
+team_0639,Finance Team 640,dept_06,6,emp_004111,6
+team_0640,Finance Team 641,dept_06,4,emp_004117,4
+team_0641,Finance Team 642,dept_06,8,emp_004124,8
+team_0642,Finance Team 643,dept_06,10,emp_004127,10
+team_0643,Finance Team 644,dept_06,7,emp_004138,7
+team_0644,Finance Team 645,dept_06,7,emp_004148,7
+team_0645,Finance Team 646,dept_06,7,emp_004155,7
+team_0646,Finance Team 647,dept_06,2,emp_004158,2
+team_0647,Finance Team 648,dept_06,11,emp_004160,11
+team_0648,Finance Team 649,dept_06,10,emp_004179,10
+team_0649,Finance Team 650,dept_06,9,emp_004189,9
+team_0650,Finance Team 651,dept_06,7,emp_004194,7
+team_0651,Finance Team 652,dept_06,7,emp_004197,7
+team_0652,Finance Team 653,dept_06,6,emp_004208,6
+team_0653,Finance Team 654,dept_06,10,emp_004218,10
+team_0654,Finance Team 655,dept_06,8,emp_004220,8
+team_0655,Finance Team 656,dept_06,4,emp_004228,4
+team_0656,Finance Team 657,dept_06,6,emp_004235,6
+team_0657,Finance Team 658,dept_06,7,emp_004238,7
+team_0658,Finance Team 659,dept_06,5,emp_004247,5
+team_0659,Finance Team 660,dept_06,8,emp_004251,8
+team_0660,Finance Team 661,dept_06,11,emp_004261,11
+team_0661,Finance Team 662,dept_06,11,emp_004275,11
+team_0662,Finance Team 663,dept_06,8,emp_004282,8
+team_0663,Finance Team 664,dept_06,5,emp_004289,5
+team_0664,Finance Team 665,dept_06,8,emp_004298,8
+team_0665,Finance Team 666,dept_06,4,emp_004302,4
+team_0666,Finance Team 667,dept_06,3,emp_004305,3
+team_0667,People Team 668,dept_07,5,emp_004309,5
+team_0668,People Team 669,dept_07,6,emp_004314,6
+team_0669,People Team 670,dept_07,7,emp_004320,7
+team_0670,People Team 671,dept_07,9,emp_004329,9
+team_0671,People Team 672,dept_07,7,emp_004335,7
+team_0672,People Team 673,dept_07,3,emp_004344,3
+team_0673,People Team 674,dept_07,8,emp_004345,8
+team_0674,People Team 675,dept_07,8,emp_004354,8
+team_0675,People Team 676,dept_07,8,emp_004364,8
+team_0676,People Team 677,dept_07,5,emp_004372,5
+team_0677,People Team 678,dept_07,6,emp_004379,6
+team_0678,People Team 679,dept_07,6,emp_004380,6
+team_0679,People Team 680,dept_07,8,emp_004392,8
+team_0680,People Team 681,dept_07,3,emp_004395,3
+team_0681,People Team 682,dept_07,6,emp_004397,6
+team_0682,People Team 683,dept_07,9,emp_004407,9
+team_0683,People Team 684,dept_07,6,emp_004417,6
+team_0684,People Team 685,dept_07,9,emp_004422,9
+team_0685,People Team 686,dept_07,8,emp_004430,8
+team_0686,People Team 687,dept_07,3,emp_004436,3
+team_0687,People Team 688,dept_07,5,emp_004439,5
+team_0688,People Team 689,dept_07,10,emp_004447,10
+team_0689,People Team 690,dept_07,3,emp_004455,3
+team_0690,People Team 691,dept_07,5,emp_004457,5
+team_0691,People Team 692,dept_07,7,emp_004461,7
+team_0692,People Team 693,dept_07,7,emp_004472,7
+team_0693,People Team 694,dept_07,10,emp_004483,10
+team_0694,People Team 695,dept_07,5,emp_004489,5
+team_0695,People Team 696,dept_07,7,emp_004491,7
+team_0696,People Team 697,dept_07,8,emp_004501,8
+team_0697,People Team 698,dept_07,6,emp_004505,6
+team_0698,People Team 699,dept_07,5,emp_004511,5
+team_0699,People Team 700,dept_07,6,emp_004517,6
+team_0700,People Team 701,dept_07,4,emp_004523,4
+team_0701,People Team 702,dept_07,6,emp_004531,6
+team_0702,People Team 703,dept_07,9,emp_004536,9
+team_0703,People Team 704,dept_07,5,emp_004543,5
+team_0704,People Team 705,dept_07,8,emp_004550,8
+team_0705,People Team 706,dept_07,2,emp_004554,2
+team_0706,People Team 707,dept_07,3,emp_004558,3
+team_0707,People Team 708,dept_07,9,emp_004565,9
+team_0708,People Team 709,dept_07,6,emp_004568,6
+team_0709,People Team 710,dept_07,7,emp_004576,7
+team_0710,People Team 711,dept_07,2,emp_004581,2
+team_0711,Operations Team 712,dept_08,5,emp_004584,5
+team_0712,Operations Team 713,dept_08,9,emp_004588,9
+team_0713,Operations Team 714,dept_08,6,emp_004597,6
+team_0714,Operations Team 715,dept_08,8,emp_004607,8
+team_0715,Operations Team 716,dept_08,7,emp_004611,7
+team_0716,Operations Team 717,dept_08,9,emp_004622,9
+team_0717,Operations Team 718,dept_08,5,emp_004630,5
+team_0718,Operations Team 719,dept_08,2,emp_004633,2
+team_0719,Operations Team 720,dept_08,5,emp_004634,5
+team_0720,Operations Team 721,dept_08,8,emp_004640,8
+team_0721,Operations Team 722,dept_08,7,emp_004653,7
+team_0722,Operations Team 723,dept_08,6,emp_004654,6
+team_0723,Operations Team 724,dept_08,9,emp_004662,9
+team_0724,Operations Team 725,dept_08,5,emp_004669,5
+team_0725,Operations Team 726,dept_08,4,emp_004677,4
+team_0726,Operations Team 727,dept_08,8,emp_004680,8
+team_0727,Operations Team 728,dept_08,5,emp_004690,5
+team_0728,Operations Team 729,dept_08,7,emp_004692,7
+team_0729,Operations Team 730,dept_08,4,emp_004699,4
+team_0730,Operations Team 731,dept_08,3,emp_004704,3
+team_0731,Operations Team 732,dept_08,5,emp_004709,5
+team_0732,Operations Team 733,dept_08,11,emp_004720,11
+team_0733,Operations Team 734,dept_08,7,emp_004721,7
+team_0734,Operations Team 735,dept_08,6,emp_004730,6
+team_0735,Operations Team 736,dept_08,6,emp_004734,6
+team_0736,Operations Team 737,dept_08,7,emp_004742,7
+team_0737,Operations Team 738,dept_08,7,emp_004747,7
+team_0738,Operations Team 739,dept_08,8,emp_004756,8
+team_0739,Operations Team 740,dept_08,11,emp_004771,11
+team_0740,Operations Team 741,dept_08,6,emp_004775,6
+team_0741,Operations Team 742,dept_08,12,emp_004780,12
+team_0742,Operations Team 743,dept_08,3,emp_004791,3
+team_0743,Operations Team 744,dept_08,7,emp_004798,7
+team_0744,Operations Team 745,dept_08,5,emp_004801,5
+team_0745,Operations Team 746,dept_08,8,emp_004809,8
+team_0746,Operations Team 747,dept_08,4,emp_004816,4
+team_0747,Operations Team 748,dept_08,5,emp_004820,5
+team_0748,Operations Team 749,dept_08,7,emp_004828,7
+team_0749,Operations Team 750,dept_08,4,emp_004832,4
+team_0750,Operations Team 751,dept_08,13,emp_004840,13
+team_0751,Operations Team 752,dept_08,9,emp_004850,9
+team_0752,Operations Team 753,dept_08,8,emp_004861,8
+team_0753,Operations Team 754,dept_08,7,emp_004868,7
+team_0754,Operations Team 755,dept_08,8,emp_004876,8
+team_0755,Operations Team 756,dept_08,6,emp_004882,6
+team_0756,Operations Team 757,dept_08,7,emp_004890,7
+team_0757,Operations Team 758,dept_08,6,emp_004893,6
+team_0758,Operations Team 759,dept_08,4,emp_004899,4
+team_0759,Operations Team 760,dept_08,6,emp_004903,6
+team_0760,Operations Team 761,dept_08,9,emp_004910,9
+team_0761,Operations Team 762,dept_08,7,emp_004917,7
+team_0762,Operations Team 763,dept_08,10,emp_004926,10
+team_0763,Operations Team 764,dept_08,9,emp_004941,9
+team_0764,Operations Team 765,dept_08,11,emp_004943,11
+team_0765,Operations Team 766,dept_08,7,emp_004954,7
+team_0766,Operations Team 767,dept_08,7,emp_004964,7
+team_0767,Operations Team 768,dept_08,6,emp_004973,6
+team_0768,Operations Team 769,dept_08,9,emp_004974,9
+team_0769,Operations Team 770,dept_08,6,emp_004985,6
+team_0770,Operations Team 771,dept_08,8,emp_004989,8
+team_0771,Operations Team 772,dept_08,3,emp_004999,3
