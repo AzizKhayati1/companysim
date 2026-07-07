@@ -1,18 +1,36 @@
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap");
+
 :root {
-  --text: #6b6375;
-  --text-h: #08060d;
-  --bg: #fff;
-  --bg-alt: #f7f6f9;
-  --border: #e5e4e7;
-  --accent: #6d28d9;
-  --accent-bg: rgba(109, 40, 217, 0.1);
+  --text: #5b6472;
+  --text-h: #12141a;
+  --bg: #f7f8fb;
+  --bg-alt: #ffffff;
+  --surface-hover: #f1f2f7;
+  --border: #e6e8ee;
+
+  --accent: #4f46e5;
+  --accent-h: #4338ca;
+  --accent-bg: rgba(79, 70, 229, 0.09);
+  --accent-text: #ffffff;
+
   --danger: #dc2626;
+  --danger-bg: rgba(220, 38, 38, 0.08);
   --success: #16a34a;
+  --success-bg: rgba(22, 163, 74, 0.09);
+  --warning: #d97706;
+  --warning-bg: rgba(217, 119, 6, 0.09);
 
-  --sans: system-ui, "Segoe UI", Roboto, sans-serif;
-  --mono: ui-monospace, Consolas, monospace;
+  --radius-sm: 7px;
+  --radius-md: 11px;
+  --radius-lg: 16px;
 
-  font: 15px/145% var(--sans);
+  --shadow-sm: 0 1px 2px rgba(20, 22, 30, 0.05), 0 1px 1px rgba(20, 22, 30, 0.03);
+  --shadow-md: 0 8px 24px rgba(20, 22, 30, 0.08), 0 2px 6px rgba(20, 22, 30, 0.04);
+
+  --sans: "Inter", system-ui, "Segoe UI", Roboto, sans-serif;
+  --mono: "JetBrains Mono", ui-monospace, Consolas, monospace;
+
+  font: 15px/1.55 var(--sans);
   color-scheme: light dark;
   color: var(--text);
   background: var(--bg);
@@ -24,15 +42,27 @@
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --text: #b7bac1;
-    --text-h: #f3f4f6;
-    --bg: #14151a;
-    --bg-alt: #1c1e26;
-    --border: #2e303a;
-    --accent: #c084fc;
-    --accent-bg: rgba(192, 132, 252, 0.15);
+    --text: #9aa3b5;
+    --text-h: #f2f4f8;
+    --bg: #0b0d12;
+    --bg-alt: #12151d;
+    --surface-hover: #191d27;
+    --border: #232733;
+
+    --accent: #818cf8;
+    --accent-h: #a5b0fb;
+    --accent-bg: rgba(129, 140, 248, 0.14);
+    --accent-text: #0b0d12;
+
     --danger: #f87171;
+    --danger-bg: rgba(248, 113, 113, 0.1);
     --success: #4ade80;
+    --success-bg: rgba(74, 222, 128, 0.12);
+    --warning: #fbbf24;
+    --warning-bg: rgba(251, 191, 36, 0.12);
+
+    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+    --shadow-md: 0 10px 30px rgba(0, 0, 0, 0.45);
   }
 }
 
@@ -50,58 +80,81 @@ body {
   flex-direction: column;
 }
 
+::selection {
+  background: var(--accent-bg);
+}
+
 h1, h2, h3 {
-  font-weight: 600;
+  font-weight: 700;
+  letter-spacing: -0.01em;
   color: var(--text-h);
   margin: 0 0 12px;
 }
 
-h1 { font-size: 24px; }
-h2 { font-size: 18px; }
-h3 { font-size: 15px; }
+h1 { font-size: 25px; }
+h2 { font-size: 17px; }
+h3 { font-size: 14px; }
+
+p {
+  margin: 0 0 10px;
+}
 
 button {
   font: inherit;
   cursor: pointer;
 }
 
-table {
-  border-collapse: collapse;
-  width: 100%;
-}
-
-th, td {
-  text-align: left;
-  padding: 6px 8px;
-  border-bottom: 1px solid var(--border);
-  font-size: 13px;
-}
-
-th {
-  color: var(--text-h);
-  font-weight: 600;
-  position: sticky;
-  top: 0;
-  background: var(--bg);
-}
-
 input, select {
   font: inherit;
-  background: var(--bg);
+  background: var(--bg-alt);
   color: var(--text-h);
   border: 1px solid var(--border);
-  border-radius: 4px;
-  padding: 4px 6px;
+  border-radius: var(--radius-sm);
+  padding: 6px 9px;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+input:hover, select:hover {
+  border-color: color-mix(in srgb, var(--border) 50%, var(--text));
+}
+
+input:focus, select:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-bg);
+}
+
+label {
+  font-size: 13px;
+  color: var(--text);
 }
 
 a {
   color: var(--accent);
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
 }
 
 code {
   font-family: var(--mono);
-  background: var(--bg-alt);
-  padding: 1px 5px;
-  border-radius: 3px;
-  font-size: 0.9em;
+  background: var(--accent-bg);
+  color: var(--accent);
+  padding: 1px 6px;
+  border-radius: 5px;
+  font-size: 0.88em;
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 20px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
 }

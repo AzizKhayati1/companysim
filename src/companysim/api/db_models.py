@@ -11,7 +11,7 @@ from __future__ import annotations
 
 from datetime import datetime, timezone
 
-from sqlalchemy import ForeignKey
+from sqlalchemy import ForeignKey, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from companysim.api.database import Base
@@ -53,6 +53,12 @@ class OrgRecord(Base):
     employees: Mapped[list["EmployeeRecord"]] = relationship(
         back_populates="org", cascade="all, delete-orphan",
         foreign_keys="EmployeeRecord.org_id",
+    )
+    runs: Mapped[list["RunRecord"]] = relationship(
+        back_populates="org", cascade="all, delete-orphan",
+    )
+    training_examples: Mapped[list["TurnoverTrainingExample"]] = relationship(
+        back_populates="org", cascade="all, delete-orphan",
     )
 
 
@@ -178,3 +184,65 @@ class EmployeeWellbeingRecord(Base):
     wellness_program_participation: Mapped[float]
 
     employee: Mapped["EmployeeRecord"] = relationship(back_populates="wellbeing")
+
+
+class RunRecord(Base):
+    """A saved simulate/diagnose call — request + response as submitted and
+    returned, so a past run can be reopened exactly as it looked (the sim is
+    seeded, but this avoids depending on that to reproduce a historical view).
+    """
+
+    __tablename__ = "runs"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    org_id: Mapped[int] = mapped_column(ForeignKey("orgs.id"))
+    run_type: Mapped[str]  # "simulate" | "diagnose"
+    created_at: Mapped[datetime] = mapped_column(default=lambda: datetime.now(timezone.utc))
+    summary: Mapped[str]
+    request_json: Mapped[str] = mapped_column(Text)
+    response_json: Mapped[str] = mapped_column(Text)
+
+    org: Mapped["OrgRecord"] = relationship(back_populates="runs")
+
+
+class TurnoverTrainingExample(Base):
+    """A labeled example collected from a real webapp simulate/diagnose run.
+
+    Features mirror ``api.scoring_frame.build_scoring_frame``'s
+    ``FEATURE_COLUMNS``-shaped output (job/comp facts exact, pulse "mean" =
+    the employee's current wellbeing snapshot). ``*_pulse_trend`` and
+    ``rating_*`` aren't stored here — they're always the same constant
+    placeholder in that adapter (no week-by-week history or performance
+    reviews in this schema), so they're reconstructed at read time instead
+    of persisted as dead columns. ``quit_within_horizon`` is organic-only
+    (see ``OrganizationModel.organic_quit_ids``) — never true just because
+    an injected Layoff/Termination event removed the employee.
+    """
+
+    __tablename__ = "turnover_training_examples"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    org_id: Mapped[int] = mapped_column(ForeignKey("orgs.id"))
+    run_id: Mapped[int] = mapped_column(ForeignKey("runs.id"))
+    # Plain int, no FK — lineage/debugging only, so this row survives even
+    # if the employee is later edited or deleted from the org.
+    employee_id: Mapped[int]
+    collected_at: Mapped[datetime] = mapped_column(default=lambda: datetime.now(timezone.utc))
+    horizon_ticks: Mapped[int]
+    quit_within_horizon: Mapped[bool]
+
+    level: Mapped[str]
+    department_id: Mapped[str]
+    role: Mapped[str]
+    tenure_months: Mapped[int]
+    base_salary: Mapped[float]
+    team_size: Mapped[int]
+    is_manager: Mapped[int]
+    promotions_count: Mapped[int]
+    mood_pulse_mean: Mapped[float]
+    stress_level_pulse_mean: Mapped[float]
+    sleep_quality_pulse_mean: Mapped[float]
+    energy_level_pulse_mean: Mapped[float]
+    burnout_exhaustion_pulse_mean: Mapped[float]
+
+    org: Mapped["OrgRecord"] = relationship(back_populates="training_examples")

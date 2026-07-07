@@ -64,6 +64,7 @@ class OrganizationModel:
     _outcomes: list[TickOutcome] = field(init=False, default_factory=list)
     _next_emp_index: int = field(init=False, default=0)
     _new_hires_this_tick: int = field(init=False, default=0)
+    _organic_quit_ids: set[str] = field(init=False, default_factory=set)
 
     def __post_init__(self) -> None:
         self._rng = np.random.default_rng(self.seed)
@@ -108,6 +109,16 @@ class OrganizationModel:
     def rng(self) -> np.random.Generator:
         return self._rng
 
+    @property
+    def organic_quit_ids(self) -> frozenset[str]:
+        """Employee ids that actually quit via the organic per-tick Bernoulli
+        draw in :meth:`EmployeeAgent.step` — excludes employees deactivated
+        directly by a scenario event (``Layoff``, ``Termination``), which set
+        ``active = False`` before this tick's per-employee step runs and so
+        never register as an active->inactive *transition* here.
+        """
+        return frozenset(self._organic_quit_ids)
+
     def step(self) -> SimulationSnapshot:
         # 0. Fire scenario events for this tick — mutations happen first
         #    so their effects show up in this tick's snapshot.
@@ -136,6 +147,7 @@ class OrganizationModel:
             # active-to-inactive transition as "this tick"'s quit.
             if was_active and not agent.active:
                 quits += 1
+                self._organic_quit_ids.add(agent.record.id)
             if agent.active:
                 prods.append(outcome.productivity)
                 engs.append(outcome.engagement)

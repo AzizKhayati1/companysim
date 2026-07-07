@@ -5,30 +5,10 @@
 }
 
 .page {
-  max-width: 1200px;
+  max-width: 1180px;
   width: 100%;
   margin: 0 auto;
-  padding: 20px 24px 60px;
-}
-
-.topnav {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  padding: 12px 24px;
-  border-bottom: 1px solid var(--border);
-}
-
-.topnav .spacer {
-  flex: 1;
-}
-
-.card {
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  padding: 16px;
-  margin-bottom: 20px;
-  background: var(--bg-alt);
+  padding: 28px 24px 64px;
 }
 
 .row {
@@ -38,54 +18,96 @@
   flex-wrap: wrap;
 }
 
-.btn {
-  padding: 6px 14px;
-  border-radius: 5px;
+.spacer {
+  flex: 1;
+}
+
+.subtitle {
+  color: var(--text);
+  font-size: 14px;
+  margin: -6px 0 20px;
+}
+
+/* ---- surfaces ---- */
+
+.card {
   border: 1px solid var(--border);
-  background: var(--bg);
+  border-radius: var(--radius-lg);
+  padding: 20px;
+  margin-bottom: 20px;
+  background: var(--bg-alt);
+  box-shadow: var(--shadow-sm);
+}
+
+.card > h2:first-child, .card > h3:first-child {
+  margin-top: 0;
+}
+
+/* ---- buttons ---- */
+
+.btn {
+  padding: 7px 15px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: var(--bg-alt);
   color: var(--text-h);
+  font-size: 13.5px;
+  font-weight: 500;
+  transition: border-color 0.15s, background 0.15s, transform 0.05s;
+  white-space: nowrap;
 }
 
 .btn:hover {
   border-color: var(--accent);
+  background: var(--accent-bg);
+  color: var(--accent);
+}
+
+.btn:active {
+  transform: scale(0.98);
 }
 
 .btn-primary {
   background: var(--accent);
   border-color: var(--accent);
-  color: white;
+  color: var(--accent-text);
+  box-shadow: var(--shadow-sm);
+}
+
+.btn-primary:hover {
+  background: var(--accent-h);
+  border-color: var(--accent-h);
+  color: var(--accent-text);
 }
 
 .btn-danger {
   color: var(--danger);
-  border-color: var(--danger);
+  border-color: var(--border);
   background: transparent;
+}
+
+.btn-danger:hover {
+  border-color: var(--danger);
+  background: var(--danger-bg);
+  color: var(--danger);
 }
 
 .btn:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+  transform: none;
 }
 
-.table-wrap {
-  overflow: auto;
-  max-height: 60vh;
-  border: 1px solid var(--border);
-  border-radius: 6px;
-}
-
-.table-wrap input, .table-wrap select {
-  width: 100%;
-  min-width: 70px;
-  font-size: 12px;
-  padding: 3px 4px;
-}
+/* ---- tags / badges ---- */
 
 .tag {
-  display: inline-block;
-  padding: 1px 8px;
-  border-radius: 10px;
-  font-size: 11px;
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 11.5px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
   background: var(--accent-bg);
   color: var(--accent);
 }
@@ -108,4 +130,164 @@
 
 @media (max-width: 900px) {
   .grid-2 { grid-template-columns: 1fr; }
+}
+
+/* ---- stat cards (compare-intervention summary etc.) ---- */
+
+.stat-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.stat-card {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 14px 16px;
+  background: var(--bg);
+}
+
+.stat-card .stat-label {
+  color: var(--text);
+  font-size: 12px;
+  margin-bottom: 4px;
+}
+
+.stat-card .stat-value {
+  color: var(--text-h);
+  font-size: 21px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+/* ---- data-list: a smooth, non-tabular replacement for <table> ---- */
+
+.data-list {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  background: var(--bg-alt);
+}
+
+.data-list-scroll {
+  overflow-x: auto;
+}
+
+.data-list-header, .data-list-row {
+  display: grid;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+}
+
+.data-list-header {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text);
+  background: var(--bg);
+  border-bottom: 1px solid var(--border);
+}
+
+.data-list-row {
+  font-size: 13.5px;
+  color: var(--text-h);
+  border-bottom: 1px solid var(--border);
+  transition: background 0.12s;
+}
+
+.data-list-row:last-child {
+  border-bottom: none;
+}
+
+.data-list-row:hover {
+  background: var(--surface-hover);
+}
+
+.data-list-cell {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.data-list-cell.actions {
+  display: flex;
+  gap: 6px;
+  justify-content: flex-end;
+}
+
+.data-list-empty {
+  padding: 24px;
+  text-align: center;
+  color: var(--text);
+  font-size: 13px;
+}
+
+/* Inline-editable inputs living inside a data-list row should feel like
+   plain text until touched, not like a separate boxed control. */
+.data-list-row input, .data-list-row select {
+  width: 100%;
+  font-size: 13px;
+  padding: 5px 7px;
+  border-color: transparent;
+  background: transparent;
+}
+
+.data-list-row input:hover, .data-list-row select:hover {
+  background: var(--bg);
+  border-color: var(--border);
+}
+
+.data-list-row input:focus, .data-list-row select:focus {
+  background: var(--bg);
+}
+
+/* ---- kv-list: label/value pairs, replacing 2-column <table> use ---- */
+
+.kv-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.kv-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 7px 0;
+  border-bottom: 1px solid var(--border);
+  font-size: 13.5px;
+}
+
+.kv-row:last-child {
+  border-bottom: none;
+}
+
+.kv-row .kv-key {
+  color: var(--text);
+}
+
+.kv-row .kv-value {
+  color: var(--text-h);
+  font-weight: 600;
+  font-family: var(--mono);
+  font-size: 13px;
+}
+
+/* ---- risk / status bars ---- */
+
+.risk-bar-track {
+  position: relative;
+  width: 64px;
+  height: 6px;
+  border-radius: 999px;
+  background: var(--border);
+  overflow: hidden;
+}
+
+.risk-bar-fill {
+  position: absolute;
+  inset: 0;
+  border-radius: 999px;
 }

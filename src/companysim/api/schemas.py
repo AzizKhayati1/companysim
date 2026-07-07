@@ -135,14 +135,96 @@ class RecommendationOut(BaseModel):
     suggested_params: dict[str, Any] = {}
 
 
+class NotesSummaryOut(BaseModel):
+    n_notes: int
+    mean_sentiment: float
+    top_themes: list[str] = []
+    sample_quotes: list[str] = []
+
+
 class DiagnosisReportOut(BaseModel):
     problem: ProblemOut
     drivers: list[DriverOut]
     recommendation: RecommendationOut
     explanation: str
+    notes_summary: NotesSummaryOut | None = None
 
 
 class DiagnoseResponse(BaseModel):
     model_available: bool
     problems_detected: int
     reports: list[DiagnosisReportOut]
+
+
+class AtRiskEmployeeOut(BaseModel):
+    employee_id: int
+    full_name: str
+    department_id: int
+    team_id: int
+    level: str
+    turnover_probability: float
+    risk_tier: str
+
+
+class AtRiskResponse(BaseModel):
+    model_available: bool
+    employees: list[AtRiskEmployeeOut]
+
+
+class CompareInterventionRequest(BaseModel):
+    intervention_type: str  # "retention_bonus" | "workload_relief" | "manager_coaching"
+    top_k: int = 20
+    at_tick: int = 1
+    params: dict[str, Any] = {}
+    horizon_ticks: int = 12
+    replicates: int = 15
+    seed: int = 5000
+
+
+class CompareInterventionResponse(BaseModel):
+    model_available: bool
+    target_employee_count: int
+    baseline_target_quits_p50: float
+    treated_target_quits_p50: float
+    quits_avoided_mean: float
+    quits_avoided_p50: float
+    quits_avoided_p05: float
+    quits_avoided_p95: float
+    estimated_cost: float
+
+
+class ModelStatusResponse(BaseModel):
+    model_available: bool
+    metadata: dict[str, Any] = {}
+    pending_training_examples: int = 0
+
+
+class TrainModelRequest(BaseModel):
+    headcount: int = 2000
+    replicates: int = 4
+    horizon: int = 12
+    seed: int = 2024
+    tolerance: float = 0.02
+    force_promote: bool = False
+
+
+class TrainModelResponse(BaseModel):
+    decision: str
+    reason: str
+    candidate_eval: dict[str, Any]
+    production_eval: dict[str, Any] | None
+    train_report: dict[str, Any]
+    promoted_at: str | None
+    n_live_examples: int = 0
+
+
+class RunSummaryOut(BaseModel):
+    id: int
+    run_type: str
+    created_at: str
+    summary: str
+
+
+class RunDetailOut(RunSummaryOut):
+    request: dict[str, Any]
+    response: dict[str, Any]

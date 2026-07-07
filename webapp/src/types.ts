@@ -131,11 +131,19 @@ export interface RecommendationOut {
   suggested_params: Record<string, unknown>;
 }
 
+export interface NotesSummaryOut {
+  n_notes: number;
+  mean_sentiment: number;
+  top_themes: string[];
+  sample_quotes: string[];
+}
+
 export interface DiagnosisReportOut {
   problem: ProblemOut;
   drivers: DriverOut[];
   recommendation: RecommendationOut;
   explanation: string;
+  notes_summary: NotesSummaryOut | null;
 }
 
 export interface DiagnoseResponse {
@@ -150,3 +158,81 @@ export const LIFE_EVENT_TYPES = [
   "bereavement", "birth_or_adoption", "moved_house", "divorce_or_separation",
   "serious_illness", "caregiving_onset", "financial_shock",
 ] as const;
+
+export interface AtRiskEmployeeOut {
+  employee_id: number;
+  full_name: string;
+  department_id: number;
+  team_id: number;
+  level: string;
+  turnover_probability: number;
+  risk_tier: string;
+}
+
+export interface AtRiskResponse {
+  model_available: boolean;
+  employees: AtRiskEmployeeOut[];
+}
+
+export type InterventionType = "retention_bonus" | "workload_relief" | "manager_coaching";
+
+export interface CompareInterventionRequest {
+  intervention_type: InterventionType;
+  top_k: number;
+  at_tick: number;
+  params: Record<string, unknown>;
+  horizon_ticks: number;
+  replicates: number;
+  seed: number;
+}
+
+export interface CompareInterventionResponse {
+  model_available: boolean;
+  target_employee_count: number;
+  baseline_target_quits_p50: number;
+  treated_target_quits_p50: number;
+  quits_avoided_mean: number;
+  quits_avoided_p50: number;
+  quits_avoided_p05: number;
+  quits_avoided_p95: number;
+  estimated_cost: number;
+}
+
+export interface ModelStatusResponse {
+  model_available: boolean;
+  metadata: Record<string, unknown>;
+  pending_training_examples: number;
+}
+
+export interface TrainModelRequest {
+  headcount: number;
+  replicates: number;
+  horizon: number;
+  seed: number;
+  tolerance: number;
+  force_promote: boolean;
+}
+
+export interface TrainModelResponse {
+  decision: "PROMOTE" | "BLOCK";
+  reason: string;
+  candidate_eval: Record<string, number>;
+  production_eval: Record<string, number> | null;
+  train_report: Record<string, number>;
+  promoted_at: string | null;
+  n_live_examples: number;
+}
+
+export type RunType = "simulate" | "diagnose";
+
+export interface RunSummaryOut {
+  id: number;
+  run_type: RunType;
+  created_at: string;
+  summary: string;
+}
+
+export interface RunDetailOut extends RunSummaryOut {
+  request: SimulateRequest;
+  response: SimulateResponse | DiagnoseResponse;
+}

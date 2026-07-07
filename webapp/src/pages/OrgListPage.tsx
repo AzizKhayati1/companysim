@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { api } from "../api/client";
 
 export default function OrgListPage() {
@@ -30,6 +30,10 @@ export default function OrgListPage() {
 
   return (
     <div className="page">
+      <div className="row" style={{ marginBottom: 16 }}>
+        <div className="spacer" />
+        <Link className="btn" to="/model">Turnover model</Link>
+      </div>
       <h1>Digital Workforce Twin</h1>
       <p className="muted">
         Create a synthetic company, edit its employees/departments/teams, then run
@@ -79,53 +83,62 @@ export default function OrgListPage() {
       {error && <p className="error">{(error as Error).message}</p>}
       {orgs && orgs.length === 0 && <p className="muted">No orgs yet — create one above.</p>}
       {orgs && orgs.length > 0 && (
-        <div className="table-wrap">
-          <table>
-            <thead>
-              <tr>
-                <th>ID</th>
-                <th>Name</th>
-                <th>Headcount</th>
-                <th>Departments</th>
-                <th>Teams</th>
-                <th>Seed</th>
-                <th></th>
-              </tr>
-            </thead>
-            <tbody>
-              {orgs.map((org) => (
-                <tr key={org.id}>
-                  <td>{org.id}</td>
-                  <td>{org.name}</td>
-                  <td>{org.headcount}</td>
-                  <td>{org.department_count}</td>
-                  <td>{org.team_count}</td>
-                  <td>{org.seed}</td>
-                  <td className="row">
-                    <button className="btn" onClick={() => navigate(`/orgs/${org.id}`)}>
-                      Edit
-                    </button>
-                    <button
-                      className="btn"
-                      onClick={() => navigate(`/orgs/${org.id}/simulate`)}
-                    >
-                      Simulate
-                    </button>
-                    <button
-                      className="btn btn-danger"
-                      onClick={() => {
-                        if (confirm(`Delete org "${org.name}"?`)) {
-                          deleteMutation.mutate(org.id);
-                        }
-                      }}
-                    >
-                      Delete
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+        <div className="data-list">
+          <div className="data-list-scroll">
+            <div
+              className="data-list-header"
+              style={{ gridTemplateColumns: "1fr 90px 110px 80px 70px 320px" }}
+            >
+              <div>Name</div>
+              <div>Headcount</div>
+              <div>Departments</div>
+              <div>Teams</div>
+              <div>Seed</div>
+              <div></div>
+            </div>
+            {orgs.map((org) => (
+              <div
+                className="data-list-row"
+                key={org.id}
+                style={{ gridTemplateColumns: "1fr 90px 110px 80px 70px 320px" }}
+              >
+                <div className="data-list-cell">
+                  <strong>{org.name}</strong>
+                </div>
+                <div className="data-list-cell">{org.headcount}</div>
+                <div className="data-list-cell">{org.department_count}</div>
+                <div className="data-list-cell">{org.team_count}</div>
+                <div className="data-list-cell">{org.seed}</div>
+                <div className="data-list-cell actions">
+                  <button className="btn" onClick={() => navigate(`/orgs/${org.id}`)}>
+                    Edit
+                  </button>
+                  <button
+                    className="btn"
+                    onClick={() => navigate(`/orgs/${org.id}/simulate`)}
+                  >
+                    Simulate
+                  </button>
+                  <button
+                    className="btn"
+                    onClick={() => navigate(`/orgs/${org.id}/at-risk`)}
+                  >
+                    At-Risk
+                  </button>
+                  <button
+                    className="btn btn-danger"
+                    onClick={() => {
+                      if (confirm(`Delete org "${org.name}"?`)) {
+                        deleteMutation.mutate(org.id);
+                      }
+                    }}
+                  >
+                    Delete
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       )}
     </div>

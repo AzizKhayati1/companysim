@@ -14,7 +14,17 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from companysim.api.database import init_db
-from companysim.api.routers import departments, diagnose, employees, orgs, simulate, teams
+from companysim.api.routers import (
+    at_risk,
+    departments,
+    diagnose,
+    employees,
+    model,
+    orgs,
+    runs,
+    simulate,
+    teams,
+)
 
 
 @asynccontextmanager
@@ -38,6 +48,9 @@ app.include_router(teams.router)
 app.include_router(employees.router)
 app.include_router(simulate.router)
 app.include_router(diagnose.router)
+app.include_router(at_risk.router)
+app.include_router(model.router)
+app.include_router(runs.router)
 
 
 @app.get("/health")

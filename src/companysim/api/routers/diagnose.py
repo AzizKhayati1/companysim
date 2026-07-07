@@ -1,4 +1,4 @@
-"""Root-cause diagnosis endpoint.
+"""Root-cause diagnosis endpoint + PDF export.
 
 Runs a simulation (same request shape as ``/simulate``), scans the
 resulting history for problems, and for each one attributes a root cause
@@ -10,29 +10,53 @@ Builds the driver frame directly from the webapp's own
 persistence, and it uses plain integer department/team/employee ids
 throughout (matching the rest of the API), converting the diagnostics
 module's generic string segment ids back to ints at this boundary.
+
+Each diagnosed problem's top segment is cross-referenced against the
+employees who actually quit *during this run* (``not agent.active`` after
+``model.run()``); if any did, synthetic exit notes are generated for them
+and run through ``ml/exit_notes.py``'s real text-analysis, enriching the
+explanation with qualitative corroboration instead of leaving it purely
+structural.
+
+``build_diagnosis_report`` is shared by the JSON ``/diagnose`` endpoint
+and the ``/diagnose/export`` PDF endpoint (same pattern as
+``scenario_builder.py`` sharing logic between ``/simulate`` and
+``/diagnose``), so re-running the identical seeded request always
+produces an identical report either way.
 """
 from __future__ import annotations
 
 from pathlib import Path
 
+import numpy as np
 import pandas as pd
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Response
 from sqlalchemy.orm import Session
 
 from companysim.api.converters import org_to_pydantic
 from companysim.api.database import get_db
-from companysim.api.db_models import EmployeeRecord, EmployeeWellbeingRecord
+from companysim.api.db_models import EmployeeRecord, EmployeeWellbeingRecord, OrgRecord
+from companysim.api.pdf_report import render_diagnosis_pdf
+from companysim.api.run_history import save_run
 from companysim.api.scenario_builder import build_scenario
+from companysim.api.training_examples import collect_training_examples
 from companysim.api.schemas import (
     DiagnoseResponse,
     DiagnosisReportOut,
     DriverOut,
+    NotesSummaryOut,
     ProblemOut,
     RecommendationOut,
     SimulateRequest,
 )
 from companysim.ml.diagnostics import detect_problems, explain, recommend
 from companysim.ml.diagnostics import diagnose as run_diagnose
+from companysim.ml.exit_notes import (
+    NotesAnalysis,
+    analyze_notes,
+    augment_explanation_with_notes,
+    generate_notes_for_employees,
+)
 from companysim.ml.registry import TurnoverModelBundle, load_bundle
 from companysim.model.organization import OrganizationModel
 
@@ -72,8 +96,36 @@ def _load_turnover_bundle() -> TurnoverModelBundle | None:
         return None
 
 
-@router.post("/diagnose", response_model=DiagnoseResponse)
-def diagnose_run(org_id: int, req: SimulateRequest, db: Session = Depends(get_db)):
+def _quit_employee_ids(model: OrganizationModel) -> set[int]:
+    """DB ids of employees who organically quit during this run.
+
+    Engine ids are ``f"emp_{db_id}"`` (see ``converters.emp_str_id``).
+    Uses :attr:`OrganizationModel.organic_quit_ids` rather than raw
+    ``not agent.active`` so an employee deactivated by an injected
+    ``Layoff``/``Termination`` event is never mistaken for a voluntary exit
+    here — that distinction matters a lot for the exit notes below, which
+    are framed entirely in the employee's own (organic-attrition) voice.
+    """
+    return {
+        int(str_id.split("_", 1)[1])
+        for str_id in model.organic_quit_ids
+        if str_id.startswith("emp_")
+    }
+
+
+def _notes_summary_out(analysis: NotesAnalysis | None) -> NotesSummaryOut | None:
+    if analysis is None:
+        return None
+    top_themes = sorted(analysis.theme_counts, key=lambda t: analysis.theme_counts[t], reverse=True)
+    return NotesSummaryOut(
+        n_notes=analysis.n_notes,
+        mean_sentiment=analysis.mean_sentiment,
+        top_themes=top_themes,
+        sample_quotes=analysis.sample_quotes,
+    )
+
+
+def build_diagnosis_report(org_id: int, req: SimulateRequest, db: Session) -> DiagnoseResponse:
     try:
         org, hf_df = org_to_pydantic(db, org_id)
     except ValueError as exc:
@@ -86,12 +138,28 @@ def diagnose_run(org_id: int, req: SimulateRequest, db: Session = Depends(get_db
     problems = detect_problems(history)
     driver_frame = _build_driver_frame(db, org_id)
     bundle = _load_turnover_bundle()
+    quit_ids = _quit_employee_ids(model)
+    notes_rng = np.random.default_rng(req.seed)
 
     reports: list[DiagnosisReportOut] = []
     for problem in problems:
         diagnosis = run_diagnose(problem, driver_frame, turnover_bundle=bundle)
         rec = recommend(diagnosis, driver_frame)
         text = explain(problem, diagnosis, rec)
+
+        notes_analysis: NotesAnalysis | None = None
+        if diagnosis.primary_drivers and quit_ids:
+            top = diagnosis.primary_drivers[0]
+            seg_col = "department_id" if top.segment_type == "department" else "team_id"
+            segment_rows = driver_frame[driver_frame[seg_col] == int(top.segment_id)]
+            segment_quit_ids = [
+                eid for eid in segment_rows["employee_id"].tolist() if eid in quit_ids
+            ]
+            if segment_quit_ids:
+                notes = generate_notes_for_employees(driver_frame, segment_quit_ids, notes_rng)
+                notes_analysis = analyze_notes(notes)
+
+        text = augment_explanation_with_notes(text, notes_analysis)
 
         reports.append(DiagnosisReportOut(
             problem=ProblemOut(
@@ -115,10 +183,33 @@ def diagnose_run(org_id: int, req: SimulateRequest, db: Session = Depends(get_db
                 suggested_params=rec.suggested_params,
             ),
             explanation=text,
+            notes_summary=_notes_summary_out(notes_analysis),
         ))
 
-    return DiagnoseResponse(
+    response = DiagnoseResponse(
         model_available=bundle is not None,
         problems_detected=len(problems),
         reports=reports,
+    )
+    summary = f"{len(reports)} problem(s) detected · seed {req.seed}"
+    run_record = save_run(db, org_id, "diagnose", summary, req, response)
+    collect_training_examples(db, org_id, run_record.id, req.ticks, model)
+    return response
+
+
+@router.post("/diagnose", response_model=DiagnoseResponse)
+def diagnose_run(org_id: int, req: SimulateRequest, db: Session = Depends(get_db)):
+    return build_diagnosis_report(org_id, req, db)
+
+
+@router.post("/diagnose/export")
+def diagnose_export(org_id: int, req: SimulateRequest, db: Session = Depends(get_db)):
+    report = build_diagnosis_report(org_id, req, db)
+    org_record = db.query(OrgRecord).filter_by(id=org_id).first()
+    org_name = org_record.name if org_record is not None else f"Org {org_id}"
+    pdf_bytes = render_diagnosis_pdf(org_name, report)
+    return Response(
+        content=pdf_bytes,
+        media_type="application/pdf",
+        headers={"Content-Disposition": f'attachment; filename="diagnosis_org_{org_id}.pdf"'},
     )

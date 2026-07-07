@@ -1,14 +1,23 @@
 import type {
+  AtRiskResponse,
+  CompareInterventionRequest,
+  CompareInterventionResponse,
   DepartmentIn,
   DepartmentOut,
   DiagnoseResponse,
   EmployeeIn,
   EmployeeOut,
+  ModelStatusResponse,
   OrgSummary,
+  RunDetailOut,
+  RunSummaryOut,
+  RunType,
   SimulateRequest,
   SimulateResponse,
   TeamIn,
   TeamOut,
+  TrainModelRequest,
+  TrainModelResponse,
 } from "../types";
 
 const API_BASE = "http://localhost:8611";
@@ -92,4 +101,49 @@ export const api = {
       method: "POST",
       body: JSON.stringify(body),
     }),
+
+  exportDiagnosisPdf: async (orgId: number, body: SimulateRequest): Promise<Blob> => {
+    const res = await fetch(`${API_BASE}/orgs/${orgId}/diagnose/export`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+    if (!res.ok) {
+      let detail = res.statusText;
+      try {
+        const errBody = await res.json();
+        detail = errBody.detail ?? detail;
+      } catch {
+        // ignore — use statusText
+      }
+      throw new Error(`${res.status}: ${detail}`);
+    }
+    return res.blob();
+  },
+
+  getAtRisk: (orgId: number, topK: number) =>
+    request<AtRiskResponse>(`/orgs/${orgId}/at-risk?top_k=${topK}`),
+
+  compareIntervention: (orgId: number, body: CompareInterventionRequest) =>
+    request<CompareInterventionResponse>(`/orgs/${orgId}/at-risk/compare-intervention`, {
+      method: "POST",
+      body: JSON.stringify(body),
+    }),
+
+  getModelStatus: () => request<ModelStatusResponse>("/model/status"),
+
+  trainModel: (body: TrainModelRequest) =>
+    request<TrainModelResponse>("/model/train", {
+      method: "POST",
+      body: JSON.stringify(body),
+    }),
+
+  listRuns: (orgId: number, runType?: RunType) =>
+    request<RunSummaryOut[]>(
+      `/orgs/${orgId}/runs${runType ? `?run_type=${runType}` : ""}`,
+    ),
+  getRun: (orgId: number, runId: number) =>
+    request<RunDetailOut>(`/orgs/${orgId}/runs/${runId}`),
+  deleteRun: (orgId: number, runId: number) =>
+    request<void>(`/orgs/${orgId}/runs/${runId}`, { method: "DELETE" }),
 };

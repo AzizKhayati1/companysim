@@ -128,6 +128,65 @@ def test_diagnose_with_no_problems_returns_empty_reports(client):
     assert body["problems_detected"] == len(body["reports"])
 
 
+def test_at_risk_ranking_is_sorted_descending(client):
+    org = client.post("/orgs", json={"name": "Acme", "headcount": 150, "seed": 21}).json()
+    resp = client.get(f"/orgs/{org['id']}/at-risk", params={"top_k": 25})
+    assert resp.status_code == 200
+    body = resp.json()
+    assert len(body["employees"]) == 25
+    probs = [e["turnover_probability"] for e in body["employees"]]
+    assert probs == sorted(probs, reverse=True)
+    assert all(e["risk_tier"] in {"low", "medium", "high"} for e in body["employees"])
+
+
+def test_at_risk_top_k_is_respected(client):
+    org = client.post("/orgs", json={"name": "Acme", "headcount": 50, "seed": 22}).json()
+    resp = client.get(f"/orgs/{org['id']}/at-risk", params={"top_k": 5})
+    assert resp.status_code == 200
+    assert len(resp.json()["employees"]) == 5
+
+
+def test_compare_intervention_targets_requested_count(client):
+    org = client.post("/orgs", json={"name": "Acme", "headcount": 200, "seed": 23}).json()
+    resp = client.post(f"/orgs/{org['id']}/at-risk/compare-intervention", json={
+        "intervention_type": "retention_bonus", "top_k": 15,
+        "horizon_ticks": 8, "replicates": 5, "seed": 23,
+    })
+    assert resp.status_code == 200
+    body = resp.json()
+    assert body["target_employee_count"] == 15
+    assert body["estimated_cost"] > 0  # retention_bonus always has a nonzero cost
+    assert body["quits_avoided_p05"] <= body["quits_avoided_p50"] <= body["quits_avoided_p95"]
+
+
+def test_compare_intervention_workload_relief_has_zero_cost(client):
+    org = client.post("/orgs", json={"name": "Acme", "headcount": 200, "seed": 24}).json()
+    resp = client.post(f"/orgs/{org['id']}/at-risk/compare-intervention", json={
+        "intervention_type": "workload_relief", "top_k": 10,
+        "horizon_ticks": 8, "replicates": 5, "seed": 24,
+    })
+    assert resp.status_code == 200
+    assert resp.json()["estimated_cost"] == 0
+
+
+def test_compare_intervention_manager_coaching_targets_teams(client):
+    org = client.post("/orgs", json={"name": "Acme", "headcount": 200, "seed": 25}).json()
+    resp = client.post(f"/orgs/{org['id']}/at-risk/compare-intervention", json={
+        "intervention_type": "manager_coaching", "top_k": 15,
+        "horizon_ticks": 8, "replicates": 5, "seed": 25,
+    })
+    assert resp.status_code == 200
+    assert resp.json()["target_employee_count"] == 15
+
+
+def test_compare_intervention_unknown_type_rejected(client):
+    org = client.post("/orgs", json={"name": "Acme", "headcount": 50, "seed": 26}).json()
+    resp = client.post(f"/orgs/{org['id']}/at-risk/compare-intervention", json={
+        "intervention_type": "not_a_real_type", "top_k": 5,
+    })
+    assert resp.status_code == 400
+
+
 def test_create_employee_then_delete(client):
     org = client.post("/orgs", json={"name": "Acme", "headcount": 20, "seed": 7}).json()
     depts = client.get(f"/orgs/{org['id']}/departments").json()

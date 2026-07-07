@@ -35,6 +35,7 @@ api = [
     "fastapi>=0.111",
     "uvicorn[standard]>=0.30",
     "sqlalchemy>=2.0",
+    "fpdf2>=2.7",
 ]
 
 [project.scripts]

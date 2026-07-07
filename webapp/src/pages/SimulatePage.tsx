@@ -2,7 +2,8 @@ import { useState } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { Link, useParams } from "react-router-dom";
 import { api } from "../api/client";
-import FanChart from "../components/FanChart";
+import DiagnosisResults from "../components/DiagnosisResults";
+import SimulationResults from "../components/SimulationResults";
 import {
   LEVELS,
   LIFE_EVENT_TYPES,
@@ -47,13 +48,6 @@ export default function SimulatePage() {
   const teams = teamsQuery.data ?? [];
   const emps = empsQuery.data ?? [];
 
-  const deptName = (id: number | null) => depts.find((d) => d.id === id)?.name ?? `dept ${id}`;
-  const teamName = (id: number | null) => teams.find((t) => t.id === id)?.name ?? `team ${id}`;
-  const segmentLabel = (segmentType: string, segmentId: string) => {
-    const id = Number(segmentId);
-    return segmentType === "department" ? deptName(id) : teamName(id);
-  };
-
   const [ticks, setTicks] = useState(12);
   const [replicates, setReplicates] = useState(1);
   const [seed, setSeed] = useState(1234);
@@ -77,6 +71,19 @@ export default function SimulatePage() {
   });
   const diagnoseMutation = useMutation({
     mutationFn: () => api.diagnose(orgId, { ticks, replicates: 1, seed, events }),
+  });
+  const exportPdfMutation = useMutation({
+    mutationFn: async () => {
+      const blob = await api.exportDiagnosisPdf(orgId, { ticks, replicates: 1, seed, events });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `diagnosis_org_${orgId}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    },
   });
 
   const addEvent = () => {
@@ -113,19 +120,14 @@ export default function SimulatePage() {
 
   const result = simulateMutation.data;
   const diagnosis = diagnoseMutation.data;
-  const metrics: { key: string; label: string; color: string }[] = [
-    { key: "active_headcount", label: "Active headcount", color: "#6d28d9" },
-    { key: "mean_engagement", label: "Mean engagement", color: "#0891b2" },
-    { key: "mean_productivity", label: "Mean productivity", color: "#16a34a" },
-    { key: "mean_turnover_risk", label: "Mean turnover risk", color: "#dc2626" },
-    { key: "mean_burnout", label: "Mean burnout", color: "#ea580c" },
-  ];
 
   return (
     <div className="page">
       <div className="row" style={{ marginBottom: 16 }}>
         <Link to="/">&larr; All orgs</Link>
         <Link to={`/orgs/${orgId}`}>&larr; Edit org</Link>
+        <Link to={`/orgs/${orgId}/at-risk`}>At-Risk employees &rarr;</Link>
+        <Link to={`/orgs/${orgId}/runs`}>Run history &rarr;</Link>
       </div>
       <h1>Simulate — {orgQuery.data?.name}</h1>
 
@@ -156,35 +158,37 @@ export default function SimulatePage() {
           employees; life events model things happening outside work.
         </p>
         {events.length > 0 && (
-          <table style={{ marginBottom: 12 }}>
-            <thead>
-              <tr>
-                <th>Tick</th>
-                <th>Type</th>
-                <th>Params</th>
-                <th></th>
-              </tr>
-            </thead>
-            <tbody>
+          <div className="data-list" style={{ marginBottom: 12 }}>
+            <div className="data-list-scroll">
+              <div className="data-list-header" style={{ gridTemplateColumns: "60px 150px 1fr 46px" }}>
+                <div>Tick</div>
+                <div>Type</div>
+                <div>Params</div>
+                <div></div>
+              </div>
               {events.map((e, i) => (
-                <tr key={i}>
-                  <td>{e.at_tick}</td>
-                  <td>{e.type}</td>
-                  <td>
+                <div
+                  className="data-list-row"
+                  key={i}
+                  style={{ gridTemplateColumns: "60px 150px 1fr 46px" }}
+                >
+                  <div className="data-list-cell">{e.at_tick}</div>
+                  <div className="data-list-cell">{e.type}</div>
+                  <div className="data-list-cell">
                     <code>{JSON.stringify(e.params)}</code>
-                  </td>
-                  <td>
+                  </div>
+                  <div className="data-list-cell actions">
                     <button
                       className="btn btn-danger"
                       onClick={() => setEvents(events.filter((_, j) => j !== i))}
                     >
                       &times;
                     </button>
-                  </td>
-                </tr>
+                  </div>
+                </div>
               ))}
-            </tbody>
-          </table>
+            </div>
+          </div>
         )}
 
         <div className="row">
@@ -321,6 +325,13 @@ export default function SimulatePage() {
         >
           {diagnoseMutation.isPending ? "Diagnosing..." : "Diagnose"}
         </button>
+        <button
+          className="btn"
+          disabled={exportPdfMutation.isPending}
+          onClick={() => exportPdfMutation.mutate()}
+        >
+          {exportPdfMutation.isPending ? "Exporting..." : "Export PDF"}
+        </button>
       </div>
       {simulateMutation.isError && (
         <p className="error">{(simulateMutation.error as Error).message}</p>
@@ -328,96 +339,20 @@ export default function SimulatePage() {
       {diagnoseMutation.isError && (
         <p className="error">{(diagnoseMutation.error as Error).message}</p>
       )}
+      {exportPdfMutation.isError && (
+        <p className="error">{(exportPdfMutation.error as Error).message}</p>
+      )}
 
       {diagnosis && (
-        <div style={{ marginTop: 24 }}>
-          <h2>Diagnosis — {diagnosis.problems_detected} problem(s) detected</h2>
-          {!diagnosis.model_available && (
-            <p className="muted">
-              No trained turnover model found — drivers are equally weighted rather than
-              ranked by the model's learned feature importance. Run{" "}
-              <code>scripts/train_turnover_model.py</code> for weighted attribution.
-            </p>
-          )}
-          {diagnosis.reports.length === 0 && (
-            <p className="muted">No threshold crossings detected in this run — looks stable.</p>
-          )}
-          {diagnosis.reports.map((report, i) => (
-            <div className="card" key={i}>
-              <h3>{report.problem.metric} @ week {report.problem.tick}</h3>
-              <p>{report.problem.description}</p>
-              {report.drivers.length > 0 && (
-                <>
-                  <p className="muted">Top contributing factors:</p>
-                  <ul>
-                    {report.drivers.map((d, j) => (
-                      <li key={j}>
-                        <strong>{segmentLabel(d.segment_type, d.segment_id)}</strong> ({d.segment_type}) —{" "}
-                        {d.feature}: {d.segment_mean.toFixed(2)} vs org avg {d.org_mean.toFixed(2)}{" "}
-                        ({d.deviation >= 0 ? "+" : ""}{d.deviation.toFixed(2)})
-                      </li>
-                    ))}
-                  </ul>
-                </>
-              )}
-              <p>{report.explanation}</p>
-              <div className="row">
-                <span className="tag">{report.recommendation.event_type.replace(/_/g, " ")}</span>
-                <button className="btn" onClick={() => applyRecommendation(report)}>
-                  + Add recommended event to scenario
-                </button>
-              </div>
-            </div>
-          ))}
-        </div>
+        <DiagnosisResults
+          diagnosis={diagnosis}
+          depts={depts}
+          teams={teams}
+          onApplyRecommendation={applyRecommendation}
+        />
       )}
 
-      {result && (
-        <div style={{ marginTop: 24 }}>
-          <h2>
-            Results — {result.mode === "monte_carlo" ? `${result.replicates} replicates` : "single run"}
-          </h2>
-          <div className="grid-2">
-            {metrics.map((m) => (
-              <div className="card" key={m.key}>
-                <FanChart
-                  rows={result.rows}
-                  metric={m.key}
-                  title={m.label}
-                  color={m.color}
-                  singleRun={result.mode === "single"}
-                />
-              </div>
-            ))}
-          </div>
-
-          <div className="card">
-            <h3>Raw data</h3>
-            <div className="table-wrap">
-              <table>
-                <thead>
-                  <tr>
-                    {result.columns.map((c) => (
-                      <th key={c}>{c}</th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {result.rows.map((row, i) => (
-                    <tr key={i}>
-                      {result.columns.map((c) => (
-                        <td key={c}>
-                          {typeof row[c] === "number" ? row[c].toFixed(3) : String(row[c])}
-                        </td>
-                      ))}
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </div>
-      )}
+      {result && <SimulationResults result={result} />}
     </div>
   );
 }
