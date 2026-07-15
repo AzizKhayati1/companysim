@@ -1,10 +1,11 @@
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Link, useParams } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import { api } from "../api/client";
 import DiagnosisResults from "../components/DiagnosisResults";
 import SimulationResults from "../components/SimulationResults";
 import type { DiagnoseResponse, RunType, SimulateResponse } from "../types";
+import { formatDateTime } from "../utils/format";
 
 export default function RunHistoryPage() {
   const { orgId: orgIdStr } = useParams();
@@ -50,16 +51,15 @@ export default function RunHistoryPage() {
 
   return (
     <div className="page">
-      <div className="row" style={{ marginBottom: 16 }}>
-        <Link to="/">&larr; All orgs</Link>
-        <Link to={`/orgs/${orgId}`}>Edit org</Link>
-        <Link to={`/orgs/${orgId}/simulate`}>&larr; Simulate</Link>
+      <div className="page-header">
+        <div>
+          <h1 className="page-title">Run History</h1>
+          <p className="page-subtitle">
+            {orgQuery.data?.name} — every Simulate and Diagnose run is saved automatically.
+            Reopen a past run to see its results again without re-running it.
+          </p>
+        </div>
       </div>
-      <h1>Run History — {orgQuery.data?.name}</h1>
-      <p className="muted">
-        Every Simulate and Diagnose run is saved automatically. Reopen a past run to see its
-        results again without re-running it.
-      </p>
 
       <div className="card">
         <div className="row" style={{ marginBottom: 10 }}>
@@ -96,7 +96,7 @@ export default function RunHistoryPage() {
                   style={{ gridTemplateColumns: "170px 100px 1fr 190px" }}
                 >
                   <div className="data-list-cell">
-                    {new Date(r.created_at).toLocaleString("en-US")}
+                    {formatDateTime(r.created_at)}
                   </div>
                   <div className="data-list-cell">
                     <span className="tag">{r.run_type}</span>

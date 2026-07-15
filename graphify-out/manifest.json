@@ -1,0 +1,557 @@
+{
+  ".claude/launch.json": {
+    "mtime": 1783085402.094653,
+    "ast_hash": "7a69f67b6bbf9b386ca06c12db0f1627",
+    "semantic_hash": "7a69f67b6bbf9b386ca06c12db0f1627"
+  },
+  ".claude/settings.local.json": {
+    "mtime": 1783799271.863673,
+    "ast_hash": "98e26f49dc559c9b0731ae9016523973",
+    "semantic_hash": "98e26f49dc559c9b0731ae9016523973"
+  },
+  "pyproject.toml": {
+    "mtime": 1783519035.825487,
+    "ast_hash": "f9dda949a25324b00406d1dbd44ee192",
+    "semantic_hash": "f9dda949a25324b00406d1dbd44ee192"
+  },
+  "scripts/build_datasets.py": {
+    "mtime": 1783000210.9950678,
+    "ast_hash": "26456ff6fc0ced127e341a9316eacd8b",
+    "semantic_hash": "26456ff6fc0ced127e341a9316eacd8b"
+  },
+  "scripts/build_turnover_cohort.py": {
+    "mtime": 1783081988.2229588,
+    "ast_hash": "8e43790c10d138deed814ec70f337ef8",
+    "semantic_hash": "8e43790c10d138deed814ec70f337ef8"
+  },
+  "scripts/demo.py": {
+    "mtime": 1782998155.890775,
+    "ast_hash": "e445c955a921394c2e98f14f1fb194f3",
+    "semantic_hash": "e445c955a921394c2e98f14f1fb194f3"
+  },
+  "scripts/scenario_demo.py": {
+    "mtime": 1782998871.592471,
+    "ast_hash": "7752a08c82a6389a5568591de5370266",
+    "semantic_hash": "7752a08c82a6389a5568591de5370266"
+  },
+  "scripts/train_models.py": {
+    "mtime": 1783082890.5055377,
+    "ast_hash": "62c45fbf893795e3d98838862883c57b",
+    "semantic_hash": "62c45fbf893795e3d98838862883c57b"
+  },
+  "scripts/train_turnover_model.py": {
+    "mtime": 1783334244.5212433,
+    "ast_hash": "87cdd97fa64b0f3f599e644ef910033a",
+    "semantic_hash": "87cdd97fa64b0f3f599e644ef910033a"
+  },
+  "src/companysim/__init__.py": {
+    "mtime": 1782998043.9358363,
+    "ast_hash": "7324b459e784a2273fb613541784c244",
+    "semantic_hash": "7324b459e784a2273fb613541784c244"
+  },
+  "src/companysim/agents/__init__.py": {
+    "mtime": 1782998099.9314215,
+    "ast_hash": "ab560ec107e54800e4d5a6b92e309598",
+    "semantic_hash": "ab560ec107e54800e4d5a6b92e309598"
+  },
+  "src/companysim/agents/employee.py": {
+    "mtime": 1783080563.8882632,
+    "ast_hash": "d5bf06b603451886928d8c353c484df0",
+    "semantic_hash": "d5bf06b603451886928d8c353c484df0"
+  },
+  "src/companysim/agents/team.py": {
+    "mtime": 1783001647.3504434,
+    "ast_hash": "8aad518ea13dcb4214e456ee153701d0",
+    "semantic_hash": "8aad518ea13dcb4214e456ee153701d0"
+  },
+  "src/companysim/api/__init__.py": {
+    "mtime": 1783085049.5114336,
+    "ast_hash": "d41d8cd98f00b204e9800998ecf8427e",
+    "semantic_hash": "d41d8cd98f00b204e9800998ecf8427e"
+  },
+  "src/companysim/api/converters.py": {
+    "mtime": 1783085190.394393,
+    "ast_hash": "bceac003c956cd9088392389f674cae5",
+    "semantic_hash": "bceac003c956cd9088392389f674cae5"
+  },
+  "src/companysim/api/database.py": {
+    "mtime": 1783085055.8796225,
+    "ast_hash": "54aa5ee5777074ab0a4f40a144da6f05",
+    "semantic_hash": "54aa5ee5777074ab0a4f40a144da6f05"
+  },
+  "src/companysim/api/db_models.py": {
+    "mtime": 1783931464.4553227,
+    "ast_hash": "3267dbb1bf34b59554bc8945425fca45",
+    "semantic_hash": "3267dbb1bf34b59554bc8945425fca45"
+  },
+  "src/companysim/api/main.py": {
+    "mtime": 1783411114.244643,
+    "ast_hash": "193555b2bf34e29395cafea8122d655c",
+    "semantic_hash": "193555b2bf34e29395cafea8122d655c"
+  },
+  "src/companysim/api/pdf_report.py": {
+    "mtime": 1783348331.531902,
+    "ast_hash": "1879266ec2af9c57b623eac9647cd1b5",
+    "semantic_hash": "1879266ec2af9c57b623eac9647cd1b5"
+  },
+  "src/companysim/api/risk_snapshots.py": {
+    "mtime": 1783931475.400215,
+    "ast_hash": "f7252508b839ae8185dc9782261bd9f3",
+    "semantic_hash": "f7252508b839ae8185dc9782261bd9f3"
+  },
+  "src/companysim/api/routers/__init__.py": {
+    "mtime": 1783085261.468184,
+    "ast_hash": "d41d8cd98f00b204e9800998ecf8427e",
+    "semantic_hash": "d41d8cd98f00b204e9800998ecf8427e"
+  },
+  "src/companysim/api/routers/at_risk.py": {
+    "mtime": 1783931406.4094722,
+    "ast_hash": "dce3a727f1587a80c35fbf85ff952283",
+    "semantic_hash": "dce3a727f1587a80c35fbf85ff952283"
+  },
+  "src/companysim/api/routers/departments.py": {
+    "mtime": 1783085280.4841802,
+    "ast_hash": "e4888e9787f290d6f18e0266afd7f8b7",
+    "semantic_hash": "e4888e9787f290d6f18e0266afd7f8b7"
+  },
+  "src/companysim/api/routers/diagnose.py": {
+    "mtime": 1783931436.826543,
+    "ast_hash": "6e53b5ec6b42373c9a1ae298e17d54c2",
+    "semantic_hash": "6e53b5ec6b42373c9a1ae298e17d54c2"
+  },
+  "src/companysim/api/routers/employees.py": {
+    "mtime": 1783931519.8227212,
+    "ast_hash": "d5a11e8e445e21041a237e9a47305cfd",
+    "semantic_hash": "d5a11e8e445e21041a237e9a47305cfd"
+  },
+  "src/companysim/api/routers/model.py": {
+    "mtime": 1783413777.2612698,
+    "ast_hash": "99f4afaea049e5c0ee4a7996885a760f",
+    "semantic_hash": "99f4afaea049e5c0ee4a7996885a760f"
+  },
+  "src/companysim/api/routers/orgs.py": {
+    "mtime": 1783085269.9524724,
+    "ast_hash": "10790b5dd4bd1705e15a83c492fed49e",
+    "semantic_hash": "10790b5dd4bd1705e15a83c492fed49e"
+  },
+  "src/companysim/api/routers/runs.py": {
+    "mtime": 1783411106.2588599,
+    "ast_hash": "99276143d5ebe9b46060bbe36ba6ecf8",
+    "semantic_hash": "99276143d5ebe9b46060bbe36ba6ecf8"
+  },
+  "src/companysim/api/routers/simulate.py": {
+    "mtime": 1783931491.1971774,
+    "ast_hash": "81f2ded5b490f356fad4038e9c19756a",
+    "semantic_hash": "81f2ded5b490f356fad4038e9c19756a"
+  },
+  "src/companysim/api/routers/teams.py": {
+    "mtime": 1783085292.2702553,
+    "ast_hash": "bd6ef58a266a9b38dc728866721b812b",
+    "semantic_hash": "bd6ef58a266a9b38dc728866721b812b"
+  },
+  "src/companysim/api/run_history.py": {
+    "mtime": 1783413567.2218032,
+    "ast_hash": "afd30725c7b66c1b7cacb5847eade517",
+    "semantic_hash": "afd30725c7b66c1b7cacb5847eade517"
+  },
+  "src/companysim/api/scenario_builder.py": {
+    "mtime": 1783087378.9083676,
+    "ast_hash": "c9236b49afe0857b5f0379e481549138",
+    "semantic_hash": "c9236b49afe0857b5f0379e481549138"
+  },
+  "src/companysim/api/schemas.py": {
+    "mtime": 1783931508.4572797,
+    "ast_hash": "69c84c75f2f115acb0e2ed8b95bf724d",
+    "semantic_hash": "69c84c75f2f115acb0e2ed8b95bf724d"
+  },
+  "src/companysim/api/scoring_frame.py": {
+    "mtime": 1783931378.644655,
+    "ast_hash": "647314e5ae6cca9637981ec742c3ae0d",
+    "semantic_hash": "647314e5ae6cca9637981ec742c3ae0d"
+  },
+  "src/companysim/api/seed.py": {
+    "mtime": 1783085177.1151502,
+    "ast_hash": "f177b87421a6942abdf656f9402af6b5",
+    "semantic_hash": "f177b87421a6942abdf656f9402af6b5"
+  },
+  "src/companysim/api/training_examples.py": {
+    "mtime": 1783414065.2521482,
+    "ast_hash": "cabe28506088db93536a0a887c919069",
+    "semantic_hash": "cabe28506088db93536a0a887c919069"
+  },
+  "src/companysim/cli.py": {
+    "mtime": 1782998154.5884528,
+    "ast_hash": "83607999f2465b17f6e682d8160e0844",
+    "semantic_hash": "83607999f2465b17f6e682d8160e0844"
+  },
+  "src/companysim/dashboard/__init__.py": {
+    "mtime": 1782998806.3824732,
+    "ast_hash": "d41d8cd98f00b204e9800998ecf8427e",
+    "semantic_hash": "d41d8cd98f00b204e9800998ecf8427e"
+  },
+  "src/companysim/dashboard/app.py": {
+    "mtime": 1783082302.2913718,
+    "ast_hash": "49ba5bf8189cf9ba1a2fc837fb66c10b",
+    "semantic_hash": "49ba5bf8189cf9ba1a2fc837fb66c10b"
+  },
+  "src/companysim/data/__init__.py": {
+    "mtime": 1783000100.0676253,
+    "ast_hash": "85e4a5767dd52c12f4ad475dbd9b2442",
+    "semantic_hash": "85e4a5767dd52c12f4ad475dbd9b2442"
+  },
+  "src/companysim/data/datasets.py": {
+    "mtime": 1783070870.130247,
+    "ast_hash": "a46b38e708a8daff36510c1950f75511",
+    "semantic_hash": "a46b38e708a8daff36510c1950f75511"
+  },
+  "src/companysim/data/generators.py": {
+    "mtime": 1782998609.3351326,
+    "ast_hash": "9539326e62fef44f9356362512649d10",
+    "semantic_hash": "9539326e62fef44f9356362512649d10"
+  },
+  "src/companysim/data/human_factors.py": {
+    "mtime": 1783080299.202271,
+    "ast_hash": "b48d27dc989ac0928ab4f1f577792259",
+    "semantic_hash": "b48d27dc989ac0928ab4f1f577792259"
+  },
+  "src/companysim/data/schemas.py": {
+    "mtime": 1782998056.3681176,
+    "ast_hash": "99814be4ba0d84f3c05a6889ed185d18",
+    "semantic_hash": "99814be4ba0d84f3c05a6889ed185d18"
+  },
+  "src/companysim/intervene.py": {
+    "mtime": 1783081579.8771558,
+    "ast_hash": "1d8f3bf7e89bbbab78827db0f91bd806",
+    "semantic_hash": "1d8f3bf7e89bbbab78827db0f91bd806"
+  },
+  "src/companysim/mc/__init__.py": {
+    "mtime": 1782998631.430287,
+    "ast_hash": "4f5b621406e1fdcbee78210216c0c3b8",
+    "semantic_hash": "4f5b621406e1fdcbee78210216c0c3b8"
+  },
+  "src/companysim/mc/runner.py": {
+    "mtime": 1783081412.6297233,
+    "ast_hash": "880990d8f643c4179c748078f7bb7654",
+    "semantic_hash": "880990d8f643c4179c748078f7bb7654"
+  },
+  "src/companysim/ml/__init__.py": {
+    "mtime": 1782998756.7711265,
+    "ast_hash": "168577052762a844400ef6c15744fb56",
+    "semantic_hash": "168577052762a844400ef6c15744fb56"
+  },
+  "src/companysim/ml/diagnostics.py": {
+    "mtime": 1783087239.270764,
+    "ast_hash": "582f489458ee4a72c5f815d023698e24",
+    "semantic_hash": "582f489458ee4a72c5f815d023698e24"
+  },
+  "src/companysim/ml/exit_notes.py": {
+    "mtime": 1783348134.9136028,
+    "ast_hash": "7b3071e96c35b38d2e0f7dbf8a18e5ae",
+    "semantic_hash": "7b3071e96c35b38d2e0f7dbf8a18e5ae"
+  },
+  "src/companysim/ml/features.py": {
+    "mtime": 1782998767.970587,
+    "ast_hash": "0cd2b573d9b17e9405ac438d360aaa94",
+    "semantic_hash": "0cd2b573d9b17e9405ac438d360aaa94"
+  },
+  "src/companysim/ml/gate.py": {
+    "mtime": 1783413702.8797092,
+    "ast_hash": "bad4d3ee0adaea626c19dd27e86b6603",
+    "semantic_hash": "bad4d3ee0adaea626c19dd27e86b6603"
+  },
+  "src/companysim/ml/registry.py": {
+    "mtime": 1783071115.260016,
+    "ast_hash": "ca119d93e83bffdc967d3900410f08a4",
+    "semantic_hash": "ca119d93e83bffdc967d3900410f08a4"
+  },
+  "src/companysim/ml/train.py": {
+    "mtime": 1783081972.1731997,
+    "ast_hash": "eae344f95cf8f5ae4b67f4a4c094f4bf",
+    "semantic_hash": "eae344f95cf8f5ae4b67f4a4c094f4bf"
+  },
+  "src/companysim/ml/turnover_features.py": {
+    "mtime": 1783071043.1699743,
+    "ast_hash": "e09e4ed36b38356692022e189fcad3be",
+    "semantic_hash": "e09e4ed36b38356692022e189fcad3be"
+  },
+  "src/companysim/ml/turnover_labels.py": {
+    "mtime": 1783070943.6641939,
+    "ast_hash": "ef6157434fb1ab66ef1ee6b7911b6df9",
+    "semantic_hash": "ef6157434fb1ab66ef1ee6b7911b6df9"
+  },
+  "src/companysim/model/__init__.py": {
+    "mtime": 1782998130.856061,
+    "ast_hash": "2e71f6872ec1e2554c48f32fc6f5c2e8",
+    "semantic_hash": "2e71f6872ec1e2554c48f32fc6f5c2e8"
+  },
+  "src/companysim/model/organization.py": {
+    "mtime": 1783413315.4964247,
+    "ast_hash": "286a7bbc2453bcc1d17565662a445167",
+    "semantic_hash": "286a7bbc2453bcc1d17565662a445167"
+  },
+  "src/companysim/scenarios/__init__.py": {
+    "mtime": 1783086936.5326204,
+    "ast_hash": "88cabf6fe7dcd82abc30437e3fefe153",
+    "semantic_hash": "88cabf6fe7dcd82abc30437e3fefe153"
+  },
+  "src/companysim/scenarios/events.py": {
+    "mtime": 1783086919.6959853,
+    "ast_hash": "93d1a8afeccba7f90e5e8ecaf0c2fd48",
+    "semantic_hash": "93d1a8afeccba7f90e5e8ecaf0c2fd48"
+  },
+  "src/companysim/scenarios/scenario.py": {
+    "mtime": 1782998534.4722002,
+    "ast_hash": "370d0578e8b5fbfcbf08b72e8b78b30a",
+    "semantic_hash": "370d0578e8b5fbfcbf08b72e8b78b30a"
+  },
+  "tests/__init__.py": {
+    "mtime": 1782998160.3948364,
+    "ast_hash": "d41d8cd98f00b204e9800998ecf8427e",
+    "semantic_hash": "d41d8cd98f00b204e9800998ecf8427e"
+  },
+  "tests/test_api.py": {
+    "mtime": 1783331719.54903,
+    "ast_hash": "ab0398956e64b5ef39e97f4f90bc65ec",
+    "semantic_hash": "ab0398956e64b5ef39e97f4f90bc65ec"
+  },
+  "tests/test_datasets.py": {
+    "mtime": 1783001839.9251544,
+    "ast_hash": "decf2c5fae767fc60937621ca7ca89bd",
+    "semantic_hash": "decf2c5fae767fc60937621ca7ca89bd"
+  },
+  "tests/test_diagnose_export.py": {
+    "mtime": 1783348519.2599063,
+    "ast_hash": "7653244ebafad25c5003d1c38b109bec",
+    "semantic_hash": "7653244ebafad25c5003d1c38b109bec"
+  },
+  "tests/test_diagnostics.py": {
+    "mtime": 1783087183.98723,
+    "ast_hash": "56b73562f5baa274cb24b32e47b17508",
+    "semantic_hash": "56b73562f5baa274cb24b32e47b17508"
+  },
+  "tests/test_exit_notes.py": {
+    "mtime": 1783347941.6048982,
+    "ast_hash": "cd6c1a5d429a89e52a0407761de07bb6",
+    "semantic_hash": "cd6c1a5d429a89e52a0407761de07bb6"
+  },
+  "tests/test_generators.py": {
+    "mtime": 1782998167.4435318,
+    "ast_hash": "2f227638851d9fa56e3e4b0963c06243",
+    "semantic_hash": "2f227638851d9fa56e3e4b0963c06243"
+  },
+  "tests/test_human_factors.py": {
+    "mtime": 1783001858.1079211,
+    "ast_hash": "a67aa1dd5b4ba5ce599e4122eb7666a6",
+    "semantic_hash": "a67aa1dd5b4ba5ce599e4122eb7666a6"
+  },
+  "tests/test_interventions.py": {
+    "mtime": 1783080701.9392712,
+    "ast_hash": "f07417695f7d81f0deb19ba1332533b3",
+    "semantic_hash": "f07417695f7d81f0deb19ba1332533b3"
+  },
+  "tests/test_ml.py": {
+    "mtime": 1782998864.130541,
+    "ast_hash": "cfe8ebcbe8fadf07a286eaf9855a2bf2",
+    "semantic_hash": "cfe8ebcbe8fadf07a286eaf9855a2bf2"
+  },
+  "tests/test_model_api.py": {
+    "mtime": 1783413900.6749513,
+    "ast_hash": "608ed36ffdb075848b005337665d9919",
+    "semantic_hash": "608ed36ffdb075848b005337665d9919"
+  },
+  "tests/test_monte_carlo.py": {
+    "mtime": 1782998856.5734873,
+    "ast_hash": "cfaa81bf0eaa29bc448b6cc8db346225",
+    "semantic_hash": "cfaa81bf0eaa29bc448b6cc8db346225"
+  },
+  "tests/test_new_events.py": {
+    "mtime": 1783087006.1455824,
+    "ast_hash": "f2e2d6aed86fd904f7e29d33782803cc",
+    "semantic_hash": "f2e2d6aed86fd904f7e29d33782803cc"
+  },
+  "tests/test_organization.py": {
+    "mtime": 1782998173.3101976,
+    "ast_hash": "c42ca5dabc9f28fc24643dc7068889db",
+    "semantic_hash": "c42ca5dabc9f28fc24643dc7068889db"
+  },
+  "tests/test_risk_snapshots.py": {
+    "mtime": 1783931564.3129978,
+    "ast_hash": "863280c104b511da5a5055791ba72f42",
+    "semantic_hash": "863280c104b511da5a5055791ba72f42"
+  },
+  "tests/test_run_history.py": {
+    "mtime": 1783411198.296821,
+    "ast_hash": "21112f9bc145902aee4da9af1638e6f1",
+    "semantic_hash": "21112f9bc145902aee4da9af1638e6f1"
+  },
+  "tests/test_scenarios.py": {
+    "mtime": 1782998848.609933,
+    "ast_hash": "5cdf1648a8d6f939bbfe483cf40c28b1",
+    "semantic_hash": "5cdf1648a8d6f939bbfe483cf40c28b1"
+  },
+  "tests/test_training_examples.py": {
+    "mtime": 1783414107.3479936,
+    "ast_hash": "57e6c53a9e7a902a294159014987265b",
+    "semantic_hash": "57e6c53a9e7a902a294159014987265b"
+  },
+  "tests/test_turnover_pipeline.py": {
+    "mtime": 1783082709.0003767,
+    "ast_hash": "78152b1d3256e22a2c4575c76c7e2349",
+    "semantic_hash": "78152b1d3256e22a2c4575c76c7e2349"
+  },
+  "webapp/.oxlintrc.json": {
+    "mtime": 1783085579.9052489,
+    "ast_hash": "029f4905006c1fffd96bc863e2d98d3e",
+    "semantic_hash": "029f4905006c1fffd96bc863e2d98d3e"
+  },
+  "webapp/package.json": {
+    "mtime": 1783085621.1345444,
+    "ast_hash": "af4e82bb4ae182acbba6c8247163ec98",
+    "semantic_hash": "af4e82bb4ae182acbba6c8247163ec98"
+  },
+  "webapp/src/App.tsx": {
+    "mtime": 1783931808.542591,
+    "ast_hash": "7aa98fc1f98f0b0074ed6cb2c81e729c",
+    "semantic_hash": "7aa98fc1f98f0b0074ed6cb2c81e729c"
+  },
+  "webapp/src/api/client.ts": {
+    "mtime": 1783931771.8746789,
+    "ast_hash": "f13f932d39e264d5f732a776afeec2b2",
+    "semantic_hash": "f13f932d39e264d5f732a776afeec2b2"
+  },
+  "webapp/src/components/DiagnosisResults.tsx": {
+    "mtime": 1783420122.8114154,
+    "ast_hash": "d2932e4779b68c95dc52b9c613e2d3b6",
+    "semantic_hash": "d2932e4779b68c95dc52b9c613e2d3b6"
+  },
+  "webapp/src/components/FanChart.tsx": {
+    "mtime": 1783085808.3026915,
+    "ast_hash": "613d8dd581017af8f459901da2b7f4e3",
+    "semantic_hash": "613d8dd581017af8f459901da2b7f4e3"
+  },
+  "webapp/src/components/SimulationResults.tsx": {
+    "mtime": 1783420087.0809584,
+    "ast_hash": "5abc0182214d3ecfe54a5d97a72f57c9",
+    "semantic_hash": "5abc0182214d3ecfe54a5d97a72f57c9"
+  },
+  "webapp/src/main.tsx": {
+    "mtime": 1783085663.5260108,
+    "ast_hash": "eb9b1ae939fb94c9750c63f3bcdaa37e",
+    "semantic_hash": "eb9b1ae939fb94c9750c63f3bcdaa37e"
+  },
+  "webapp/src/pages/AtRiskPage.tsx": {
+    "mtime": 1783931823.354593,
+    "ast_hash": "1831c375a5de3433b8664625cfa7c14a",
+    "semantic_hash": "1831c375a5de3433b8664625cfa7c14a"
+  },
+  "webapp/src/pages/EmployeeRiskHistoryPage.tsx": {
+    "mtime": 1783931798.5925958,
+    "ast_hash": "3faf241e71f5898f8fdda88f3c1e9d5d",
+    "semantic_hash": "3faf241e71f5898f8fdda88f3c1e9d5d"
+  },
+  "webapp/src/pages/OrgEditorPage.tsx": {
+    "mtime": 1783420018.8547044,
+    "ast_hash": "54b769df88d6b6060daa3170b533a697",
+    "semantic_hash": "54b769df88d6b6060daa3170b533a697"
+  },
+  "webapp/src/pages/OrgListPage.tsx": {
+    "mtime": 1783419951.4519894,
+    "ast_hash": "c0e9f69494d785440a06920dcffa89cc",
+    "semantic_hash": "c0e9f69494d785440a06920dcffa89cc"
+  },
+  "webapp/src/pages/RunHistoryPage.tsx": {
+    "mtime": 1783420057.7458014,
+    "ast_hash": "90e5c79ef761d932d8a5d4c48a89395e",
+    "semantic_hash": "90e5c79ef761d932d8a5d4c48a89395e"
+  },
+  "webapp/src/pages/SimulatePage.tsx": {
+    "mtime": 1783420102.7091012,
+    "ast_hash": "24049f647a3401769541e806091bd6a2",
+    "semantic_hash": "24049f647a3401769541e806091bd6a2"
+  },
+  "webapp/src/pages/TrainModelPage.tsx": {
+    "mtime": 1783420076.1267314,
+    "ast_hash": "7d854c9e3b03dfda23d2aaa6deba823c",
+    "semantic_hash": "7d854c9e3b03dfda23d2aaa6deba823c"
+  },
+  "webapp/src/types.ts": {
+    "mtime": 1783931762.2693937,
+    "ast_hash": "d1613a13714e8712b4cebc5ba9350641",
+    "semantic_hash": "d1613a13714e8712b4cebc5ba9350641"
+  },
+  "webapp/tsconfig.app.json": {
+    "mtime": 1783085579.9371152,
+    "ast_hash": "5f2dafd737dea8a4ddcbb10f5113ac5a",
+    "semantic_hash": "5f2dafd737dea8a4ddcbb10f5113ac5a"
+  },
+  "webapp/tsconfig.json": {
+    "mtime": 1783085579.9467695,
+    "ast_hash": "a3d39fa780ebff65444de257f291ce6c",
+    "semantic_hash": "a3d39fa780ebff65444de257f291ce6c"
+  },
+  "webapp/tsconfig.node.json": {
+    "mtime": 1783085579.9529414,
+    "ast_hash": "f9cb81ddcea69ffdab672fc8c48dca66",
+    "semantic_hash": "f9cb81ddcea69ffdab672fc8c48dca66"
+  },
+  "webapp/vite.config.ts": {
+    "mtime": 1783085847.207996,
+    "ast_hash": "4232d7aca08266ae8828275794076bc4",
+    "semantic_hash": "4232d7aca08266ae8828275794076bc4"
+  },
+  "README.md": {
+    "mtime": 1783082792.8344204,
+    "ast_hash": "bd63c97a7be56a9ddc9a55c2c931e0fb",
+    "semantic_hash": "bd63c97a7be56a9ddc9a55c2c931e0fb"
+  },
+  "docs/diagnosis_thresholds.md": {
+    "mtime": 1783089280.0278525,
+    "ast_hash": "bf20b18d75050b25d99e23d4e2195088",
+    "semantic_hash": "bf20b18d75050b25d99e23d4e2195088"
+  },
+  "docs/project_overview.md": {
+    "mtime": 1783521932.8780024,
+    "ast_hash": "ad447b18807497995afdf7abcc93187e",
+    "semantic_hash": "ad447b18807497995afdf7abcc93187e"
+  },
+  "webapp/README.md": {
+    "mtime": 1783085579.9750812,
+    "ast_hash": "10495bfcc6c568eca4dab6dd5df795d3",
+    "semantic_hash": "10495bfcc6c568eca4dab6dd5df795d3"
+  },
+  "webapp/index.html": {
+    "mtime": 1783085892.3304074,
+    "ast_hash": "a28f55eef2c5e242572a96945c2f2ba0",
+    "semantic_hash": "a28f55eef2c5e242572a96945c2f2ba0"
+  },
+  "docs/project_overview.pdf": {
+    "mtime": 1783419005.5250652,
+    "ast_hash": "b79852274c1b695c07e8007dc31f5a74",
+    "semantic_hash": "b79852274c1b695c07e8007dc31f5a74"
+  },
+  "webapp/public/favicon.svg": {
+    "mtime": 1783085580.0575118,
+    "ast_hash": "7e840862161341271697daa99a40d76b",
+    "semantic_hash": "7e840862161341271697daa99a40d76b"
+  },
+  "webapp/public/icons.svg": {
+    "mtime": 1783085580.0948951,
+    "ast_hash": "3b4fcfcf393eca4d264dca4a4663bc37",
+    "semantic_hash": "3b4fcfcf393eca4d264dca4a4663bc37"
+  },
+  "webapp/src/assets/hero.png": {
+    "mtime": 1783085580.0112462,
+    "ast_hash": "aead493361b27e7510691c5d7072dfc1",
+    "semantic_hash": "aead493361b27e7510691c5d7072dfc1"
+  },
+  "webapp/src/assets/react.svg": {
+    "mtime": 1783085580.1311724,
+    "ast_hash": "f0402b67b6ce880f65666bb49e841696",
+    "semantic_hash": "f0402b67b6ce880f65666bb49e841696"
+  },
+  "webapp/src/assets/vite.svg": {
+    "mtime": 1783085580.1596391,
+    "ast_hash": "9960a24288958394ac50e57ff638b036",
+    "semantic_hash": "9960a24288958394ac50e57ff638b036"
+  }
+}

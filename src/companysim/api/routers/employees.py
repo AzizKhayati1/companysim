@@ -6,10 +6,11 @@ from sqlalchemy.orm import Session
 from companysim.api.database import get_db
 from companysim.api.db_models import (
     EmployeeRecord,
+    EmployeeRiskSnapshot,
     EmployeeWellbeingRecord,
     OrgRecord,
 )
-from companysim.api.schemas import EmployeeIn, EmployeeOut
+from companysim.api.schemas import EmployeeIn, EmployeeOut, RiskHistoryPointOut
 
 router = APIRouter(prefix="/orgs/{org_id}/employees", tags=["employees"])
 
@@ -138,3 +139,22 @@ def delete_employee(org_id: int, emp_id: int, db: Session = Depends(get_db)):
     emp = _get_emp_or_404(db, org_id, emp_id)
     db.delete(emp)
     db.commit()
+
+
+@router.get("/{emp_id}/risk-history", response_model=list[RiskHistoryPointOut])
+def get_risk_history(org_id: int, emp_id: int, db: Session = Depends(get_db)):
+    _get_emp_or_404(db, org_id, emp_id)
+    rows = (
+        db.query(EmployeeRiskSnapshot)
+        .filter_by(org_id=org_id, employee_id=emp_id)
+        .order_by(EmployeeRiskSnapshot.computed_at)
+        .all()
+    )
+    return [
+        RiskHistoryPointOut(
+            run_id=r.run_id, computed_at=r.computed_at.isoformat(),
+            turnover_probability=r.turnover_probability, risk_tier=r.risk_tier,
+            model_available=r.model_available,
+        )
+        for r in rows
+    ]

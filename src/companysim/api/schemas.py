@@ -228,3 +228,19 @@ class RunSummaryOut(BaseModel):
 class RunDetailOut(RunSummaryOut):
     request: dict[str, Any]
     response: dict[str, Any]
+
+
+class RiskHistoryPointOut(BaseModel):
+    run_id: int
+    computed_at: str
+    turnover_probability: float
+    risk_tier: str
+    model_available: bool
+
+
+class RiskTrendPointOut(BaseModel):
+    run_id: int
+    computed_at: str
+    mean_risk: float
+    employee_count: int
+    model_available: bool

@@ -27,8 +27,19 @@ class Base(DeclarativeBase):
 
 
 def init_db() -> None:
-    from companysim.api import db_models  # noqa: F401  (register models on Base)
-    Base.metadata.create_all(bind=engine)
+    """Bring the DB schema up to date via Alembic migrations.
+
+    Runs on every app startup (see ``main.py``'s lifespan) — a no-op if
+    already at head, or applies pending migrations on a fresh/stale DB.
+    Replaces a bare ``Base.metadata.create_all()``, which had no schema
+    versioning and let the DB silently drift out of sync with the ORM
+    models (see migrations/README and pyproject.toml's alembic dependency).
+    """
+    from alembic import command
+    from alembic.config import Config
+
+    alembic_cfg = Config("alembic.ini")
+    command.upgrade(alembic_cfg, "head")
 
 
 def get_db() -> Generator[Session, None, None]:

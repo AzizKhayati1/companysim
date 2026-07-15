@@ -1,0 +1,236 @@
+import { useQuery } from "@tanstack/react-query";
+import { Link, useParams } from "react-router-dom";
+import {
+  CartesianGrid,
+  Line,
+  LineChart,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from "recharts";
+import { api } from "../api/client";
+import { formatDateTime } from "../utils/format";
+
+const TIER_COLOR: Record<string, string> = {
+  high: "var(--danger)",
+  medium: "#d97706",
+  low: "var(--success)",
+};
+
+const TIER_RECOMMENDATION: Record<string, string> = {
+  high: "This person's predicted risk is high. A targeted retention conversation — informed " +
+    "by whichever driver below is most elevated — is worth prioritizing before the next cycle.",
+  medium: "Risk is moderate and worth watching. A check-in with their manager now can prevent " +
+    "it from escalating further.",
+  low: "Risk is low. No action needed — continue regular pulse check-ins.",
+};
+
+function factorColor(v: number): string {
+  if (v > 0.66) return "var(--danger)";
+  if (v > 0.4) return "#d97706";
+  return "var(--success)";
+}
+
+export default function EmployeeRiskHistoryPage() {
+  const { orgId: orgIdStr, employeeId: employeeIdStr } = useParams();
+  const orgId = Number(orgIdStr);
+  const employeeId = Number(employeeIdStr);
+
+  const orgQuery = useQuery({ queryKey: ["org", orgId], queryFn: () => api.getOrg(orgId) });
+  const employeesQuery = useQuery({
+    queryKey: ["employees", orgId],
+    queryFn: () => api.listEmployees(orgId),
+  });
+  const deptsQuery = useQuery({
+    queryKey: ["departments", orgId],
+    queryFn: () => api.listDepartments(orgId),
+  });
+  const teamsQuery = useQuery({
+    queryKey: ["teams", orgId],
+    queryFn: () => api.listTeams(orgId),
+  });
+  const historyQuery = useQuery({
+    queryKey: ["risk-history", orgId, employeeId],
+    queryFn: () => api.getEmployeeRiskHistory(orgId, employeeId),
+  });
+
+  const depts = deptsQuery.data ?? [];
+  const teams = teamsQuery.data ?? [];
+  const deptName = (id: number) => depts.find((d) => d.id === id)?.name ?? `dept ${id}`;
+  const teamName = (id: number) => teams.find((t) => t.id === id)?.name ?? `team ${id}`;
+
+  const employee = employeesQuery.data?.find((e) => e.id === employeeId);
+  const points = historyQuery.data ?? [];
+  const latest = points[points.length - 1];
+  const tier = latest?.risk_tier ?? "low";
+  const initials = employee
+    ? employee.full_name.split(" ").map((p) => p[0]).join("").slice(0, 2).toUpperCase()
+    : "--";
+
+  const drivers = employee
+    ? [
+        { label: "Workload", raw: employee.workload_perceived, bar: employee.workload_perceived },
+        {
+          label: "Manager support", raw: employee.manager_support_score,
+          bar: 1 - employee.manager_support_score,
+        },
+        {
+          label: "Psychological safety", raw: employee.psychological_safety_perceived,
+          bar: 1 - employee.psychological_safety_perceived,
+        },
+        {
+          label: "Financial security", raw: employee.financial_security_score,
+          bar: 1 - employee.financial_security_score,
+        },
+      ]
+    : [];
+
+  const chartData = points.map((p) => ({
+    date: new Date(p.computed_at).toLocaleDateString("en-US"),
+    probability: Math.round(p.turnover_probability * 1000) / 10,
+  }));
+
+  return (
+    <div className="page">
+      <Link to={`/orgs/${orgId}/at-risk`} style={{ display: "inline-block", marginBottom: 18 }}>
+        &larr; Back to Retention Risk
+      </Link>
+
+      <div className="profile-grid">
+        <div className="card">
+          <div className="profile-avatar">{initials}</div>
+          <h2 style={{ marginBottom: 2 }}>{employee?.full_name ?? `Employee ${employeeId}`}</h2>
+          <p className="muted" style={{ marginBottom: 14 }}>
+            {orgQuery.data?.name}
+            {employee && (
+              <>
+                <br />
+                {employee.role} · {deptName(employee.department_id)} · {teamName(employee.team_id)}
+              </>
+            )}
+          </p>
+          {latest && (
+            <span
+              className="tag"
+              style={{
+                color: TIER_COLOR[tier], background: "transparent", marginBottom: 18,
+                display: "inline-block",
+              }}
+            >
+              {tier} risk
+            </span>
+          )}
+
+          {drivers.length > 0 && (
+            <div style={{ marginTop: 18 }}>
+              {drivers.map((d) => (
+                <div className="driver-bar-row" key={d.label}>
+                  <div className="driver-bar-labels">
+                    <span className="muted">{d.label}</span>
+                    <strong>{(d.raw * 100).toFixed(0)}%</strong>
+                  </div>
+                  <div className="risk-bar-track" style={{ width: "100%" }}>
+                    <div
+                      className="risk-bar-fill"
+                      style={{ width: `${d.bar * 100}%`, background: factorColor(d.bar) }}
+                    />
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        <div>
+          <div className="card">
+            <h2 style={{ marginTop: 0 }}>Risk score over time</h2>
+            <p className="muted">
+              One point per Simulate/Diagnose run against this org, scored at the moment the run
+              happened — a rising trend means recent org changes are pushing this person's
+              predicted risk up.
+            </p>
+            {historyQuery.isLoading && <p className="muted">Loading...</p>}
+            {!historyQuery.isLoading && points.length === 0 && (
+              <p className="muted">
+                No runs yet for this org — go run a{" "}
+                <Link to={`/orgs/${orgId}/simulate`}>Simulate</Link> or Diagnose first.
+              </p>
+            )}
+            {points.length > 0 && (
+              <ResponsiveContainer width="100%" height={220}>
+                <LineChart data={chartData} margin={{ top: 5, right: 10, left: 0, bottom: 5 }}>
+                  <CartesianGrid strokeDasharray="3 3" opacity={0.2} />
+                  <XAxis dataKey="date" fontSize={11} />
+                  <YAxis fontSize={11} unit="%" domain={[0, 100]} />
+                  <Tooltip formatter={(value: number) => [`${value}%`, "Turnover probability"]} />
+                  <Line
+                    type="monotone"
+                    dataKey="probability"
+                    stroke={TIER_COLOR[tier]}
+                    strokeWidth={2}
+                    dot={{ r: 4 }}
+                  />
+                </LineChart>
+              </ResponsiveContainer>
+            )}
+          </div>
+
+          {latest && (
+            <div className="card">
+              <h2 style={{ marginTop: 0 }}>Recommended next step</h2>
+              <p className="muted">{TIER_RECOMMENDATION[tier]}</p>
+              <Link to={`/orgs/${orgId}/at-risk`} className="btn btn-primary">
+                Open in what-if planner
+              </Link>
+            </div>
+          )}
+
+          {points.length > 0 && (
+            <div className="card">
+              <h2 style={{ marginTop: 0 }}>Snapshots</h2>
+              <div className="data-list">
+                <div className="data-list-scroll">
+                  <div
+                    className="data-list-header"
+                    style={{ gridTemplateColumns: "170px 130px 90px 140px" }}
+                  >
+                    <div>When</div>
+                    <div>Risk</div>
+                    <div>Tier</div>
+                    <div>Source</div>
+                  </div>
+                  {[...points].reverse().map((p, i) => (
+                    <div
+                      className="data-list-row"
+                      key={`${p.run_id}-${i}`}
+                      style={{ gridTemplateColumns: "170px 130px 90px 140px" }}
+                    >
+                      <div className="data-list-cell">
+                        {formatDateTime(p.computed_at)}
+                      </div>
+                      <div className="data-list-cell">
+                        {(p.turnover_probability * 100).toFixed(1)}%
+                      </div>
+                      <div className="data-list-cell">
+                        <span
+                          className="tag"
+                          style={{ color: TIER_COLOR[p.risk_tier], background: "transparent" }}
+                        >
+                          {p.risk_tier}
+                        </span>
+                      </div>
+                      <div className="data-list-cell">
+                        {p.model_available ? "trained model" : "sim latent (fallback)"}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}

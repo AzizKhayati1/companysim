@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Link } from "react-router-dom";
 import { api } from "../api/client";
 
 function EvalTable({ title, evalData }: { title: string; evalData: Record<string, number> | null }) {
@@ -42,18 +41,19 @@ export default function TrainModelPage() {
 
   return (
     <div className="page">
-      <div className="row" style={{ marginBottom: 16 }}>
-        <Link to="/">&larr; All orgs</Link>
+      <div className="page-header">
+        <div>
+          <h1 className="page-title">Turnover Model</h1>
+          <p className="page-subtitle">
+            Retrain the production turnover-risk model used by every org's At-Risk page and
+            diagnosis root-cause attribution. Trained on a freshly generated synthetic cohort
+            each time, blended with every labeled example collected in the background from real
+            Simulate/Diagnose runs across all orgs, then gated against a fixed evaluation
+            benchmark before being promoted — the model keeps learning from actual usage without
+            ever promoting a regression.
+          </p>
+        </div>
       </div>
-      <h1>Turnover Model</h1>
-      <p className="muted">
-        Retrain the production turnover-risk model used by every org's At-Risk page and
-        diagnosis root-cause attribution. Trained on a freshly generated synthetic cohort each
-        time, blended with every labeled example collected in the background from real
-        Simulate/Diagnose runs across all orgs, then gated against a fixed evaluation benchmark
-        before being promoted — the model keeps learning from actual usage without ever
-        promoting a regression.
-      </p>
 
       <div className="card">
         <h2>Current production model</h2>

@@ -16,53 +16,36 @@ silently pretending to be a real prediction.
 """
 from __future__ import annotations
 
-from pathlib import Path
-
 import pandas as pd
 from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from companysim.api.converters import emp_str_id, org_to_pydantic, team_str_id
 from companysim.api.database import get_db
-from companysim.api.db_models import EmployeeRecord
-from companysim.api.scoring_frame import build_scoring_frame
+from companysim.api.db_models import EmployeeRecord, EmployeeRiskSnapshot
+from companysim.api.scoring_frame import build_scoring_frame, score_current_employees
 from companysim.api.schemas import (
     AtRiskEmployeeOut,
     AtRiskResponse,
     CompareInterventionRequest,
     CompareInterventionResponse,
+    RiskTrendPointOut,
 )
 from companysim.intervene import compare_intervention as run_compare_intervention
-from companysim.ml.registry import TurnoverModelBundle, load_bundle
-from companysim.ml.turnover_features import FEATURE_COLUMNS
 from companysim.scenarios.events import ManagerCoaching, RetentionBonus, WorkloadRelief
 from companysim.scenarios.scenario import Scenario
 
 router = APIRouter(prefix="/orgs/{org_id}/at-risk", tags=["at-risk"])
 
-PRODUCTION_MODEL_PATH = Path("models/turnover_production.joblib")
-
-
-def _load_turnover_bundle() -> TurnoverModelBundle | None:
-    if not PRODUCTION_MODEL_PATH.exists():
-        return None
-    try:
-        return load_bundle(PRODUCTION_MODEL_PATH, expected_type=TurnoverModelBundle)
-    except Exception:
-        return None
-
 
 def _rank_employee_ids(db: Session, org_id: int, frame: pd.DataFrame) -> tuple[list[int], bool]:
     """Return (employee ids ranked worst-first, whether a real model was used)."""
-    bundle = _load_turnover_bundle()
-    if bundle is not None and not frame.empty:
-        scored = bundle.predict_risk(frame[["employee_id", *FEATURE_COLUMNS]])
-        ranked = scored.sort_values("turnover_probability", ascending=False)
-        return ranked["employee_id"].astype(int).tolist(), True
-
-    raw = db.query(EmployeeRecord).filter(EmployeeRecord.org_id == org_id).all()
-    ranked_raw = sorted(raw, key=lambda e: e.turnover_risk, reverse=True)
-    return [e.id for e in ranked_raw], False
+    if frame.empty:
+        return [], False
+    scored, model_used = score_current_employees(db, org_id)
+    ranked = scored.sort_values("turnover_probability", ascending=False)
+    return ranked["employee_id"].astype(int).tolist(), model_used
 
 
 @router.get("", response_model=AtRiskResponse)
@@ -71,25 +54,8 @@ def get_at_risk(org_id: int, top_k: int = 50, db: Session = Depends(get_db)):
     if frame.empty:
         raise HTTPException(404, "org not found or has no employees")
 
-    bundle = _load_turnover_bundle()
-    if bundle is not None:
-        scored = bundle.predict_risk(frame[["employee_id", *FEATURE_COLUMNS]])
-        ranked = scored.merge(
-            frame[["employee_id", "full_name", "department_id", "team_id", "level"]],
-            on="employee_id",
-        )
-        ranked = ranked.sort_values("turnover_probability", ascending=False)
-    else:
-        raw = db.query(EmployeeRecord).filter(EmployeeRecord.org_id == org_id).all()
-        risk_by_id = {e.id: e.turnover_risk for e in raw}
-        ranked = frame.copy()
-        ranked["turnover_probability"] = ranked["employee_id"].map(risk_by_id)
-        ranked["risk_tier"] = pd.cut(
-            ranked["turnover_probability"], bins=[-1, 0.25, 0.5, 2], labels=["low", "medium", "high"],
-        ).astype(str)
-        ranked = ranked.sort_values("turnover_probability", ascending=False)
-
-    ranked = ranked.head(top_k)
+    scored, model_used = score_current_employees(db, org_id)
+    ranked = scored.sort_values("turnover_probability", ascending=False).head(top_k)
     employees_out = [
         AtRiskEmployeeOut(
             employee_id=int(row["employee_id"]), full_name=row["full_name"],
@@ -99,7 +65,38 @@ def get_at_risk(org_id: int, top_k: int = 50, db: Session = Depends(get_db)):
         )
         for _, row in ranked.iterrows()
     ]
-    return AtRiskResponse(model_available=bundle is not None, employees=employees_out)
+    return AtRiskResponse(model_available=model_used, employees=employees_out)
+
+
+@router.get("/trend", response_model=list[RiskTrendPointOut])
+def get_risk_trend(org_id: int, db: Session = Depends(get_db)):
+    """Org-wide mean risk per run, for the Dashboard's trend chart.
+
+    Aggregates the same ``EmployeeRiskSnapshot`` rows collected from every
+    Simulate/Diagnose run (see ``api/risk_snapshots.py``) — no new
+    persistence, just a group-by-run rollup of data already being recorded.
+    """
+    rows = (
+        db.query(
+            EmployeeRiskSnapshot.run_id,
+            func.min(EmployeeRiskSnapshot.computed_at).label("computed_at"),
+            func.avg(EmployeeRiskSnapshot.turnover_probability).label("mean_risk"),
+            func.count(EmployeeRiskSnapshot.id).label("employee_count"),
+            func.max(EmployeeRiskSnapshot.model_available).label("model_available"),
+        )
+        .filter(EmployeeRiskSnapshot.org_id == org_id)
+        .group_by(EmployeeRiskSnapshot.run_id)
+        .order_by(func.min(EmployeeRiskSnapshot.computed_at))
+        .all()
+    )
+    return [
+        RiskTrendPointOut(
+            run_id=r.run_id, computed_at=r.computed_at.isoformat(),
+            mean_risk=float(r.mean_risk), employee_count=int(r.employee_count),
+            model_available=bool(r.model_available),
+        )
+        for r in rows
+    ]
 
 
 @router.post("/compare-intervention", response_model=CompareInterventionResponse)

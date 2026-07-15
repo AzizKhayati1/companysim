@@ -36,6 +36,14 @@ api = [
     "uvicorn[standard]>=0.30",
     "sqlalchemy>=2.0",
     "fpdf2>=2.7",
+    "alembic>=1.13",
+]
+notebooks = [
+    "jupyter>=1.0",
+    "nbformat>=5.9",
+    "nbconvert>=7.16",
+    "ipykernel>=6.29",
+    "plotly>=5.22",
 ]
 
 [project.scripts]

@@ -9,6 +9,8 @@ import type {
   EmployeeOut,
   ModelStatusResponse,
   OrgSummary,
+  RiskHistoryPoint,
+  RiskTrendPoint,
   RunDetailOut,
   RunSummaryOut,
   RunType,
@@ -77,6 +79,8 @@ export const api = {
     request<void>(`/orgs/${orgId}/teams/${teamId}`, { method: "DELETE" }),
 
   listEmployees: (orgId: number) => request<EmployeeOut[]>(`/orgs/${orgId}/employees`),
+  getEmployeeRiskHistory: (orgId: number, empId: number) =>
+    request<RiskHistoryPoint[]>(`/orgs/${orgId}/employees/${empId}/risk-history`),
   createEmployee: (orgId: number, body: EmployeeIn) =>
     request<EmployeeOut>(`/orgs/${orgId}/employees`, {
       method: "POST",
@@ -123,6 +127,9 @@ export const api = {
 
   getAtRisk: (orgId: number, topK: number) =>
     request<AtRiskResponse>(`/orgs/${orgId}/at-risk?top_k=${topK}`),
+
+  getRiskTrend: (orgId: number) =>
+    request<RiskTrendPoint[]>(`/orgs/${orgId}/at-risk/trend`),
 
   compareIntervention: (orgId: number, body: CompareInterventionRequest) =>
     request<CompareInterventionResponse>(`/orgs/${orgId}/at-risk/compare-intervention`, {
