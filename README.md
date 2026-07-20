@@ -61,7 +61,7 @@ Working end-to-end, verified in the browser via the Streamlit dashboard:
 ```bash
 python -m venv .venv
 .venv\Scripts\activate       # Windows
-pip install -e ".[dev,ml,viz]"
+pip install -e ".[dev,ml,viz,api]"
 
 # Basic sim demo
 python scripts/demo.py
@@ -79,6 +79,20 @@ python scripts/train_turnover_model.py
 streamlit run src/companysim/dashboard/app.py
 
 pytest
+```
+
+### Webapp/API database migrations
+
+The webapp's SQLite DB (`data/app.db`) is schema-versioned with Alembic —
+`api/database.py::init_db()` runs `alembic upgrade head` automatically on
+every server startup, so a fresh clone gets the full schema and an
+existing DB just picks up anything new. When you change a model in
+`api/db_models.py`, generate the matching migration and commit it
+alongside the model change:
+
+```bash
+alembic revision --autogenerate -m "describe the change"
+# review the generated script in migrations/versions/ before committing
 ```
 
 ## Layout

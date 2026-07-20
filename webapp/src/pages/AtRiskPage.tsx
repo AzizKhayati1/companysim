@@ -3,6 +3,7 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import { Link, useParams } from "react-router-dom";
 import { api } from "../api/client";
 import type { InterventionType } from "../types";
+import { formatCurrency } from "../utils/format";
 
 const INTERVENTIONS: { value: InterventionType; label: string; magnitudeLabel: string }[] = [
   { value: "retention_bonus", label: "Retention Bonus", magnitudeLabel: "Amount %" },
@@ -67,19 +68,26 @@ export default function AtRiskPage() {
   const result = compareMutation.data;
   const activeIntervention = INTERVENTIONS.find((i) => i.value === interventionType)!;
 
+  const [layout, setLayout] = useState<"list" | "board">("list");
+  const tierColumns = (["high", "medium", "low"] as const).map((tier) => ({
+    tier,
+    label: tier[0].toUpperCase() + tier.slice(1),
+    color: TIER_COLOR[tier],
+    employees: employees.filter((e) => e.risk_tier === tier),
+  }));
+
   return (
     <div className="page">
-      <div className="row" style={{ marginBottom: 16 }}>
-        <Link to="/">&larr; All orgs</Link>
-        <Link to={`/orgs/${orgId}`}>Edit org</Link>
-        <Link to={`/orgs/${orgId}/simulate`}>Simulate</Link>
+      <div className="page-header">
+        <div>
+          <h1 className="page-title">Retention Risk</h1>
+          <p className="page-subtitle">
+            {orgQuery.data?.name} — who's likely to leave, and does a targeted intervention
+            actually reduce it? Ranked by the trained turnover model when one is available;
+            falls back to the simulation's own risk estimate otherwise.
+          </p>
+        </div>
       </div>
-      <h1>At-Risk Employees — {orgQuery.data?.name}</h1>
-      <p className="muted">
-        Who's likely to leave, and does a targeted intervention actually reduce it? Ranked by
-        the trained turnover model when one is available; falls back to the simulation's own
-        risk estimate otherwise.
-      </p>
 
       {atRiskQuery.data && !atRiskQuery.data.model_available && (
         <div className="card" style={{ borderColor: "#d97706" }}>
@@ -91,23 +99,38 @@ export default function AtRiskPage() {
         </div>
       )}
 
-      <div className="card">
-        <div className="row" style={{ marginBottom: 10 }}>
-          <h2 style={{ margin: 0 }}>Ranked employees</h2>
-          <label>
-            Show top{" "}
-            <input
-              type="number"
-              min={5}
-              max={500}
-              value={rankSize}
-              onChange={(e) => setRankSize(Number(e.target.value))}
-            />
-          </label>
+      <div className="row" style={{ marginBottom: 16, justifyContent: "space-between" }}>
+        <div className="tab-bar" style={{ marginBottom: 0 }}>
+          <button
+            className={`tab-item${layout === "list" ? " active" : ""}`}
+            onClick={() => setLayout("list")}
+          >
+            List
+          </button>
+          <button
+            className={`tab-item${layout === "board" ? " active" : ""}`}
+            onClick={() => setLayout("board")}
+          >
+            Board
+          </button>
         </div>
-        {atRiskQuery.isLoading && <p className="muted">Scoring...</p>}
-        {atRiskQuery.isError && <p className="error">{(atRiskQuery.error as Error).message}</p>}
-        {employees.length > 0 && (
+        <label>
+          Show top{" "}
+          <input
+            type="number"
+            min={5}
+            max={500}
+            value={rankSize}
+            onChange={(e) => setRankSize(Number(e.target.value))}
+          />
+        </label>
+      </div>
+
+      {atRiskQuery.isLoading && <p className="muted">Scoring...</p>}
+      {atRiskQuery.isError && <p className="error">{(atRiskQuery.error as Error).message}</p>}
+
+      {layout === "list" && employees.length > 0 && (
+        <div className="card">
           <div className="data-list">
             <div className="data-list-scroll">
               <div
@@ -127,7 +150,11 @@ export default function AtRiskPage() {
                   key={e.employee_id}
                   style={{ gridTemplateColumns: "1fr 150px 150px 70px 130px 90px" }}
                 >
-                  <div className="data-list-cell">{e.full_name}</div>
+                  <div className="data-list-cell">
+                    <Link to={`/orgs/${orgId}/employees/${e.employee_id}/risk-history`}>
+                      {e.full_name}
+                    </Link>
+                  </div>
                   <div className="data-list-cell">{deptName(e.department_id)}</div>
                   <div className="data-list-cell">{teamName(e.team_id)}</div>
                   <div className="data-list-cell">{e.level}</div>
@@ -155,8 +182,40 @@ export default function AtRiskPage() {
               ))}
             </div>
           </div>
-        )}
-      </div>
+        </div>
+      )}
+
+      {layout === "board" && employees.length > 0 && (
+        <div className="tier-board">
+          {tierColumns.map((col) => (
+            <div key={col.tier}>
+              <div className="tier-column-header">
+                <div className="tier-column-dot" style={{ background: col.color }} />
+                <strong>{col.label}</strong>
+                <span className="tier-column-count">{col.employees.length}</span>
+              </div>
+              {col.employees.map((e) => (
+                <Link
+                  key={e.employee_id}
+                  to={`/orgs/${orgId}/employees/${e.employee_id}/risk-history`}
+                  className="tier-card"
+                  style={{ display: "block" }}
+                >
+                  <div style={{ fontWeight: 600, fontSize: 13, color: "var(--text-h)" }}>
+                    {e.full_name}
+                  </div>
+                  <div className="muted" style={{ margin: "2px 0 8px" }}>
+                    {deptName(e.department_id)}
+                  </div>
+                  <div style={{ fontSize: 12, fontWeight: 700, color: col.color }}>
+                    {(e.turnover_probability * 100).toFixed(0)}% risk
+                  </div>
+                </Link>
+              ))}
+            </div>
+          ))}
+        </div>
+      )}
 
       <div className="card">
         <h2>What-if: apply an intervention to the top-K at-risk employees</h2>
@@ -227,7 +286,7 @@ export default function AtRiskPage() {
               <div className="stat-card">
                 <div className="stat-label">Estimated cost</div>
                 <div className="stat-value">
-                  ${result.estimated_cost.toLocaleString("en-US", { maximumFractionDigits: 0 })}
+                  ${formatCurrency(result.estimated_cost)}
                 </div>
               </div>
             </div>

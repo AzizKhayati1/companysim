@@ -12,6 +12,7 @@ from sqlalchemy.orm import Session
 
 from companysim.api.converters import org_to_pydantic
 from companysim.api.database import get_db
+from companysim.api.risk_snapshots import record_risk_snapshots
 from companysim.api.run_history import save_run
 from companysim.api.scenario_builder import build_scenario
 from companysim.api.schemas import SimulateRequest, SimulateResponse
@@ -59,4 +60,5 @@ def simulate(org_id: int, req: SimulateRequest, db: Session = Depends(get_db)):
     run_record = save_run(db, org_id, "simulate", summary, req, response)
     if model is not None:
         collect_training_examples(db, org_id, run_record.id, req.ticks, model)
+    record_risk_snapshots(db, org_id, run_record.id)
     return response

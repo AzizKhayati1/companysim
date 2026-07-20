@@ -26,19 +26,18 @@ produces an identical report either way.
 """
 from __future__ import annotations
 
-from pathlib import Path
-
 import numpy as np
-import pandas as pd
 from fastapi import APIRouter, Depends, HTTPException, Response
 from sqlalchemy.orm import Session
 
 from companysim.api.converters import org_to_pydantic
 from companysim.api.database import get_db
-from companysim.api.db_models import EmployeeRecord, EmployeeWellbeingRecord, OrgRecord
+from companysim.api.db_models import OrgRecord
 from companysim.api.pdf_report import render_diagnosis_pdf
+from companysim.api.risk_snapshots import record_risk_snapshots
 from companysim.api.run_history import save_run
 from companysim.api.scenario_builder import build_scenario
+from companysim.api.scoring_frame import build_driver_frame, load_production_bundle
 from companysim.api.training_examples import collect_training_examples
 from companysim.api.schemas import (
     DiagnoseResponse,
@@ -57,43 +56,9 @@ from companysim.ml.exit_notes import (
     augment_explanation_with_notes,
     generate_notes_for_employees,
 )
-from companysim.ml.registry import TurnoverModelBundle, load_bundle
 from companysim.model.organization import OrganizationModel
 
 router = APIRouter(prefix="/orgs/{org_id}", tags=["diagnose"])
-
-PRODUCTION_MODEL_PATH = Path("models/turnover_production.joblib")
-
-_DRIVER_COLUMNS: tuple[str, ...] = (
-    "workload_perceived", "manager_support_score", "psychological_safety_perceived",
-    "financial_security_score", "burnout_exhaustion", "stress_level", "mood",
-    "sleep_quality", "meaning_at_work_score", "life_satisfaction",
-)
-
-
-def _build_driver_frame(db: Session, org_id: int) -> pd.DataFrame:
-    rows = (
-        db.query(EmployeeRecord, EmployeeWellbeingRecord)
-        .join(EmployeeWellbeingRecord, EmployeeWellbeingRecord.employee_id == EmployeeRecord.id)
-        .filter(EmployeeRecord.org_id == org_id)
-        .all()
-    )
-    records = []
-    for emp, wb in rows:
-        record = {"employee_id": emp.id, "department_id": emp.department_id, "team_id": emp.team_id}
-        for col in _DRIVER_COLUMNS:
-            record[col] = getattr(wb, col)
-        records.append(record)
-    return pd.DataFrame(records)
-
-
-def _load_turnover_bundle() -> TurnoverModelBundle | None:
-    if not PRODUCTION_MODEL_PATH.exists():
-        return None
-    try:
-        return load_bundle(PRODUCTION_MODEL_PATH, expected_type=TurnoverModelBundle)
-    except Exception:
-        return None
 
 
 def _quit_employee_ids(model: OrganizationModel) -> set[int]:
@@ -136,8 +101,8 @@ def build_diagnosis_report(org_id: int, req: SimulateRequest, db: Session) -> Di
     history = model.run(req.ticks)
 
     problems = detect_problems(history)
-    driver_frame = _build_driver_frame(db, org_id)
-    bundle = _load_turnover_bundle()
+    driver_frame = build_driver_frame(db, org_id)
+    bundle = load_production_bundle()
     quit_ids = _quit_employee_ids(model)
     notes_rng = np.random.default_rng(req.seed)
 
@@ -194,6 +159,7 @@ def build_diagnosis_report(org_id: int, req: SimulateRequest, db: Session) -> Di
     summary = f"{len(reports)} problem(s) detected · seed {req.seed}"
     run_record = save_run(db, org_id, "diagnose", summary, req, response)
     collect_training_examples(db, org_id, run_record.id, req.ticks, model)
+    record_risk_snapshots(db, org_id, run_record.id)
     return response
 
 

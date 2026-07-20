@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from companysim.ml.diagnostics import diagnose, detect_problems, explain, recommend
+from companysim.ml.diagnostics import diagnose, detect_problems, explain, explain_employee, recommend
 
 
 def _flat_history(ticks: int = 10) -> pd.DataFrame:
@@ -127,3 +127,55 @@ def test_explain_produces_nonempty_readable_string():
     assert isinstance(text, str)
     assert len(text) > 50
     assert "Recommended" in text
+
+
+def _driver_frame_with_one_outlier(employee_id: str = "bad_1") -> pd.DataFrame:
+    rng = np.random.default_rng(2)
+    rows = []
+    for i in range(30):
+        rows.append({
+            "employee_id": f"ok_{i}", "department_id": "Engineering", "team_id": "team_1",
+            "workload_perceived": rng.normal(0.45, 0.03),
+            "manager_support_score": rng.normal(0.6, 0.03),
+        })
+    # One employee with a clearly elevated workload and depressed manager support.
+    rows.append({
+        "employee_id": employee_id, "department_id": "Engineering", "team_id": "team_1",
+        "workload_perceived": 0.95, "manager_support_score": 0.1,
+    })
+    return pd.DataFrame(rows)
+
+
+def test_explain_employee_ranks_the_employees_own_worst_driver_first():
+    frame = _driver_frame_with_one_outlier()
+    contributions = explain_employee("bad_1", frame)
+    assert len(contributions) > 0
+    top = contributions[0]
+    assert top.segment_type == "employee"
+    assert top.segment_id == "bad_1"
+    # Both workload (higher-is-bad) and manager support (lower-is-bad) are
+    # skewed for this employee; either could rank first depending on equal
+    # default weighting, but both must appear with a positive score.
+    assert top.feature in ("workload_perceived", "manager_support_score")
+    assert top.score > 0
+    scores = [c.score for c in contributions]
+    assert scores == sorted(scores, reverse=True)
+
+
+def test_explain_employee_average_employee_has_no_drivers():
+    frame = _driver_frame_with_one_outlier()
+    contributions = explain_employee("ok_0", frame)
+    # An employee sampled from the same tight, near-org-mean distribution
+    # as everyone else shouldn't produce any positive-score drivers.
+    assert contributions == []
+
+
+def test_explain_employee_unknown_id_returns_empty():
+    frame = _driver_frame_with_one_outlier()
+    assert explain_employee("does-not-exist", frame) == []
+
+
+def test_explain_employee_respects_top_n():
+    frame = _driver_frame_with_one_outlier()
+    contributions = explain_employee("bad_1", frame, top_n=1)
+    assert len(contributions) <= 1

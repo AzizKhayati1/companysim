@@ -1,4 +1,5 @@
 from companysim.data.datasets import DatasetBuilder, DatasetConfig, to_organization
+from companysim.intervene import compare_intervention
 from companysim.model.organization import OrganizationModel
 from companysim.scenarios.events import ManagerCoaching, RetentionBonus, WorkloadRelief
 from companysim.scenarios.scenario import Scenario
@@ -16,7 +17,6 @@ def test_retention_bonus_reduces_targeted_turnover_risk():
     scenario = Scenario(name="bonus", events=[
         RetentionBonus(at_tick=1, employee_ids=targets, amount_pct=0.25),
     ])
-    baseline = OrganizationModel(org.model_copy(deep=True), seed=41, human_factors=tables["human_factors"]).run(6)
     treated_model = OrganizationModel(
         org.model_copy(deep=True), seed=41,
         human_factors=tables["human_factors"], scenario=scenario,
@@ -78,3 +78,24 @@ def test_unknown_team_id_is_a_no_op():
     ])
     model = OrganizationModel(org, seed=53, human_factors=tables["human_factors"], scenario=scenario)
     model.run(3)  # should not raise
+
+
+def test_compare_intervention_quits_are_scoped_to_target_cohort():
+    """Regression guard for the §5.4 fix: company-wide cumulative quits is
+    the wrong denominator for a targeted program (noise from the untargeted
+    majority swamps the signal). baseline/treated quit counts must be
+    bounded by the cohort size, not the whole org — a reversion to a
+    company-wide count would blow past this bound in a large org with a
+    small targeted cohort."""
+    org, tables = _rich_org(seed=61, headcount=300)
+    targets = tuple(e.id for e in org.employees[:15])
+    scenario = Scenario(name="bonus", events=[
+        RetentionBonus(at_tick=1, employee_ids=targets, amount_pct=0.2),
+    ])
+    result = compare_intervention(
+        org, tables["human_factors"], scenario,
+        target_employee_ids=targets, replicates=5, horizon_ticks=8, base_seed=61,
+    )
+    assert set(result.target_employee_ids) == set(targets)
+    assert 0 <= result.baseline_target_quits_p50 <= len(targets)
+    assert 0 <= result.treated_target_quits_p50 <= len(targets)

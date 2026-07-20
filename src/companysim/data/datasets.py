@@ -25,12 +25,16 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from datetime import date, timedelta
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 import numpy as np
 import pandas as pd
 from faker import Faker
 
 from companysim.data.human_factors import generate_human_factors
+
+if TYPE_CHECKING:
+    from companysim.data.schemas import Organization
 
 # ---- Realism knobs ----------------------------------------------------------
 
@@ -330,11 +334,11 @@ class DatasetBuilder:
         # Names, emails, phones.
         first_names = [self.faker.first_name() for _ in range(n)]
         last_names = [self.faker.last_name() for _ in range(n)]
-        full_names = [f"{f} {l}" for f, l in zip(first_names, last_names)]
+        full_names = [f"{f} {ln}" for f, ln in zip(first_names, last_names)]
         email_domain = self.config.org_name.lower().replace(" ", "") + ".example"
         emails = [
-            f"{f.lower()}.{l.lower()}@{email_domain}"
-            for f, l in zip(first_names, last_names)
+            f"{f.lower()}.{ln.lower()}@{email_domain}"
+            for f, ln in zip(first_names, last_names)
         ]
         phones = [self.faker.msisdn() for _ in range(n)]
 
@@ -356,7 +360,7 @@ class DatasetBuilder:
 
         # Hire dates and tenure.
         # Level nudges tenure up: senior folks have been around longer.
-        seniority_bonus = np.array([_LEVEL_SENIORITY[l] for l in levels]) * 3.0
+        seniority_bonus = np.array([_LEVEL_SENIORITY[lvl] for lvl in levels]) * 3.0
         tenure_months = np.clip(
             self.rng.exponential(scale=24, size=n) + seniority_bonus
             + self.rng.normal(0, 4, size=n),
@@ -368,7 +372,7 @@ class DatasetBuilder:
         ])
 
         # Age — base 22 + tenure + level nudge, plus noise.
-        level_age_bump = np.array([_LEVEL_SENIORITY[l] for l in levels]) * 1.5
+        level_age_bump = np.array([_LEVEL_SENIORITY[lvl] for lvl in levels]) * 1.5
         ages = np.clip(
             22 + tenure_months / 12 + level_age_bump + self.rng.normal(0, 4, size=n),
             22, 66,
@@ -379,21 +383,21 @@ class DatasetBuilder:
         ])
 
         # Compensation — level midpoint × dept mult × col mult × noise.
-        level_mids = np.array([_LEVEL_SALARY_MID[l] for l in levels])
+        level_mids = np.array([_LEVEL_SALARY_MID[lvl] for lvl in levels])
         dept_mults = deps.set_index("department_id")["salary_multiplier"].to_dict()
         dept_mult_arr = np.array([dept_mults[d] for d in dept_ids])
         salary_noise = self.rng.normal(1.0, 0.08, size=n)
         base_salary = np.maximum(30_000, level_mids * dept_mult_arr * col_mults * salary_noise)
 
-        bonus_pct = np.array([_LEVEL_BONUS_PCT[l] for l in levels])
+        bonus_pct = np.array([_LEVEL_BONUS_PCT[lvl] for lvl in levels])
         bonus_target = base_salary * bonus_pct
-        equity_mid = np.array([_LEVEL_EQUITY_MID[l] for l in levels])
+        equity_mid = np.array([_LEVEL_EQUITY_MID[lvl] for lvl in levels])
         equity_value = np.maximum(0, equity_mid * self.rng.normal(1.0, 0.20, size=n))
         total_comp = base_salary + bonus_target + equity_value
 
         # Behavioral latents — the same distributions the sim uses.
         productivity = self.rng.beta(6, 3, size=n)
-        collab_alpha = np.array([7 if l in ("M1", "M2", "M3", "VP", "CXO") else 5 for l in levels])
+        collab_alpha = np.array([7 if lvl in ("M1", "M2", "M3", "VP", "CXO") else 5 for lvl in levels])
         collaboration = np.array([self.rng.beta(a, 3) for a in collab_alpha])
         engagement_raw = self.rng.beta(5, 3, size=n)
         engagement = np.where(tenure_months < 6, engagement_raw * 0.85, engagement_raw).clip(0, 1)

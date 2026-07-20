@@ -327,6 +327,61 @@ def diagnose(
     return Diagnosis(problem=problem, primary_drivers=contributions[:top_n])
 
 
+def explain_employee(
+    employee_id: int,
+    driver_frame: pd.DataFrame,
+    *,
+    turnover_bundle: "TurnoverModelBundle | None" = None,
+    categorical_columns: Collection[str] = (),
+    top_n: int = 5,
+) -> list[DriverContribution]:
+    """The same importance-weighted deviation-from-org-mean scoring
+    :func:`diagnose` uses for a department/team, applied to one employee's
+    own driver values instead of a segment mean — "why is *this person*
+    flagged," not "why is this department flagged." Reuses
+    :data:`BAD_DIRECTION` and the same feature-importance aggregation, so
+    the two stay consistent with each other by construction.
+
+    Returns up to ``top_n`` drivers (default 5, vs. ``diagnose``'s 3) —
+    for a single person, showing more of what's actually elevated is more
+    useful than the segment-level top-3 cutoff.
+    """
+    row = driver_frame[driver_frame["employee_id"] == employee_id]
+    if row.empty:
+        return []
+
+    numeric_cols = [
+        c for c in driver_frame.columns
+        if c in BAD_DIRECTION and pd.api.types.is_numeric_dtype(driver_frame[c])
+    ]
+    if not numeric_cols:
+        return []
+
+    importances: dict[str, float] = {}
+    if turnover_bundle is not None:
+        importances = _aggregate_feature_importances(turnover_bundle.classifier, categorical_columns)
+    default_weight = 1.0 / len(numeric_cols)
+
+    org_means = driver_frame[numeric_cols].mean()
+    values = row.iloc[0]
+    contributions: list[DriverContribution] = []
+    for col in numeric_cols:
+        deviation = float(values[col] - org_means[col])
+        badness = deviation * BAD_DIRECTION[col]
+        importance = float(importances.get(col, default_weight))
+        score = max(0.0, badness) * importance
+        if score <= 0:
+            continue
+        contributions.append(DriverContribution(
+            segment_type="employee", segment_id=str(employee_id), feature=col,
+            segment_mean=float(values[col]), org_mean=float(org_means[col]),
+            deviation=deviation, importance=importance, score=score,
+        ))
+
+    contributions.sort(key=lambda c: c.score, reverse=True)
+    return contributions[:top_n]
+
+
 def recommend(diagnosis: Diagnosis, driver_frame: pd.DataFrame, *, top_k: int = 10) -> Recommendation:
     """Map the top driving feature to a specific scenario event, targeted
     at the worst-affected employees (by that same feature) within the

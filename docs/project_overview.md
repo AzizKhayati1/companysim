@@ -395,7 +395,7 @@ and every retrain blends all of them in before deciding whether to
 promote.
 
 **Collection** (`api/training_examples.py::collect_training_examples`):
-after `routers/simulate.py` (single, non-Monte-Carlo runs only — a
+after `  routers/simulate.py` (single, non-Monte-Carlo runs only — a
 replicated run has no single representative outcome) or
 `routers/diagnose.py` runs a simulation with `ticks >= 6` (short horizons
 don't give the quit mechanic enough time to mean anything), it builds the

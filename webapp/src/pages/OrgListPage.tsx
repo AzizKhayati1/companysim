@@ -111,7 +111,7 @@ export default function OrgListPage() {
                 <div className="data-list-cell">{org.seed}</div>
                 <div className="data-list-cell actions">
                   <button className="btn" onClick={() => navigate(`/orgs/${org.id}`)}>
-                    Edit
+                    Open
                   </button>
                   <button
                     className="btn"

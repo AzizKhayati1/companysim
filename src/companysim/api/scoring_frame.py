@@ -28,10 +28,42 @@ review history), so this fills in the best honest approximation for each:
 """
 from __future__ import annotations
 
+from pathlib import Path
+
 import pandas as pd
 from sqlalchemy.orm import Session
 
 from companysim.api.db_models import EmployeeRecord, EmployeeWellbeingRecord
+from companysim.ml.registry import TurnoverModelBundle, load_bundle
+from companysim.ml.turnover_features import FEATURE_COLUMNS
+
+PRODUCTION_MODEL_PATH = Path("models/turnover_production.joblib")
+
+# Wellbeing columns pulled per-employee for root-cause diagnosis (segment- or
+# individual-level) — a different, richer slice than build_scoring_frame's
+# model-feature columns above, since diagnosis reasons over raw psychological
+# constructs rather than the model's engineered pulse/rating features.
+DRIVER_COLUMNS: tuple[str, ...] = (
+    "workload_perceived", "manager_support_score", "psychological_safety_perceived",
+    "financial_security_score", "burnout_exhaustion", "stress_level", "mood",
+    "sleep_quality", "meaning_at_work_score", "life_satisfaction",
+)
+
+
+def build_driver_frame(db: Session, org_id: int) -> pd.DataFrame:
+    rows = (
+        db.query(EmployeeRecord, EmployeeWellbeingRecord)
+        .join(EmployeeWellbeingRecord, EmployeeWellbeingRecord.employee_id == EmployeeRecord.id)
+        .filter(EmployeeRecord.org_id == org_id)
+        .all()
+    )
+    records = []
+    for emp, wb in rows:
+        record = {"employee_id": emp.id, "department_id": emp.department_id, "team_id": emp.team_id}
+        for col in DRIVER_COLUMNS:
+            record[col] = getattr(wb, col)
+        records.append(record)
+    return pd.DataFrame(records)
 
 
 def build_scoring_frame(db: Session, org_id: int) -> pd.DataFrame:
@@ -74,3 +106,48 @@ def build_scoring_frame(db: Session, org_id: int) -> pd.DataFrame:
             "rating_delta": 0.0,
         })
     return pd.DataFrame(records)
+
+
+def load_production_bundle() -> TurnoverModelBundle | None:
+    """Load the trained production model, or ``None`` if it doesn't exist
+    or fails to load — callers fall back to the simulation's own raw
+    ``turnover_risk`` latent rather than treating this as fatal.
+    """
+    if not PRODUCTION_MODEL_PATH.exists():
+        return None
+    try:
+        return load_bundle(PRODUCTION_MODEL_PATH, expected_type=TurnoverModelBundle)
+    except Exception:
+        return None
+
+
+def score_current_employees(db: Session, org_id: int) -> tuple[pd.DataFrame, bool]:
+    """Score every current employee of ``org_id`` with the production model.
+
+    Returns ``(frame, model_used)`` where ``frame`` has at least
+    ``employee_id``/``turnover_probability``/``risk_tier`` columns (plus
+    whatever :func:`build_scoring_frame` already produces, so callers can
+    merge in display fields for free). Falls back to the org's raw
+    ``EmployeeRecord.turnover_risk`` latent, tiered the same way the model
+    would be, when no production model is available.
+    """
+    frame = build_scoring_frame(db, org_id)
+    if frame.empty:
+        return frame.assign(turnover_probability=pd.Series(dtype=float), risk_tier=pd.Series(dtype=str)), False
+
+    bundle = load_production_bundle()
+    if bundle is not None:
+        scored = bundle.predict_risk(frame[["employee_id", *FEATURE_COLUMNS]])
+        merged = frame.merge(
+            scored[["employee_id", "turnover_probability", "risk_tier"]], on="employee_id",
+        )
+        return merged, True
+
+    raw = db.query(EmployeeRecord).filter(EmployeeRecord.org_id == org_id).all()
+    risk_by_id = {e.id: e.turnover_risk for e in raw}
+    out = frame.copy()
+    out["turnover_probability"] = out["employee_id"].map(risk_by_id)
+    out["risk_tier"] = pd.cut(
+        out["turnover_probability"], bins=[-1, 0.25, 0.5, 2], labels=["low", "medium", "high"],
+    ).astype(str)
+    return out, False

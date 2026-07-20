@@ -1,34 +1,57 @@
-@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap");
-
 :root {
-  --text: #5b6472;
-  --text-h: #12141a;
-  --bg: #f7f8fb;
+  /* ---- Vantage palette (light) ---- */
+  --bg: #f2f4f8;
   --bg-alt: #ffffff;
-  --surface-hover: #f1f2f7;
-  --border: #e6e8ee;
+  --surface: #ffffff;
+  --surface-2: #f6f7fb;
+  --surface-hover: #f6f7fb;
+  --sidebar-bg: rgba(255, 255, 255, 0.78);
+  --border: rgba(0, 0, 0, 0.08);
+  --border-strong: rgba(0, 0, 0, 0.14);
 
-  --accent: #4f46e5;
-  --accent-h: #4338ca;
-  --accent-bg: rgba(79, 70, 229, 0.09);
+  /* --text/--text-h keep their existing roles (muted / heading) so every
+     component written against them re-skins for free; --text-2/--text-3
+     are the same palette under Vantage's own 3-tier naming, for new
+     components (AppShell, Dashboard, ...) written directly against it. */
+  --text: #6e6e73;
+  --text-2: #6e6e73;
+  --text-3: #98989d;
+  --text-h: #1d1d1f;
+
+  --accent: #5e5ce6;
+  --accent-h: #4b48d1;
+  --accent-strong: #4b48d1;
+  --accent-bg: rgba(94, 92, 230, 0.11);
+  --accent-soft: rgba(94, 92, 230, 0.11);
   --accent-text: #ffffff;
 
-  --danger: #dc2626;
-  --danger-bg: rgba(220, 38, 38, 0.08);
-  --success: #16a34a;
-  --success-bg: rgba(22, 163, 74, 0.09);
-  --warning: #d97706;
-  --warning-bg: rgba(217, 119, 6, 0.09);
+  --danger: #ff3b30;
+  --danger-bg: rgba(255, 59, 48, 0.1);
+  --red: #ff3b30;
+  --red-soft: rgba(255, 59, 48, 0.1);
 
-  --radius-sm: 7px;
-  --radius-md: 11px;
+  --success: #34c759;
+  --success-bg: rgba(52, 199, 89, 0.12);
+  --green: #34c759;
+  --green-soft: rgba(52, 199, 89, 0.12);
+
+  --warning: #ff9500;
+  --warning-bg: rgba(255, 149, 0, 0.12);
+  --orange: #ff9500;
+  --orange-soft: rgba(255, 149, 0, 0.12);
+
+  --radius-sm: 8px;
+  --radius-md: 10px;
   --radius-lg: 16px;
 
-  --shadow-sm: 0 1px 2px rgba(20, 22, 30, 0.05), 0 1px 1px rgba(20, 22, 30, 0.03);
-  --shadow-md: 0 8px 24px rgba(20, 22, 30, 0.08), 0 2px 6px rgba(20, 22, 30, 0.04);
+  --shadow-sm: 0 1px 2px rgba(20, 20, 25, 0.05);
+  --shadow-md: 0 12px 32px rgba(20, 20, 25, 0.1);
+  --shadow-xs: 0 1px 2px rgba(20, 20, 25, 0.05);
+  --shadow: 0 12px 32px rgba(20, 20, 25, 0.1);
 
-  --sans: "Inter", system-ui, "Segoe UI", Roboto, sans-serif;
-  --mono: "JetBrains Mono", ui-monospace, Consolas, monospace;
+  --sans: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue",
+    Arial, sans-serif;
+  --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
 
   font: 15px/1.55 var(--sans);
   color-scheme: light dark;
@@ -40,30 +63,92 @@
   -moz-osx-font-smoothing: grayscale;
 }
 
+/* OS-level default (no explicit toggle yet) */
 @media (prefers-color-scheme: dark) {
-  :root {
-    --text: #9aa3b5;
-    --text-h: #f2f4f8;
-    --bg: #0b0d12;
-    --bg-alt: #12151d;
-    --surface-hover: #191d27;
-    --border: #232733;
+  :root:not([data-theme="light"]) {
+    --bg: #000000;
+    --bg-alt: #1c1c1e;
+    --surface: #1c1c1e;
+    --surface-2: #242426;
+    --surface-hover: #242426;
+    --sidebar-bg: rgba(28, 28, 30, 0.72);
+    --border: rgba(255, 255, 255, 0.09);
+    --border-strong: rgba(255, 255, 255, 0.16);
 
-    --accent: #818cf8;
-    --accent-h: #a5b0fb;
-    --accent-bg: rgba(129, 140, 248, 0.14);
-    --accent-text: #0b0d12;
+    --text: #98989d;
+    --text-2: #98989d;
+    --text-3: #6e6e73;
+    --text-h: #f5f5f7;
 
-    --danger: #f87171;
-    --danger-bg: rgba(248, 113, 113, 0.1);
-    --success: #4ade80;
-    --success-bg: rgba(74, 222, 128, 0.12);
-    --warning: #fbbf24;
-    --warning-bg: rgba(251, 191, 36, 0.12);
+    --accent: #7d7aff;
+    --accent-h: #9694ff;
+    --accent-strong: #9694ff;
+    --accent-bg: rgba(125, 122, 255, 0.18);
+    --accent-soft: rgba(125, 122, 255, 0.18);
 
-    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
-    --shadow-md: 0 10px 30px rgba(0, 0, 0, 0.45);
+    --danger: #ff453a;
+    --danger-bg: rgba(255, 69, 58, 0.16);
+    --red: #ff453a;
+    --red-soft: rgba(255, 69, 58, 0.16);
+
+    --success: #32d74b;
+    --success-bg: rgba(50, 215, 75, 0.16);
+    --green: #32d74b;
+    --green-soft: rgba(50, 215, 75, 0.16);
+
+    --warning: #ff9f0a;
+    --warning-bg: rgba(255, 159, 10, 0.16);
+    --orange: #ff9f0a;
+    --orange-soft: rgba(255, 159, 10, 0.16);
+
+    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
+    --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.4);
+    --shadow-md: 0 10px 28px rgba(0, 0, 0, 0.5);
+    --shadow: 0 10px 28px rgba(0, 0, 0, 0.5);
   }
+}
+
+/* Explicit toggle (ThemeContext) always wins over the OS default */
+:root[data-theme="dark"] {
+  --bg: #000000;
+  --bg-alt: #1c1c1e;
+  --surface: #1c1c1e;
+  --surface-2: #242426;
+  --surface-hover: #242426;
+  --sidebar-bg: rgba(28, 28, 30, 0.72);
+  --border: rgba(255, 255, 255, 0.09);
+  --border-strong: rgba(255, 255, 255, 0.16);
+
+  --text: #98989d;
+  --text-2: #98989d;
+  --text-3: #6e6e73;
+  --text-h: #f5f5f7;
+
+  --accent: #7d7aff;
+  --accent-h: #9694ff;
+  --accent-strong: #9694ff;
+  --accent-bg: rgba(125, 122, 255, 0.18);
+  --accent-soft: rgba(125, 122, 255, 0.18);
+
+  --danger: #ff453a;
+  --danger-bg: rgba(255, 69, 58, 0.16);
+  --red: #ff453a;
+  --red-soft: rgba(255, 69, 58, 0.16);
+
+  --success: #32d74b;
+  --success-bg: rgba(50, 215, 75, 0.16);
+  --green: #32d74b;
+  --green-soft: rgba(50, 215, 75, 0.16);
+
+  --warning: #ff9f0a;
+  --warning-bg: rgba(255, 159, 10, 0.16);
+  --orange: #ff9f0a;
+  --orange-soft: rgba(255, 159, 10, 0.16);
+
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --shadow-md: 0 10px 28px rgba(0, 0, 0, 0.5);
+  --shadow: 0 10px 28px rgba(0, 0, 0, 0.5);
 }
 
 * {
@@ -72,6 +157,7 @@
 
 body {
   margin: 0;
+  transition: background 0.25s ease, color 0.25s ease;
 }
 
 #root {

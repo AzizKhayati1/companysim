@@ -236,3 +236,19 @@ export interface RunDetailOut extends RunSummaryOut {
   request: SimulateRequest;
   response: SimulateResponse | DiagnoseResponse;
 }
+
+export interface RiskHistoryPoint {
+  run_id: number;
+  computed_at: string;
+  turnover_probability: number;
+  risk_tier: string;
+  model_available: boolean;
+}
+
+export interface RiskTrendPoint {
+  run_id: number;
+  computed_at: string;
+  mean_risk: number;
+  employee_count: number;
+  model_available: boolean;
+}

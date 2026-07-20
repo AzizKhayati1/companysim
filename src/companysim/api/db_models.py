@@ -60,6 +60,9 @@ class OrgRecord(Base):
     training_examples: Mapped[list["TurnoverTrainingExample"]] = relationship(
         back_populates="org", cascade="all, delete-orphan",
     )
+    risk_snapshots: Mapped[list["EmployeeRiskSnapshot"]] = relationship(
+        back_populates="org", cascade="all, delete-orphan",
+    )
 
 
 class DepartmentRecord(Base):
@@ -246,3 +249,31 @@ class TurnoverTrainingExample(Base):
     burnout_exhaustion_pulse_mean: Mapped[float]
 
     org: Mapped["OrgRecord"] = relationship(back_populates="training_examples")
+
+
+class EmployeeRiskSnapshot(Base):
+    """The production model's predicted turnover risk for one employee, at
+    the moment a Simulate/Diagnose run happened — one row per employee per
+    run. Powers the per-employee risk-history trend view. Unlike
+    ``TurnoverTrainingExample`` this has no minimum-horizon gate and is
+    recorded for every run (including Monte Carlo replicates), since it only
+    reflects the current org state, not a simulated outcome.
+    """
+
+    __tablename__ = "employee_risk_snapshots"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    org_id: Mapped[int] = mapped_column(ForeignKey("orgs.id"))
+    # FK for lineage only, no cascade tied to it — matches
+    # TurnoverTrainingExample.run_id, so deleting an individual run (Run
+    # History's Delete button) doesn't silently destroy risk history.
+    run_id: Mapped[int] = mapped_column(ForeignKey("runs.id"))
+    # Plain int, no FK — survives even if the employee is later edited or
+    # deleted from the org (same reasoning as TurnoverTrainingExample).
+    employee_id: Mapped[int]
+    computed_at: Mapped[datetime] = mapped_column(default=lambda: datetime.now(timezone.utc))
+    turnover_probability: Mapped[float]
+    risk_tier: Mapped[str]
+    model_available: Mapped[bool]
+
+    org: Mapped["OrgRecord"] = relationship(back_populates="risk_snapshots")

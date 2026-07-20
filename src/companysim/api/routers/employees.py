@@ -6,10 +6,13 @@ from sqlalchemy.orm import Session
 from companysim.api.database import get_db
 from companysim.api.db_models import (
     EmployeeRecord,
+    EmployeeRiskSnapshot,
     EmployeeWellbeingRecord,
     OrgRecord,
 )
-from companysim.api.schemas import EmployeeIn, EmployeeOut
+from companysim.api.scoring_frame import build_driver_frame, load_production_bundle
+from companysim.api.schemas import DriverOut, EmployeeIn, EmployeeOut, RiskHistoryPointOut
+from companysim.ml.diagnostics import explain_employee
 
 router = APIRouter(prefix="/orgs/{org_id}/employees", tags=["employees"])
 
@@ -138,3 +141,43 @@ def delete_employee(org_id: int, emp_id: int, db: Session = Depends(get_db)):
     emp = _get_emp_or_404(db, org_id, emp_id)
     db.delete(emp)
     db.commit()
+
+
+@router.get("/{emp_id}/risk-history", response_model=list[RiskHistoryPointOut])
+def get_risk_history(org_id: int, emp_id: int, db: Session = Depends(get_db)):
+    _get_emp_or_404(db, org_id, emp_id)
+    rows = (
+        db.query(EmployeeRiskSnapshot)
+        .filter_by(org_id=org_id, employee_id=emp_id)
+        .order_by(EmployeeRiskSnapshot.computed_at)
+        .all()
+    )
+    return [
+        RiskHistoryPointOut(
+            run_id=r.run_id, computed_at=r.computed_at.isoformat(),
+            turnover_probability=r.turnover_probability, risk_tier=r.risk_tier,
+            model_available=r.model_available,
+        )
+        for r in rows
+    ]
+
+
+@router.get("/{emp_id}/risk-drivers", response_model=list[DriverOut])
+def get_risk_drivers(org_id: int, emp_id: int, db: Session = Depends(get_db)):
+    """Why *this* employee is at risk — the same importance-weighted,
+    deviation-from-org-mean attribution ``/diagnose`` uses for a
+    department/team, applied to one person. See
+    ``ml.diagnostics.explain_employee``.
+    """
+    _get_emp_or_404(db, org_id, emp_id)
+    driver_frame = build_driver_frame(db, org_id)
+    bundle = load_production_bundle()
+    contributions = explain_employee(emp_id, driver_frame, turnover_bundle=bundle)
+    return [
+        DriverOut(
+            segment_type=c.segment_type, segment_id=c.segment_id, feature=c.feature,
+            segment_mean=c.segment_mean, org_mean=c.org_mean,
+            deviation=c.deviation, score=c.score,
+        )
+        for c in contributions
+    ]
