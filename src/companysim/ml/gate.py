@@ -168,3 +168,29 @@ def get_production_status() -> dict[str, Any] | None:
         return None
     bundle = load_bundle(PRODUCTION_PATH, expected_type=TurnoverModelBundle)
     return bundle.metadata
+
+
+def load_promotion_log() -> list[dict[str, Any]]:
+    """Every retrain's audit-log entry, oldest first — the full history of
+    candidate/production eval metrics and promote/block decisions behind
+    the model-quality dashboard's trend charts."""
+    if not LOG_PATH.exists():
+        return []
+    with LOG_PATH.open("r", encoding="utf-8") as f:
+        return [json.loads(line) for line in f if line.strip()]
+
+
+def get_production_feature_importances(top_n: int = 10) -> list[dict[str, Any]]:
+    """The current production model's top drivers, ranked descending —
+    reuses the same one-hot-aggregation ``diagnose()`` already applies to
+    department/team segments and ``explain_employee()`` applies to a
+    single person, here applied to the classifier itself."""
+    if not PRODUCTION_PATH.exists():
+        return []
+    from companysim.ml.diagnostics import _aggregate_feature_importances  # noqa: PLC0415
+    from companysim.ml.turnover_features import CATEGORICAL_FEATURES  # noqa: PLC0415
+
+    bundle = load_bundle(PRODUCTION_PATH, expected_type=TurnoverModelBundle)
+    importances = _aggregate_feature_importances(bundle.classifier, CATEGORICAL_FEATURES)
+    ranked = sorted(importances.items(), key=lambda kv: kv[1], reverse=True)[:top_n]
+    return [{"feature": feature, "importance": float(value)} for feature, value in ranked]

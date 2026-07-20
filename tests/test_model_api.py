@@ -78,3 +78,38 @@ def test_train_model_force_promote_always_promotes(client):
     status = client.get("/model/status").json()
     assert status["model_available"] is True
     assert status["metadata"]["training_seed"] == 4243
+
+
+def test_model_quality_reflects_a_forced_promotion(client):
+    resp = client.post("/model/train", json={
+        "headcount": 600, "replicates": 2, "horizon": 8, "seed": 4244,
+        "force_promote": True,
+    })
+    assert resp.status_code == 200
+
+    quality = client.get("/model/quality").json()
+    assert len(quality["history"]) >= 1
+    latest = quality["history"][-1]
+    assert latest["decision"] in {"PROMOTE", "BLOCK"}
+    assert "auc" in latest["candidate_eval"]
+
+    # A production model now exists, so it should have ranked drivers.
+    assert len(quality["feature_importances"]) > 0
+    importances = [f["importance"] for f in quality["feature_importances"]]
+    assert importances == sorted(importances, reverse=True)
+    for entry in quality["feature_importances"]:
+        assert entry["importance"] >= 0.0
+
+
+def test_model_quality_history_entries_are_chronologically_ordered(client):
+    client.post("/model/train", json={
+        "headcount": 600, "replicates": 2, "horizon": 8, "seed": 4245,
+        "force_promote": True,
+    })
+    client.post("/model/train", json={
+        "headcount": 600, "replicates": 2, "horizon": 8, "seed": 4246,
+        "force_promote": True,
+    })
+    quality = client.get("/model/quality").json()
+    timestamps = [entry["timestamp"] for entry in quality["history"]]
+    assert timestamps == sorted(timestamps)

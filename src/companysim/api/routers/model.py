@@ -21,12 +21,18 @@ from sqlalchemy.orm import Session
 from companysim.api.database import get_db
 from companysim.api.db_models import TurnoverTrainingExample
 from companysim.api.schemas import (
+    ModelQualityResponse,
     ModelStatusResponse,
     TrainModelRequest,
     TrainModelResponse,
 )
 from companysim.api.training_examples import load_collected_examples
-from companysim.ml.gate import get_production_status, run_training_gate
+from companysim.ml.gate import (
+    get_production_feature_importances,
+    get_production_status,
+    load_promotion_log,
+    run_training_gate,
+)
 
 router = APIRouter(prefix="/model", tags=["model"])
 
@@ -38,6 +44,14 @@ def model_status(db: Session = Depends(get_db)):
     return ModelStatusResponse(
         model_available=metadata is not None, metadata=metadata or {},
         pending_training_examples=pending,
+    )
+
+
+@router.get("/quality", response_model=ModelQualityResponse)
+def model_quality():
+    return ModelQualityResponse(
+        history=load_promotion_log(),
+        feature_importances=get_production_feature_importances(),
     )
 
 

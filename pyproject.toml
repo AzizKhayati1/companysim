@@ -45,6 +45,9 @@ notebooks = [
     "ipykernel>=6.29",
     "plotly>=5.22",
 ]
+llm = [
+    "google-genai>=0.3",
+]
 
 [project.scripts]
 companysim = "companysim.cli:main"

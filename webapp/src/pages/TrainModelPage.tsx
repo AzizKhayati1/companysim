@@ -1,6 +1,17 @@
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  CartesianGrid,
+  Legend,
+  Line,
+  LineChart,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from "recharts";
 import { api } from "../api/client";
+import { formatDateTime } from "../utils/format";
 
 function EvalTable({ title, evalData }: { title: string; evalData: Record<string, number> | null }) {
   if (!evalData) return <p className="muted">{title}: none</p>;
@@ -19,9 +30,18 @@ function EvalTable({ title, evalData }: { title: string; evalData: Record<string
   );
 }
 
+function humanizeFeature(feature: string): string {
+  return feature
+    .replace(/_/g, " ")
+    .replace(/\bpulse mean\b/, "(pulse avg)")
+    .replace(/\bpulse trend\b/, "(pulse trend)")
+    .replace(/^./, (c) => c.toUpperCase());
+}
+
 export default function TrainModelPage() {
   const queryClient = useQueryClient();
   const statusQuery = useQuery({ queryKey: ["model-status"], queryFn: api.getModelStatus });
+  const qualityQuery = useQuery({ queryKey: ["model-quality"], queryFn: api.getModelQuality });
 
   const [headcount, setHeadcount] = useState(2000);
   const [replicates, setReplicates] = useState(4);
@@ -33,11 +53,22 @@ export default function TrainModelPage() {
   const trainMutation = useMutation({
     mutationFn: () =>
       api.trainModel({ headcount, replicates, horizon, seed, tolerance, force_promote: forcePromote }),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["model-status"] }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["model-status"] });
+      queryClient.invalidateQueries({ queryKey: ["model-quality"] });
+    },
   });
 
   const status = statusQuery.data;
   const result = trainMutation.data;
+  const quality = qualityQuery.data;
+  const history = quality?.history ?? [];
+  const qualityChartData = history.map((h) => ({
+    date: new Date(h.timestamp).toLocaleDateString("en-US"),
+    auc: Math.round((h.candidate_eval.auc ?? 0) * 1000) / 10,
+    precisionAt10: Math.round((h.candidate_eval.precision_at_10 ?? 0) * 1000) / 10,
+    decision: h.decision,
+  }));
 
   return (
     <div className="page">
@@ -95,6 +126,118 @@ export default function TrainModelPage() {
           </p>
         )}
       </div>
+
+      <div className="card">
+        <h2>Model quality over time</h2>
+        <p className="muted">
+          Every retrain's holdout AUC and precision@10, in order — a rising or flat line means
+          retrains are holding steady or improving; a falling one is exactly what the promotion
+          gate exists to catch before it reaches production.
+        </p>
+        {qualityQuery.isLoading && <p className="muted">Loading...</p>}
+        {quality && history.length === 0 && (
+          <p className="muted">No retrains recorded yet — train a model below to start the trend.</p>
+        )}
+        {history.length > 0 && (
+          <ResponsiveContainer width="100%" height={220}>
+            <LineChart data={qualityChartData} margin={{ top: 5, right: 10, left: 0, bottom: 5 }}>
+              <CartesianGrid strokeDasharray="3 3" opacity={0.2} />
+              <XAxis dataKey="date" fontSize={11} />
+              <YAxis fontSize={11} unit="%" domain={[0, 100]} />
+              <Tooltip formatter={(v) => `${v}%`} />
+              <Legend wrapperStyle={{ fontSize: 12 }} />
+              <Line
+                type="monotone" dataKey="auc" name="Holdout AUC" stroke="var(--accent)"
+                strokeWidth={2} dot={{ r: 3 }}
+              />
+              <Line
+                type="monotone" dataKey="precisionAt10" name="Precision@10%" stroke="#d97706"
+                strokeWidth={2} strokeDasharray="4 4" dot={{ r: 3 }}
+              />
+            </LineChart>
+          </ResponsiveContainer>
+        )}
+      </div>
+
+      {quality && quality.feature_importances.length > 0 && (
+        <div className="card">
+          <h2>Current production model — top drivers</h2>
+          <p className="muted" style={{ marginBottom: 12 }}>
+            The features the production classifier weighs most heavily when scoring turnover risk.
+          </p>
+          {quality.feature_importances.map((f, i) => {
+            const maxImportance = quality.feature_importances[0].importance || 1;
+            return (
+              <div className="driver-bar-row" key={f.feature}>
+                <div className="driver-bar-labels">
+                  <span className="muted">{humanizeFeature(f.feature)}</span>
+                  <strong>{(f.importance * 100).toFixed(1)}%</strong>
+                </div>
+                <div className="risk-bar-track" style={{ width: "100%" }}>
+                  <div
+                    className="risk-bar-fill"
+                    style={{
+                      width: `${Math.min(100, (f.importance / maxImportance) * 100)}%`,
+                      background: i === 0 ? "var(--accent)" : "#94a3b8",
+                    }}
+                  />
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {history.length > 0 && (
+        <div className="card">
+          <h2>Retrain history</h2>
+          <div className="data-list">
+            <div className="data-list-scroll">
+              <div
+                className="data-list-header"
+                style={{ gridTemplateColumns: "170px 90px 90px 100px 110px 1fr" }}
+              >
+                <div>When</div>
+                <div>Decision</div>
+                <div>AUC</div>
+                <div>Precision@10</div>
+                <div>Live examples</div>
+                <div>Reason</div>
+              </div>
+              {[...history].reverse().map((h, i) => (
+                <div
+                  className="data-list-row"
+                  key={`${h.timestamp}-${i}`}
+                  style={{ gridTemplateColumns: "170px 90px 90px 100px 110px 1fr" }}
+                >
+                  <div className="data-list-cell">{formatDateTime(h.timestamp)}</div>
+                  <div className="data-list-cell">
+                    <span
+                      className="tag"
+                      style={{
+                        background: h.decision === "PROMOTE" ? "var(--success)" : "var(--danger)",
+                        color: "white",
+                      }}
+                    >
+                      {h.decision}
+                    </span>
+                  </div>
+                  <div className="data-list-cell">
+                    {typeof h.candidate_eval.auc === "number" ? h.candidate_eval.auc.toFixed(3) : "-"}
+                  </div>
+                  <div className="data-list-cell">
+                    {typeof h.candidate_eval.precision_at_10 === "number"
+                      ? `${(h.candidate_eval.precision_at_10 * 100).toFixed(0)}%`
+                      : "-"}
+                  </div>
+                  <div className="data-list-cell">{h.n_live_examples}</div>
+                  <div className="data-list-cell">{h.reason}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
 
       <div className="card">
         <h2>Retrain</h2>

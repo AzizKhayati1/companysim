@@ -16,8 +16,8 @@ jobs:
           python-version: "3.12"
           cache: pip
 
-      - name: Install package + dev/ml/viz/api extras
-        run: pip install -e ".[dev,ml,viz,api]"
+      - name: Install package + dev/ml/viz/api/llm extras
+        run: pip install -e ".[dev,ml,viz,api,llm]"
 
       - name: Lint (ruff)
         run: ruff check src/ tests/ scripts/

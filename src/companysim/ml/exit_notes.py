@@ -211,10 +211,11 @@ class NotesAnalysis:
     theme_counts: dict[str, int] = field(default_factory=dict)
     top_terms: list[str] = field(default_factory=list)
     sample_quotes: list[str] = field(default_factory=list)
+    n_llm_generated: int = 0
 
 
 def analyze_notes(
-    notes: dict[Any, str], *, max_quotes: int = 2, max_terms: int = 8,
+    notes: dict[Any, str], *, max_quotes: int = 2, max_terms: int = 8, n_llm_generated: int = 0,
 ) -> NotesAnalysis:
     texts = list(notes.values())
     if not texts:
@@ -244,6 +245,7 @@ def analyze_notes(
     return NotesAnalysis(
         n_notes=len(texts), mean_sentiment=mean_sentiment,
         theme_counts=theme_counts, top_terms=top_terms, sample_quotes=texts[:max_quotes],
+        n_llm_generated=n_llm_generated,
     )
 
 

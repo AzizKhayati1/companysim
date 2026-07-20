@@ -140,6 +140,7 @@ class NotesSummaryOut(BaseModel):
     mean_sentiment: float
     top_themes: list[str] = []
     sample_quotes: list[str] = []
+    n_llm_generated: int = 0
 
 
 class DiagnosisReportOut(BaseModel):
@@ -216,6 +217,27 @@ class TrainModelResponse(BaseModel):
     train_report: dict[str, Any]
     promoted_at: str | None
     n_live_examples: int = 0
+
+
+class PromotionLogEntryOut(BaseModel):
+    timestamp: str
+    decision: str
+    reason: str
+    candidate_eval: dict[str, Any]
+    production_eval: dict[str, Any] | None
+    n_live_examples: int = 0
+    training_seed: int
+    training_headcount: int
+
+
+class FeatureImportanceOut(BaseModel):
+    feature: str
+    importance: float
+
+
+class ModelQualityResponse(BaseModel):
+    history: list[PromotionLogEntryOut]
+    feature_importances: list[FeatureImportanceOut]
 
 
 class RunSummaryOut(BaseModel):

@@ -136,6 +136,7 @@ export interface NotesSummaryOut {
   mean_sentiment: number;
   top_themes: string[];
   sample_quotes: string[];
+  n_llm_generated: number;
 }
 
 export interface DiagnosisReportOut {
@@ -221,6 +222,27 @@ export interface TrainModelResponse {
   train_report: Record<string, number>;
   promoted_at: string | null;
   n_live_examples: number;
+}
+
+export interface PromotionLogEntryOut {
+  timestamp: string;
+  decision: "PROMOTE" | "BLOCK";
+  reason: string;
+  candidate_eval: Record<string, number>;
+  production_eval: Record<string, number> | null;
+  n_live_examples: number;
+  training_seed: number;
+  training_headcount: number;
+}
+
+export interface FeatureImportanceOut {
+  feature: string;
+  importance: number;
+}
+
+export interface ModelQualityResponse {
+  history: PromotionLogEntryOut[];
+  feature_importances: FeatureImportanceOut[];
 }
 
 export type RunType = "simulate" | "diagnose";

@@ -61,6 +61,13 @@ export default function DiagnosisResults({ diagnosis, depts, teams, onApplyRecom
               {report.notes_summary.sample_quotes.map((q, k) => (
                 <p key={k} style={{ fontStyle: "italic", margin: "4px 0" }}>&ldquo;{q}&rdquo;</p>
               ))}
+              {report.notes_summary.n_llm_generated > 0 && (
+                <p style={{ margin: "4px 0", fontSize: 12 }}>
+                  {report.notes_summary.n_llm_generated} of {report.notes_summary.n_notes} note(s)
+                  above were AI-generated (Gemini), grounded in this employee's own risk-driver
+                  values.
+                </p>
+              )}
             </div>
           )}
           <div className="row">

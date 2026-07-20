@@ -8,6 +8,7 @@ import type {
   DriverOut,
   EmployeeIn,
   EmployeeOut,
+  ModelQualityResponse,
   ModelStatusResponse,
   OrgSummary,
   RiskHistoryPoint,
@@ -141,6 +142,7 @@ export const api = {
     }),
 
   getModelStatus: () => request<ModelStatusResponse>("/model/status"),
+  getModelQuality: () => request<ModelQualityResponse>("/model/quality"),
 
   trainModel: (body: TrainModelRequest) =>
     request<TrainModelResponse>("/model/train", {

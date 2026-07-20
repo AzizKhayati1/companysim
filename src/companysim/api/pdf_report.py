@@ -96,6 +96,17 @@ def _add_problem_block(pdf: _DiagnosisPDF, index: int, report: DiagnosisReportOu
         for quote in report.notes_summary.sample_quotes:
             pdf.set_x(pdf.l_margin + 5)
             pdf.multi_cell(0, 5, _safe_text(f'"{quote}"'), new_x="LMARGIN", new_y="NEXT")
+        if report.notes_summary.n_llm_generated > 0:
+            pdf.set_x(pdf.l_margin + 5)
+            pdf.multi_cell(
+                0, 5,
+                _safe_text(
+                    f"{report.notes_summary.n_llm_generated} of {report.notes_summary.n_notes} "
+                    "note(s) above were AI-generated (Gemini), grounded in this employee's own "
+                    "risk-driver values."
+                ),
+                new_x="LMARGIN", new_y="NEXT",
+            )
 
     pdf.set_text_color(0, 0, 0)
     pdf.ln(4)
