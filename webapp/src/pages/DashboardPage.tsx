@@ -15,7 +15,7 @@ import { formatDateTime } from "../utils/format";
 
 const TIER_COLOR: Record<string, string> = {
   high: "var(--danger)",
-  medium: "#d97706",
+  medium: "var(--orange)",
   low: "var(--success)",
 };
 

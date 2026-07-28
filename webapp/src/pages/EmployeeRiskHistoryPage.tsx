@@ -14,7 +14,7 @@ import { formatDateTime } from "../utils/format";
 
 const TIER_COLOR: Record<string, string> = {
   high: "var(--danger)",
-  medium: "#d97706",
+  medium: "var(--orange)",
   low: "var(--success)",
 };
 
@@ -139,7 +139,7 @@ export default function EmployeeRiskHistoryPage() {
                       className="risk-bar-fill"
                       style={{
                         width: `${Math.min(100, d.segment_mean * 100)}%`,
-                        background: i === 0 ? "var(--danger)" : "#d97706",
+                        background: i === 0 ? "var(--danger)" : "var(--orange)",
                       }}
                     />
                   </div>

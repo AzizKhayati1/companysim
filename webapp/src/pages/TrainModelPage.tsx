@@ -151,7 +151,7 @@ export default function TrainModelPage() {
                 strokeWidth={2} dot={{ r: 3 }}
               />
               <Line
-                type="monotone" dataKey="precisionAt10" name="Precision@10%" stroke="#d97706"
+                type="monotone" dataKey="precisionAt10" name="Precision@10%" stroke="var(--orange)"
                 strokeWidth={2} strokeDasharray="4 4" dot={{ r: 3 }}
               />
             </LineChart>

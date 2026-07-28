@@ -13,7 +13,7 @@ const INTERVENTIONS: { value: InterventionType; label: string; magnitudeLabel: s
 
 const TIER_COLOR: Record<string, string> = {
   high: "var(--danger)",
-  medium: "#d97706",
+  medium: "var(--orange)",
   low: "var(--success)",
 };
 
@@ -90,7 +90,7 @@ export default function AtRiskPage() {
       </div>
 
       {atRiskQuery.data && !atRiskQuery.data.model_available && (
-        <div className="card" style={{ borderColor: "#d97706" }}>
+        <div className="card" style={{ borderColor: "var(--orange)" }}>
           <p className="muted">
             No trained turnover model found (<code>models/turnover_production.joblib</code>) —
             ranking falls back to the simulation's internal risk score rather than a real
