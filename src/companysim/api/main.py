@@ -16,6 +16,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from companysim.api.database import init_db
 from companysim.api.routers import (
     at_risk,
+    chat,
     departments,
     diagnose,
     employees,
@@ -51,6 +52,7 @@ app.include_router(diagnose.router)
 app.include_router(at_risk.router)
 app.include_router(model.router)
 app.include_router(runs.router)
+app.include_router(chat.router)
 
 
 @app.get("/health")

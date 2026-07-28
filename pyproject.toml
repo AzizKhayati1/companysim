@@ -46,7 +46,7 @@ notebooks = [
     "plotly>=5.22",
 ]
 llm = [
-    "google-genai>=0.3",
+    "groq>=1.0",
 ]
 
 [project.scripts]

@@ -29,11 +29,13 @@ review history), so this fills in the best honest approximation for each:
 from __future__ import annotations
 
 from pathlib import Path
+from typing import Any
 
 import pandas as pd
+from sqlalchemy import func
 from sqlalchemy.orm import Session
 
-from companysim.api.db_models import EmployeeRecord, EmployeeWellbeingRecord
+from companysim.api.db_models import EmployeeRecord, EmployeeRiskSnapshot, EmployeeWellbeingRecord
 from companysim.ml.registry import TurnoverModelBundle, load_bundle
 from companysim.ml.turnover_features import FEATURE_COLUMNS
 
@@ -151,3 +153,35 @@ def score_current_employees(db: Session, org_id: int) -> tuple[pd.DataFrame, boo
         out["turnover_probability"], bins=[-1, 0.25, 0.5, 2], labels=["low", "medium", "high"],
     ).astype(str)
     return out, False
+
+
+def risk_trend_rows(db: Session, org_id: int) -> list[dict[str, Any]]:
+    """Org-wide mean risk per run, oldest first — a group-by-run rollup of
+    the ``EmployeeRiskSnapshot`` rows collected from every Simulate/Diagnose
+    run (see ``api/risk_snapshots.py``). Shared by the Dashboard's trend
+    chart (``routers/at_risk.py::get_risk_trend``) and the org chatbot's
+    trend tool (``api/org_chat.py``) — one query, two consumers.
+    """
+    rows = (
+        db.query(
+            EmployeeRiskSnapshot.run_id,
+            func.min(EmployeeRiskSnapshot.computed_at).label("computed_at"),
+            func.avg(EmployeeRiskSnapshot.turnover_probability).label("mean_risk"),
+            func.count(EmployeeRiskSnapshot.id).label("employee_count"),
+            func.max(EmployeeRiskSnapshot.model_available).label("model_available"),
+        )
+        .filter(EmployeeRiskSnapshot.org_id == org_id)
+        .group_by(EmployeeRiskSnapshot.run_id)
+        .order_by(func.min(EmployeeRiskSnapshot.computed_at))
+        .all()
+    )
+    return [
+        {
+            "run_id": r.run_id,
+            "computed_at": r.computed_at.isoformat(),
+            "mean_risk": float(r.mean_risk),
+            "employee_count": int(r.employee_count),
+            "model_available": bool(r.model_available),
+        }
+        for r in rows
+    ]

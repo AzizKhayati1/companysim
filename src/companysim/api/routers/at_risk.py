@@ -18,13 +18,12 @@ from __future__ import annotations
 
 import pandas as pd
 from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from companysim.api.converters import emp_str_id, org_to_pydantic, team_str_id
 from companysim.api.database import get_db
-from companysim.api.db_models import EmployeeRecord, EmployeeRiskSnapshot
-from companysim.api.scoring_frame import build_scoring_frame, score_current_employees
+from companysim.api.db_models import EmployeeRecord
+from companysim.api.scoring_frame import build_scoring_frame, risk_trend_rows, score_current_employees
 from companysim.api.schemas import (
     AtRiskEmployeeOut,
     AtRiskResponse,
@@ -76,27 +75,7 @@ def get_risk_trend(org_id: int, db: Session = Depends(get_db)):
     Simulate/Diagnose run (see ``api/risk_snapshots.py``) — no new
     persistence, just a group-by-run rollup of data already being recorded.
     """
-    rows = (
-        db.query(
-            EmployeeRiskSnapshot.run_id,
-            func.min(EmployeeRiskSnapshot.computed_at).label("computed_at"),
-            func.avg(EmployeeRiskSnapshot.turnover_probability).label("mean_risk"),
-            func.count(EmployeeRiskSnapshot.id).label("employee_count"),
-            func.max(EmployeeRiskSnapshot.model_available).label("model_available"),
-        )
-        .filter(EmployeeRiskSnapshot.org_id == org_id)
-        .group_by(EmployeeRiskSnapshot.run_id)
-        .order_by(func.min(EmployeeRiskSnapshot.computed_at))
-        .all()
-    )
-    return [
-        RiskTrendPointOut(
-            run_id=r.run_id, computed_at=r.computed_at.isoformat(),
-            mean_risk=float(r.mean_risk), employee_count=int(r.employee_count),
-            model_available=bool(r.model_available),
-        )
-        for r in rows
-    ]
+    return [RiskTrendPointOut(**row) for row in risk_trend_rows(db, org_id)]
 
 
 @router.post("/compare-intervention", response_model=CompareInterventionResponse)

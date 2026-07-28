@@ -1,12 +1,12 @@
-"""Optional real-LLM exit-note generation — Gemini, behind a flag.
+"""Optional real-LLM exit-note generation — Groq, behind a flag.
 
 ``exit_notes.py``'s template generator is fast, deterministic, and needs
 no external service; that stays the default everywhere in this project,
 including the test suite and CI. This module is the "clean, contained
 upgrade" that module's docstring anticipates: when explicitly enabled
-(``COMPANYSIM_LLM_EXIT_NOTES=1``) and a ``GEMINI_API_KEY`` is present,
+(``COMPANYSIM_LLM_EXIT_NOTES=1``) and a ``GROQ_API_KEY`` is present,
 exit notes for employees who actually quit during a run are instead
-written by Gemini — grounded in the exact same top-driver signal
+written by Groq — grounded in the exact same top-driver signal
 (``exit_notes._rank_bad_drivers``) so the LLM's note is honestly tied to
 the same underlying state as the template path, never independently
 invented.
@@ -26,7 +26,7 @@ import pandas as pd
 from companysim.ml.exit_notes import _PHRASE_BANK, _rank_bad_drivers, generate_note
 
 _FLAG_VAR = "COMPANYSIM_LLM_EXIT_NOTES"
-_MODEL = "gemini-2.0-flash"
+_MODEL = "llama-3.3-70b-versatile"
 _MAX_OUTPUT_TOKENS = 200
 
 _FEATURE_LABELS: dict[str, str] = {
@@ -45,13 +45,13 @@ _FEATURE_LABELS: dict[str, str] = {
 
 def is_llm_enabled() -> bool:
     """True only when the flag is on, a key is present, and the optional
-    ``google-genai`` package (the ``llm`` extra) is actually installed."""
+    ``groq`` package (the ``llm`` extra) is actually installed."""
     if os.environ.get(_FLAG_VAR, "").strip().lower() not in {"1", "true", "yes"}:
         return False
-    if not os.environ.get("GEMINI_API_KEY"):
+    if not os.environ.get("GROQ_API_KEY"):
         return False
     try:
-        import google.genai  # noqa: F401, PLC0415
+        import groq  # noqa: F401, PLC0415
     except ImportError:
         return False
     return True
@@ -74,25 +74,23 @@ def _build_prompt(driver_values: dict[str, float]) -> str | None:
 
 
 def generate_note_via_llm(driver_values: dict[str, float]) -> str | None:
-    """A Gemini-generated note, or ``None`` on any failure — the caller
+    """A Groq-generated note, or ``None`` on any failure — the caller
     should fall back to :func:`exit_notes.generate_note` when this
     returns ``None``."""
     prompt = _build_prompt(driver_values)
     if prompt is None:
         return None
     try:
-        from google import genai  # noqa: PLC0415
-        from google.genai import types  # noqa: PLC0415
+        from groq import Groq  # noqa: PLC0415
 
-        client = genai.Client(api_key=os.environ["GEMINI_API_KEY"])
-        response = client.models.generate_content(
+        client = Groq(api_key=os.environ["GROQ_API_KEY"])
+        response = client.chat.completions.create(
             model=_MODEL,
-            contents=prompt,
-            config=types.GenerateContentConfig(
-                max_output_tokens=_MAX_OUTPUT_TOKENS, temperature=0.9,
-            ),
+            messages=[{"role": "user", "content": prompt}],
+            max_tokens=_MAX_OUTPUT_TOKENS,
+            temperature=0.9,
         )
-        text = (response.text or "").strip()
+        text = (response.choices[0].message.content or "").strip()
         return text or None
     except Exception:
         return None
@@ -102,7 +100,7 @@ def generate_notes_for_employees_mixed(
     driver_frame: pd.DataFrame, employee_ids: list[Any], rng: np.random.Generator,
 ) -> tuple[dict[Any, str], int]:
     """Same contract as ``exit_notes.generate_notes_for_employees``, but
-    tries Gemini first for each employee and falls back to the template
+    tries Groq first for each employee and falls back to the template
     generator on any failure. Returns ``(notes, n_llm_generated)``."""
     columns = [c for c in _PHRASE_BANK if c in driver_frame.columns]
     indexed = driver_frame.set_index("employee_id")
