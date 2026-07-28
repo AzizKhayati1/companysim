@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Link, Outlet, useLocation, useParams } from "react-router-dom";
 import { api } from "../api/client";
 import { useTheme } from "../theme/ThemeContext";
+import AskVantageWidget from "./AskVantageWidget";
 
 interface NavItem {
   key: string;
@@ -201,6 +202,8 @@ export default function AppShell() {
           <Outlet />
         </div>
       </main>
+
+      {orgId !== undefined && <AskVantageWidget key={orgId} orgId={orgId} />}
     </div>
   );
 }

@@ -90,6 +90,21 @@ export interface ScenarioEventIn {
   params: Record<string, unknown>;
 }
 
+export const EVENT_TYPE_LABELS: Record<ScenarioEventType, string> = {
+  layoff: "Layoff",
+  hire: "Hire",
+  promotion: "Promotion",
+  policy_change: "Policy Change",
+  retention_bonus: "Retention Bonus",
+  workload_relief: "Workload Relief",
+  manager_coaching: "Manager Coaching",
+  budget_cut: "Budget Cut",
+  reorg: "Reorg",
+  termination: "Termination",
+  transfer: "Transfer",
+  life_event: "Life Event",
+};
+
 export interface SimulateRequest {
   ticks: number;
   replicates: number;
@@ -243,6 +258,17 @@ export interface FeatureImportanceOut {
 export interface ModelQualityResponse {
   history: PromotionLogEntryOut[];
   feature_importances: FeatureImportanceOut[];
+}
+
+export interface ChatMessageIn {
+  role: "user" | "assistant";
+  content: string;
+}
+
+export interface ChatResponse {
+  reply: string;
+  tools_used: string[];
+  llm_available: boolean;
 }
 
 export type RunType = "simulate" | "diagnose";

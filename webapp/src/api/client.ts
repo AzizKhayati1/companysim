@@ -1,5 +1,7 @@
 import type {
   AtRiskResponse,
+  ChatMessageIn,
+  ChatResponse,
   CompareInterventionRequest,
   CompareInterventionResponse,
   DepartmentIn,
@@ -139,6 +141,12 @@ export const api = {
     request<CompareInterventionResponse>(`/orgs/${orgId}/at-risk/compare-intervention`, {
       method: "POST",
       body: JSON.stringify(body),
+    }),
+
+  askOrgChat: (orgId: number, message: string, history: ChatMessageIn[]) =>
+    request<ChatResponse>(`/orgs/${orgId}/chat`, {
+      method: "POST",
+      body: JSON.stringify({ message, history }),
     }),
 
   getModelStatus: () => request<ModelStatusResponse>("/model/status"),

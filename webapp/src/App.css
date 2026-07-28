@@ -405,6 +405,212 @@
   margin-top: 0;
 }
 
+/* ---- chat ---- */
+
+.chat-message {
+  display: flex;
+  flex-direction: column;
+  max-width: 78%;
+}
+
+.chat-message-user {
+  align-items: flex-end;
+  align-self: flex-end;
+}
+
+.chat-message-assistant {
+  align-items: flex-start;
+  align-self: flex-start;
+}
+
+.chat-bubble {
+  padding: 9px 13px;
+  border-radius: var(--radius-md);
+  font-size: 14px;
+  line-height: 1.45;
+  white-space: pre-wrap;
+}
+
+.chat-message-user .chat-bubble {
+  background: var(--accent);
+  color: var(--accent-text);
+}
+
+.chat-message-assistant .chat-bubble {
+  background: var(--surface-2);
+  color: var(--text-h);
+  border: 1px solid var(--border);
+}
+
+.chat-tools-used {
+  margin-top: 4px;
+  font-size: 11.5px;
+  color: var(--text-3);
+}
+
+/* ---- ask vantage floating widget ---- */
+
+.ask-vantage-button {
+  position: fixed;
+  right: 28px;
+  bottom: 28px;
+  z-index: 80;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 13px 20px 13px 16px;
+  border-radius: 999px;
+  background: var(--accent);
+  color: var(--accent-text);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.22);
+  cursor: pointer;
+  font-size: 13.5px;
+  font-weight: 600;
+  transition: background 0.15s;
+}
+
+.ask-vantage-button:hover {
+  background: var(--accent-h);
+}
+
+.ask-vantage-panel {
+  position: fixed;
+  right: 28px;
+  bottom: 28px;
+  z-index: 90;
+  width: 388px;
+  max-height: min(640px, calc(100vh - 56px));
+  display: flex;
+  flex-direction: column;
+  border-radius: 20px;
+  overflow: hidden;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  box-shadow: 0 26px 70px rgba(0, 0, 0, 0.28);
+}
+
+.ask-vantage-header {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 15px 16px;
+  border-bottom: 1px solid var(--border);
+  background: var(--sidebar-bg);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+}
+
+.ask-vantage-header-mark {
+  width: 30px;
+  height: 30px;
+  border-radius: 9px;
+  background: linear-gradient(140deg, var(--accent), var(--accent-strong));
+  flex: none;
+}
+
+.ask-vantage-header-title {
+  font-size: 13.5px;
+  font-weight: 700;
+  color: var(--text-h);
+}
+
+.ask-vantage-header-subtitle {
+  font-size: 11.5px;
+  color: var(--text-2);
+}
+
+.ask-vantage-close {
+  width: 26px;
+  height: 26px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: var(--text-2);
+  flex: none;
+}
+
+.ask-vantage-close:hover {
+  background: var(--surface-2);
+}
+
+.ask-vantage-messages {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.ask-vantage-panel .chat-bubble {
+  font-size: 13px;
+}
+
+.ask-vantage-footer {
+  padding: 12px 14px 14px;
+  border-top: 1px solid var(--border);
+}
+
+.ask-vantage-suggestions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 10px;
+}
+
+.ask-vantage-suggestion {
+  padding: 6px 11px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  font-size: 11.5px;
+  color: var(--text-2);
+  cursor: pointer;
+}
+
+.ask-vantage-suggestion:hover {
+  background: var(--surface-2);
+  color: var(--text-h);
+}
+
+.ask-vantage-input-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 8px 8px 13px;
+  border-radius: 12px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+}
+
+.ask-vantage-input-row input {
+  flex: 1;
+  border: none;
+  outline: none;
+  background: transparent;
+  font-size: 13px;
+  color: var(--text-h);
+  padding: 0;
+}
+
+.ask-vantage-send {
+  width: 30px;
+  height: 30px;
+  border-radius: 9px;
+  background: var(--accent);
+  color: var(--accent-text);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex: none;
+}
+
+.ask-vantage-send:hover {
+  background: var(--accent-h);
+}
+
 /* ---- buttons ---- */
 
 .btn {
