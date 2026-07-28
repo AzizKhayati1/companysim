@@ -3,11 +3,13 @@ import {
   CartesianGrid,
   ComposedChart,
   Line,
+  ReferenceLine,
   ResponsiveContainer,
   Tooltip,
   XAxis,
   YAxis,
 } from "recharts";
+import type { EventMarker } from "../utils/eventMarkers";
 
 interface FanChartProps {
   rows: Record<string, number>[];
@@ -15,6 +17,7 @@ interface FanChartProps {
   title: string;
   color?: string;
   singleRun?: boolean;
+  markers?: EventMarker[];
 }
 
 export default function FanChart({
@@ -23,6 +26,7 @@ export default function FanChart({
   title,
   color = "#6d28d9",
   singleRun = false,
+  markers = [],
 }: FanChartProps) {
   const data = rows.map((r) => {
     if (singleRun) {
@@ -43,6 +47,15 @@ export default function FanChart({
           <XAxis dataKey="tick" fontSize={11} />
           <YAxis fontSize={11} />
           <Tooltip />
+          {markers.map((m) => (
+            <ReferenceLine
+              key={m.at_tick}
+              x={m.at_tick}
+              stroke="var(--text-3)"
+              strokeDasharray="3 3"
+              label={{ value: m.label, position: "top", fontSize: 9, fill: "var(--text-3)" }}
+            />
+          ))}
           {singleRun ? (
             <Line type="monotone" dataKey="value" stroke={color} strokeWidth={2} dot={false} />
           ) : (

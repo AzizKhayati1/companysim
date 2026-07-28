@@ -1,11 +1,12 @@
 import { useState } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { useParams } from "react-router-dom";
+import { useLocation, useParams } from "react-router-dom";
 import {
   CartesianGrid,
   Legend,
   Line,
   LineChart,
+  ReferenceLine,
   ResponsiveContainer,
   Tooltip,
   XAxis,
@@ -15,13 +16,20 @@ import { api } from "../api/client";
 import DiagnosisResults from "../components/DiagnosisResults";
 import SimulationResults from "../components/SimulationResults";
 import {
+  EVENT_TYPE_LABELS,
   LEVELS,
   LIFE_EVENT_TYPES,
   type DepartmentOut,
   type DiagnosisReportOut,
   type ScenarioEventIn,
   type ScenarioEventType,
+  type SimulateRequest,
 } from "../types";
+import { buildEventMarkers } from "../utils/eventMarkers";
+
+const DEFAULT_TICKS = 12;
+const DEFAULT_REPLICATES = 1;
+const DEFAULT_SEED = 1234;
 
 const EVENT_TYPES: { value: ScenarioEventType; label: string; group: string }[] = [
   { value: "layoff", label: "Layoff", group: "Global" },
@@ -78,6 +86,8 @@ const SCENARIO_TEMPLATES: {
 export default function SimulatePage() {
   const { orgId: orgIdStr } = useParams();
   const orgId = Number(orgIdStr);
+  const location = useLocation();
+  const loadedRequest = (location.state as { loadedRequest?: SimulateRequest } | null)?.loadedRequest;
 
   const orgQuery = useQuery({ queryKey: ["org", orgId], queryFn: () => api.getOrg(orgId) });
   const deptsQuery = useQuery({
@@ -96,10 +106,11 @@ export default function SimulatePage() {
   const teams = teamsQuery.data ?? [];
   const emps = empsQuery.data ?? [];
 
-  const [ticks, setTicks] = useState(12);
-  const [replicates, setReplicates] = useState(1);
-  const [seed, setSeed] = useState(1234);
-  const [events, setEvents] = useState<ScenarioEventIn[]>([]);
+  const [ticks, setTicks] = useState(loadedRequest?.ticks ?? DEFAULT_TICKS);
+  const [replicates, setReplicates] = useState(loadedRequest?.replicates ?? DEFAULT_REPLICATES);
+  const [seed, setSeed] = useState(loadedRequest?.seed ?? DEFAULT_SEED);
+  const [events, setEvents] = useState<ScenarioEventIn[]>(loadedRequest?.events ?? []);
+  const [showLoadedBanner, setShowLoadedBanner] = useState(loadedRequest !== undefined);
 
   const [newType, setNewType] = useState<ScenarioEventType>("layoff");
   const [atTick, setAtTick] = useState(1);
@@ -183,6 +194,14 @@ export default function SimulatePage() {
     forecastMutation.mutate();
   };
 
+  const resetToDefaults = () => {
+    setTicks(DEFAULT_TICKS);
+    setReplicates(DEFAULT_REPLICATES);
+    setSeed(DEFAULT_SEED);
+    setEvents([]);
+    setShowLoadedBanner(false);
+  };
+
   const result = simulateMutation.data;
   const diagnosis = diagnoseMutation.data;
   const forecast = forecastMutation.data;
@@ -194,6 +213,7 @@ export default function SimulatePage() {
         treated: Math.round(((forecast.treated.rows[i]?.mean_turnover_risk as number) ?? 0) * 1000) / 10,
       }))
     : [];
+  const forecastMarkers = buildEventMarkers(events, EVENT_TYPE_LABELS);
 
   return (
     <div className="page">
@@ -206,6 +226,22 @@ export default function SimulatePage() {
           </p>
         </div>
       </div>
+
+      {showLoadedBanner && (
+        <div
+          className="card"
+          style={{
+            display: "flex", alignItems: "center", justifyContent: "space-between",
+            borderColor: "var(--accent)", marginBottom: 20,
+          }}
+        >
+          <p className="muted" style={{ margin: 0 }}>
+            Loaded a saved scenario from Run History — edit events below and re-run to save it as
+            a new run, or start over.
+          </p>
+          <button className="btn" onClick={resetToDefaults}>Start fresh</button>
+        </div>
+      )}
 
       <div className="grid-2">
         <div className="card">
@@ -448,6 +484,15 @@ export default function SimulatePage() {
                 <YAxis fontSize={11} unit="%" />
                 <Tooltip formatter={(v) => `${v}%`} />
                 <Legend wrapperStyle={{ fontSize: 12 }} />
+                {forecastMarkers.map((m) => (
+                  <ReferenceLine
+                    key={m.at_tick}
+                    x={m.at_tick}
+                    stroke="var(--text-3)"
+                    strokeDasharray="3 3"
+                    label={{ value: m.label, position: "top", fontSize: 9, fill: "var(--text-3)" }}
+                  />
+                ))}
                 <Line
                   type="monotone" dataKey="baseline" name="Baseline" stroke="var(--text-3)"
                   strokeWidth={2} strokeDasharray="4 4" dot={false}
@@ -471,7 +516,7 @@ export default function SimulatePage() {
         />
       )}
 
-      {result && <SimulationResults result={result} />}
+      {result && <SimulationResults result={result} events={events} />}
     </div>
   );
 }

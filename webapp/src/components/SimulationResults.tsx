@@ -1,4 +1,5 @@
-import type { SimulateResponse } from "../types";
+import { EVENT_TYPE_LABELS, type ScenarioEventIn, type SimulateResponse } from "../types";
+import { buildEventMarkers } from "../utils/eventMarkers";
 import FanChart from "./FanChart";
 
 const METRICS: { key: string; label: string; color: string }[] = [
@@ -9,7 +10,11 @@ const METRICS: { key: string; label: string; color: string }[] = [
   { key: "mean_burnout", label: "Mean burnout", color: "#ea580c" },
 ];
 
-export default function SimulationResults({ result }: { result: SimulateResponse }) {
+export default function SimulationResults({
+  result, events = [],
+}: { result: SimulateResponse; events?: ScenarioEventIn[] }) {
+  const markers = buildEventMarkers(events, EVENT_TYPE_LABELS);
+
   return (
     <div style={{ marginTop: 24 }}>
       <h2>
@@ -24,6 +29,7 @@ export default function SimulationResults({ result }: { result: SimulateResponse
               title={m.label}
               color={m.color}
               singleRun={result.mode === "single"}
+              markers={markers}
             />
           </div>
         ))}

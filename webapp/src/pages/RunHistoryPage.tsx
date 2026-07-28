@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { api } from "../api/client";
 import DiagnosisResults from "../components/DiagnosisResults";
 import SimulationResults from "../components/SimulationResults";
@@ -11,6 +11,7 @@ export default function RunHistoryPage() {
   const { orgId: orgIdStr } = useParams();
   const orgId = Number(orgIdStr);
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
 
   const orgQuery = useQuery({ queryKey: ["org", orgId], queryFn: () => api.getOrg(orgId) });
   const deptsQuery = useQuery({
@@ -44,6 +45,13 @@ export default function RunHistoryPage() {
     onSuccess: (_data, runId) => {
       queryClient.invalidateQueries({ queryKey: ["runs", orgId] });
       if (selectedRunId === runId) setSelectedRunId(null);
+    },
+  });
+
+  const loadMutation = useMutation({
+    mutationFn: (runId: number) => api.getRun(orgId, runId),
+    onSuccess: (runDetail) => {
+      navigate(`/orgs/${orgId}/simulate`, { state: { loadedRequest: runDetail.request } });
     },
   });
 
@@ -82,7 +90,7 @@ export default function RunHistoryPage() {
             <div className="data-list-scroll">
               <div
                 className="data-list-header"
-                style={{ gridTemplateColumns: "170px 100px 1fr 190px" }}
+                style={{ gridTemplateColumns: "170px 100px 1fr 280px" }}
               >
                 <div>When</div>
                 <div>Type</div>
@@ -93,7 +101,7 @@ export default function RunHistoryPage() {
                 <div
                   className="data-list-row"
                   key={r.id}
-                  style={{ gridTemplateColumns: "170px 100px 1fr 190px" }}
+                  style={{ gridTemplateColumns: "170px 100px 1fr 280px" }}
                 >
                   <div className="data-list-cell">
                     {formatDateTime(r.created_at)}
@@ -105,6 +113,13 @@ export default function RunHistoryPage() {
                   <div className="data-list-cell actions">
                     <button className="btn" onClick={() => setSelectedRunId(r.id)}>
                       View
+                    </button>
+                    <button
+                      className="btn"
+                      disabled={loadMutation.isPending}
+                      onClick={() => loadMutation.mutate(r.id)}
+                    >
+                      Load into Simulator
                     </button>
                     <button
                       className="btn btn-danger"
@@ -121,9 +136,13 @@ export default function RunHistoryPage() {
         )}
       </div>
 
+      {loadMutation.isError && (
+        <p className="error">{(loadMutation.error as Error).message}</p>
+      )}
+
       {runDetailQuery.isLoading && <p className="muted">Loading run...</p>}
       {detail && detail.run_type === "simulate" && (
-        <SimulationResults result={detail.response as SimulateResponse} />
+        <SimulationResults result={detail.response as SimulateResponse} events={detail.request.events} />
       )}
       {detail && detail.run_type === "diagnose" && (
         <DiagnosisResults
