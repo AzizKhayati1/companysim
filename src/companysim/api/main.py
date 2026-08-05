@@ -20,6 +20,9 @@ from companysim.api.routers import (
     departments,
     diagnose,
     employees,
+    exit_notes,
+    ingest,
+    llm,
     model,
     orgs,
     runs,
@@ -53,6 +56,9 @@ app.include_router(at_risk.router)
 app.include_router(model.router)
 app.include_router(runs.router)
 app.include_router(chat.router)
+app.include_router(exit_notes.router)
+app.include_router(ingest.router)
+app.include_router(llm.router)
 
 
 @app.get("/health")

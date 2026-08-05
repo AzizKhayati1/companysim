@@ -236,6 +236,23 @@
   margin: 0 auto;
 }
 
+/* Token meter row. Sticky so it stays reachable while a long page scrolls,
+   but inside the content column so it never overlaps the page body.
+   z-index sits above cards and below the meter's own popover (40/41). */
+.app-topbar {
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  display: flex;
+  justify-content: flex-end;
+  padding: 12px 0 4px;
+  pointer-events: none;
+}
+
+.app-topbar > * {
+  pointer-events: auto;
+}
+
 .page-header {
   display: flex;
   align-items: flex-start;

@@ -1,0 +1,25 @@
+MERIDIAN ANALYTICS — ANNUAL PERFORMANCE REVIEW
+
+Employee:      Jason James
+Email:         jason.james@meridiananalytics.example
+Role:          Platform Engineer (IC1)
+Review period: 1 January 2025 – 31 December 2025
+Reviewer:      Alison Pike, Director of Engineering
+
+OVERALL RATING: 5 out of 5 — Outstanding
+
+Summary
+Jason had an exceptional year. They led the billing
+migration end to end, cut p99 latency on the reconciliation service by 62%,
+and became the person the team escalates to when something is genuinely hard.
+
+Strengths
+- Technical depth: the sharding design was reused by two other teams.
+- Mentorship: onboarded three engineers, all productive inside a month.
+
+Development areas
+- Occasionally takes on too much personally rather than delegating.
+
+Goals for next period
+- Lead the platform reliability workstream.
+- Formalise the mentoring already happening informally.

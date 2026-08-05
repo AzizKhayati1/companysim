@@ -36,6 +36,8 @@ from sqlalchemy.orm import Session
 from companysim.api.converters import org_to_pydantic
 from companysim.api.database import get_db
 from companysim.api.db_models import OrgRecord
+from companysim.api.exit_note_records import PendingNoteRecord, record_exit_notes
+from companysim.api.llm_usage import record_llm_calls
 from companysim.api.pdf_report import render_diagnosis_pdf
 from companysim.api.risk_snapshots import record_risk_snapshots
 from companysim.api.run_history import save_run
@@ -55,10 +57,12 @@ from companysim.ml.diagnostics import detect_problems, explain, recommend
 from companysim.ml.diagnostics import diagnose as run_diagnose
 from companysim.ml.exit_notes import (
     NotesAnalysis,
+    analyze_note,
     analyze_notes,
     augment_explanation_with_notes,
     generate_notes_for_employees,
 )
+from companysim.llm.usage import collect
 from companysim.ml.llm_exit_notes import generate_notes_for_employees_mixed, is_llm_enabled
 from companysim.model.organization import OrganizationModel
 
@@ -112,6 +116,7 @@ def build_diagnosis_report(org_id: int, req: SimulateRequest, db: Session) -> Di
     notes_rng = np.random.default_rng(req.seed)
 
     reports: list[DiagnosisReportOut] = []
+    pending_note_records: list[PendingNoteRecord] = []
     for problem in problems:
         diagnosis = run_diagnose(problem, driver_frame, turnover_bundle=bundle)
         rec = recommend(diagnosis, driver_frame)
@@ -127,13 +132,19 @@ def build_diagnosis_report(org_id: int, req: SimulateRequest, db: Session) -> Di
             ]
             if segment_quit_ids:
                 if is_llm_enabled():
-                    notes, n_llm = generate_notes_for_employees_mixed(
+                    notes, llm_employee_ids = generate_notes_for_employees_mixed(
                         driver_frame, segment_quit_ids, notes_rng,
                     )
                 else:
                     notes = generate_notes_for_employees(driver_frame, segment_quit_ids, notes_rng)
-                    n_llm = 0
-                notes_analysis = analyze_notes(notes, n_llm_generated=n_llm)
+                    llm_employee_ids = set()
+                notes_analysis = analyze_notes(notes, n_llm_generated=len(llm_employee_ids))
+                for eid, text in notes.items():
+                    sentiment, themes = analyze_note(text)
+                    pending_note_records.append(PendingNoteRecord(
+                        employee_id=int(eid), text=text, sentiment=sentiment,
+                        themes=themes, is_llm_generated=eid in llm_employee_ids,
+                    ))
 
         text = augment_explanation_with_notes(text, notes_analysis)
 
@@ -171,17 +182,28 @@ def build_diagnosis_report(org_id: int, req: SimulateRequest, db: Session) -> Di
     run_record = save_run(db, org_id, "diagnose", summary, req, response)
     collect_training_examples(db, org_id, run_record.id, req.ticks, model)
     record_risk_snapshots(db, org_id, run_record.id)
+    record_exit_notes(db, org_id, run_record.id, pending_note_records)
     return response
 
 
+# Both endpoints collect around their own call rather than
+# build_diagnosis_report collecting internally: that keeps exactly one
+# collect block per HTTP request, so an export can't be double-counted by
+# a nested block. A run with LLM exit notes off records nothing, which is
+# correct — the template generator makes no requests.
 @router.post("/diagnose", response_model=DiagnoseResponse)
 def diagnose_run(org_id: int, req: SimulateRequest, db: Session = Depends(get_db)):
-    return build_diagnosis_report(org_id, req, db)
+    with collect() as calls:
+        report = build_diagnosis_report(org_id, req, db)
+    record_llm_calls(db, calls, org_id=org_id)
+    return report
 
 
 @router.post("/diagnose/export")
 def diagnose_export(org_id: int, req: SimulateRequest, db: Session = Depends(get_db)):
-    report = build_diagnosis_report(org_id, req, db)
+    with collect() as calls:
+        report = build_diagnosis_report(org_id, req, db)
+    record_llm_calls(db, calls, org_id=org_id)
     org_record = db.query(OrgRecord).filter_by(id=org_id).first()
     org_name = org_record.name if org_record is not None else f"Org {org_id}"
     pdf_bytes = render_diagnosis_pdf(org_name, report)

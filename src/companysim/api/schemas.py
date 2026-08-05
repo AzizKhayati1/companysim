@@ -157,6 +157,40 @@ class DiagnoseResponse(BaseModel):
     reports: list[DiagnosisReportOut]
 
 
+class ThemeFrequencyOut(BaseModel):
+    theme: str
+    count: int
+
+
+class ExitNoteSentimentPointOut(BaseModel):
+    run_id: int
+    generated_at: str
+    mean_sentiment: float
+    n_notes: int
+
+
+class ExitNoteQuoteOut(BaseModel):
+    id: int
+    run_id: int
+    employee_id: int | None
+    text: str
+    sentiment: float
+    themes: list[str]
+    is_llm_generated: bool
+    is_backfilled: bool
+    generated_at: str
+
+
+class ExitNotesInsightsResponse(BaseModel):
+    n_notes_total: int
+    mean_sentiment_overall: float
+    n_llm_generated_total: int
+    n_backfilled_total: int
+    theme_frequency: list[ThemeFrequencyOut]
+    sentiment_trend: list[ExitNoteSentimentPointOut]
+    recent_quotes: list[ExitNoteQuoteOut]
+
+
 class AtRiskEmployeeOut(BaseModel):
     employee_id: int
     full_name: str
@@ -198,6 +232,7 @@ class ModelStatusResponse(BaseModel):
     model_available: bool
     metadata: dict[str, Any] = {}
     pending_training_examples: int = 0
+    pending_document_examples: int = 0
 
 
 class TrainModelRequest(BaseModel):
@@ -217,6 +252,8 @@ class TrainModelResponse(BaseModel):
     train_report: dict[str, Any]
     promoted_at: str | None
     n_live_examples: int = 0
+    n_document_examples: int = 0
+    extra_example_counts: dict[str, int] = {}
 
 
 class PromotionLogEntryOut(BaseModel):
@@ -226,6 +263,9 @@ class PromotionLogEntryOut(BaseModel):
     candidate_eval: dict[str, Any]
     production_eval: dict[str, Any] | None
     n_live_examples: int = 0
+    # Absent from log lines written before document ingestion existed —
+    # defaulted rather than required so historical entries still parse.
+    extra_example_counts: dict[str, int] = {}
     training_seed: int
     training_headcount: int
 
@@ -282,3 +322,148 @@ class RiskTrendPointOut(BaseModel):
     mean_risk: float
     employee_count: int
     model_available: bool
+
+
+class SourceDocumentOut(BaseModel):
+    id: int
+    kind: str
+    filename: str
+    content_hash: str
+    uploaded_at: str
+    as_of_date: str | None
+    extraction_status: str
+    extractor: str | None
+    extraction_error: str | None
+
+
+class ExtractedFactOut(BaseModel):
+    id: int
+    document_id: int
+    target_table: str
+    target_employee_id: int | None
+    field_name: str
+    proposed_value: str
+    current_value: str | None
+    confidence: float
+    review_status: str
+    evidence_span: str
+    applied_at: str | None
+
+
+class DocumentDetailOut(SourceDocumentOut):
+    raw_text: str
+    pending_facts: list[ExtractedFactOut]
+
+
+class ExtractDocumentResponse(BaseModel):
+    document: SourceDocumentOut
+    n_facts_staged: int
+    facts: list[ExtractedFactOut]
+
+
+class ApplyFactsRequest(BaseModel):
+    approved_fact_ids: list[int]
+
+
+class ApplyFactsResponse(BaseModel):
+    n_applied: int
+    n_rejected: int
+    n_employees_created: int = 0
+    # Approved facts that could not be applied (an unknown department name,
+    # an employee deleted since staging) — surfaced by message so the
+    # reviewer sees exactly what didn't land.
+    unapplied: list[str] = []
+
+
+class IngestTotalsOut(BaseModel):
+    n_documents: int
+    n_pending_facts: int
+    n_applied_facts: int
+    n_performance_reviews: int
+    n_ingested_exit_notes: int
+
+
+class TokenTotalsOut(BaseModel):
+    requests: int = 0
+    prompt_tokens: int = 0
+    completion_tokens: int = 0
+    total_tokens: int = 0
+
+
+class FeatureUsageOut(BaseModel):
+    feature: str
+    requests: int
+    total_tokens: int
+
+
+class LlmRequestOut(BaseModel):
+    id: int
+    feature: str
+    model: str
+    org_id: int | None
+    prompt_tokens: int
+    completion_tokens: int
+    total_tokens: int
+    created_at: str
+
+
+class LlmUsageResponse(BaseModel):
+    """Token spend across every Groq-backed feature. Windows are UTC;
+    ``week`` is a rolling 7×24h window, not a calendar week."""
+
+    all_time: TokenTotalsOut
+    today: TokenTotalsOut
+    week: TokenTotalsOut
+    by_feature: list[FeatureUsageOut] = []
+    recent: list[LlmRequestOut] = []
+
+
+class LineageFieldOut(BaseModel):
+    column: str
+    value: str
+    # What this column feeds once written — empty when it's a plain stored
+    # value with no downstream consumer.
+    note: str = ""
+
+
+class LineageTargetOut(BaseModel):
+    """One database row a document wrote (or proposes to write)."""
+
+    table: str
+    # "written"  — the row exists now
+    # "pending"  — staged, awaiting approval, nothing written yet
+    # "applied"  — was staged and has since been approved and written
+    state: str
+    row_id: int | None = None
+    employee_id: int | None = None
+    employee_name: str | None = None
+    fields: list[LineageFieldOut] = []
+
+
+class DocumentLineageOut(BaseModel):
+    """Where a document's extracted content lands in the schema, and what
+    that lands in turn feeds — the provenance chain behind the review UI.
+    """
+
+    document_id: int
+    kind: str
+    extraction_status: str
+    extractor: str | None = None
+    targets: list[LineageTargetOut] = []
+    downstream: list[str] = []
+
+
+class DocumentCohortOut(BaseModel):
+    """Whether this org's documents can produce labeled training examples.
+    ``usable=False`` carries the reason in ``reason`` — the denominator
+    rule (see ``ingest.cohorts``) surfaced rather than failing silently.
+    """
+
+    usable: bool
+    reason: str = ""
+    window_start: str | None = None
+    window_end: str | None = None
+    n_positives: int = 0
+    n_negatives: int = 0
+    base_rate: float = 0.0
+    n_unmatched_resignations: int = 0

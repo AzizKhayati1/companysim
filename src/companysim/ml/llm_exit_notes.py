@@ -23,6 +23,7 @@ from typing import Any
 import numpy as np
 import pandas as pd
 
+from companysim.llm.usage import FEATURE_EXIT_NOTES, record_response
 from companysim.ml.exit_notes import _PHRASE_BANK, _rank_bad_drivers, generate_note
 
 _FLAG_VAR = "COMPANYSIM_LLM_EXIT_NOTES"
@@ -90,6 +91,7 @@ def generate_note_via_llm(driver_values: dict[str, float]) -> str | None:
             max_tokens=_MAX_OUTPUT_TOKENS,
             temperature=0.9,
         )
+        record_response(response, feature=FEATURE_EXIT_NOTES, model=_MODEL)
         text = (response.choices[0].message.content or "").strip()
         return text or None
     except Exception:
@@ -98,14 +100,18 @@ def generate_note_via_llm(driver_values: dict[str, float]) -> str | None:
 
 def generate_notes_for_employees_mixed(
     driver_frame: pd.DataFrame, employee_ids: list[Any], rng: np.random.Generator,
-) -> tuple[dict[Any, str], int]:
+) -> tuple[dict[Any, str], set[Any]]:
     """Same contract as ``exit_notes.generate_notes_for_employees``, but
     tries Groq first for each employee and falls back to the template
-    generator on any failure. Returns ``(notes, n_llm_generated)``."""
+    generator on any failure. Returns ``(notes, llm_employee_ids)`` — the
+    ids whose note was actually LLM-written, a subset of ``notes.keys()``.
+    Callers needing the old count use ``len(llm_employee_ids)``; the set
+    itself lets a caller attribute ``is_llm_generated`` per note when
+    persisting individual rows (see ``api.exit_note_records``)."""
     columns = [c for c in _PHRASE_BANK if c in driver_frame.columns]
     indexed = driver_frame.set_index("employee_id")
     notes: dict[Any, str] = {}
-    n_llm = 0
+    llm_employee_ids: set[Any] = set()
     for eid in employee_ids:
         if eid not in indexed.index:
             continue
@@ -114,7 +120,7 @@ def generate_notes_for_employees_mixed(
         llm_note = generate_note_via_llm(values)
         if llm_note:
             notes[eid] = llm_note
-            n_llm += 1
+            llm_employee_ids.add(eid)
         else:
             notes[eid] = generate_note(values, rng)
-    return notes, n_llm
+    return notes, llm_employee_ids

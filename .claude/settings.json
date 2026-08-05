@@ -1,0 +1,34 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(.venv/Scripts/python -m pytest tests/test_llm_ingest.py -q)",
+      "Bash(.venv/Scripts/python -m pytest tests/test_ingest_pipeline.py -q)",
+      "Bash(.venv/Scripts/python -m pytest tests/test_ingest_pipeline.py::test_full_cohort_path_produces_labeled_examples -q)",
+      "Bash(.venv/Scripts/python -m pytest tests/test_document_ingest.py::test_resignation_letter_extracts_nothing_and_needs_review -q)",
+      "Bash(.venv/Scripts/python -m pytest tests/test_document_ingest.py tests/test_document_cohorts.py tests/test_llm_ingest.py tests/test_ingest_pipeline.py -q)",
+      "Bash(.venv/Scripts/alembic current *)",
+      "Bash(.venv/Scripts/python -c ' *)",
+      "Bash(ls -d .claude/skills/*/ 2>/dev/null && grep -Hm1 '^description:' .claude/skills/*/SKILL.md 2>/dev/null; echo \"---\"; ls .claude/ 2>/dev/null; echo \"--- root skills? ---\"; ls /c/Users/MSI/.claude/skills/ 2>/dev/null | head)",
+      "Read(//c/Users/MSI/.claude/skills//**)",
+      "Bash(.venv/Scripts/python -m uvicorn companysim.api.main:app --port 8000)",
+      "Bash(curl -sf http://localhost:8000/health)",
+      "Bash(break)",
+      "Bash(curl -sf http://localhost:5173/)",
+      "Bash(curl -s http://localhost:8000/health)",
+      "Bash(curl -s http://localhost:8000/orgs)",
+      "Bash(curl -s http://localhost:8000/model/status)",
+      "Bash(python -c \"import json,sys; d=json.load\\(sys.stdin\\); print\\(json.dumps\\({k:v for k,v in d.items\\(\\) if k!='metadata'}, indent=2\\)\\); print\\('metadata keys:', list\\(d['metadata']\\)[:8]\\)\")",
+      "Bash(curl -s -X POST http://localhost:8000/orgs/9/documents -F 'file=@/c/Users/MSI/AppData/Local/Temp/claude/d--companysim/2d8f60a8-9be4-4398-b7fb-b6186337c866/scratchpad/roster.csv;type=text/csv' -F kind=roster -F as_of_date=2026-01-01)",
+      "Bash(curl -s -o /dev/null -w 'HTTP %{http_code}\\\\n' -X POST http://localhost:8000/orgs/9/documents -F 'file=@/c/Users/MSI/AppData/Local/Temp/claude/d--companysim/2d8f60a8-9be4-4398-b7fb-b6186337c866/scratchpad/roster.csv;type=text/csv' -F kind=roster)",
+      "Bash(curl -s -X POST \"http://localhost:8000/orgs/9/documents\" -F \"file=@roster.csv;type=text/csv\" -F \"kind=roster\" -F \"as_of_date=2026-01-01\")",
+      "Bash(curl -s -w \"\\\\nHTTP %{http_code}\\\\n\" -X POST \"http://localhost:8000/orgs/9/documents\" -F \"file=@roster.csv;type=text/csv\" -F \"kind=roster\")",
+      "Bash(curl -s -X POST \"http://localhost:8000/orgs/9/documents/1/extract\")",
+      "Bash(python -m json.tool)",
+      "Bash(curl -s \"http://localhost:8000/orgs/9/documents/1\")",
+      "Bash(python -c ' *)",
+      "Edit(/.claude/skills/run-servers/**)",
+      "Bash(npx tsc *)",
+      "Bash(echo \"TSC_EXIT=$?\")"
+    ]
+  }
+}

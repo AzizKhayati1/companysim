@@ -37,6 +37,19 @@ _STORED_COLUMNS: tuple[str, ...] = (
     "team_size", "is_manager", "promotions_count",
     "mood_pulse_mean", "stress_level_pulse_mean", "sleep_quality_pulse_mean",
     "energy_level_pulse_mean", "burnout_exhaustion_pulse_mean",
+    # Real once performance reviews are ingested (see scoring_frame's
+    # rating_features), so they must be captured at collection time —
+    # reconstructing them at read time would re-apply today's reviews to
+    # an example labeled months ago.
+    "rating_last", "rating_prev", "rating_delta",
+)
+
+# Still genuinely constant in build_scoring_frame — no week-by-week pulse
+# history in this schema — so these stay reconstructed at read time
+# rather than stored as dead columns.
+_PLACEHOLDER_TREND_COLUMNS: tuple[str, ...] = (
+    "mood_pulse_trend", "stress_level_pulse_trend", "sleep_quality_pulse_trend",
+    "energy_level_pulse_trend", "burnout_exhaustion_pulse_trend",
 )
 
 
@@ -65,6 +78,9 @@ def collect_training_examples(
             sleep_quality_pulse_mean=float(row.sleep_quality_pulse_mean),
             energy_level_pulse_mean=float(row.energy_level_pulse_mean),
             burnout_exhaustion_pulse_mean=float(row.burnout_exhaustion_pulse_mean),
+            rating_last=float(row.rating_last),
+            rating_prev=float(row.rating_prev),
+            rating_delta=float(row.rating_delta),
         )
         for row in frame.itertuples()
     ]
@@ -75,22 +91,22 @@ def collect_training_examples(
 def load_collected_examples(db: Session) -> pd.DataFrame:
     """All collected examples, reshaped to ``FEATURE_COLUMNS`` + label —
     ready to concatenate onto ``ml.gate.run_training_gate``'s synthetic
-    cohort. The constant placeholder columns (``*_pulse_trend``,
-    ``rating_*``) aren't stored per-row; they're filled in here instead,
-    matching ``api.scoring_frame.build_scoring_frame`` exactly.
+    cohort. Only the still-constant ``*_pulse_trend`` columns are filled
+    in here; ``rating_*`` is read from the row, since ingested performance
+    reviews make it vary per employee (see
+    ``api.scoring_frame.rating_features``).
     """
     rows = db.query(TurnoverTrainingExample).all()
     if not rows:
         return pd.DataFrame(columns=[*FEATURE_COLUMNS, "quit_within_horizon"])
 
     frame = pd.DataFrame([
-        {**{col: getattr(r, col) for col in _STORED_COLUMNS}, "quit_within_horizon": r.quit_within_horizon}
+        {
+            **{col: getattr(r, col) for col in _STORED_COLUMNS},
+            "quit_within_horizon": r.quit_within_horizon,
+        }
         for r in rows
     ])
-    for col in ("mood_pulse_trend", "stress_level_pulse_trend", "sleep_quality_pulse_trend",
-                "energy_level_pulse_trend", "burnout_exhaustion_pulse_trend"):
+    for col in _PLACEHOLDER_TREND_COLUMNS:
         frame[col] = 0.0
-    frame["rating_last"] = 3.0
-    frame["rating_prev"] = 3.0
-    frame["rating_delta"] = 0.0
     return frame[[*FEATURE_COLUMNS, "quit_within_horizon"]]

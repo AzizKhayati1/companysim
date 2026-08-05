@@ -1,4 +1,5 @@
 import type {
+  ApplyFactsResponse,
   AtRiskResponse,
   ChatMessageIn,
   ChatResponse,
@@ -7,9 +8,16 @@ import type {
   DepartmentIn,
   DepartmentOut,
   DiagnoseResponse,
+  DocumentCohortOut,
+  DocumentDetailOut,
+  DocumentLineageOut,
   DriverOut,
   EmployeeIn,
   EmployeeOut,
+  ExitNotesInsightsResponse,
+  ExtractDocumentResponse,
+  IngestTotalsOut,
+  LlmUsageResponse,
   ModelQualityResponse,
   ModelStatusResponse,
   OrgSummary,
@@ -20,6 +28,7 @@ import type {
   RunType,
   SimulateRequest,
   SimulateResponse,
+  SourceDocumentOut,
   TeamIn,
   TeamOut,
   TrainModelRequest,
@@ -148,6 +157,63 @@ export const api = {
       method: "POST",
       body: JSON.stringify({ message, history }),
     }),
+
+  getExitNotesInsights: (orgId: number, quoteLimit = 20) =>
+    request<ExitNotesInsightsResponse>(
+      `/orgs/${orgId}/exit-notes/insights?quote_limit=${quoteLimit}`,
+    ),
+
+  listDocuments: (orgId: number) =>
+    request<SourceDocumentOut[]>(`/orgs/${orgId}/documents`),
+  getDocument: (orgId: number, documentId: number) =>
+    request<DocumentDetailOut>(`/orgs/${orgId}/documents/${documentId}`),
+  getIngestTotals: (orgId: number) =>
+    request<IngestTotalsOut>(`/orgs/${orgId}/documents/totals`),
+  getDocumentCohort: (orgId: number) =>
+    request<DocumentCohortOut>(`/orgs/${orgId}/documents/cohort`),
+  getDocumentLineage: (orgId: number, documentId: number) =>
+    request<DocumentLineageOut>(`/orgs/${orgId}/documents/${documentId}/lineage`),
+
+  // Multipart, so it can't go through `request` — that helper always sets
+  // Content-Type: application/json, and overriding it here would strip the
+  // multipart boundary the browser generates.
+  uploadDocument: async (
+    orgId: number, file: File, kind: string, asOfDate?: string,
+  ): Promise<SourceDocumentOut> => {
+    const form = new FormData();
+    form.append("file", file);
+    form.append("kind", kind);
+    if (asOfDate) form.append("as_of_date", asOfDate);
+    const res = await fetch(`${API_BASE}/orgs/${orgId}/documents`, {
+      method: "POST",
+      body: form,
+    });
+    if (!res.ok) {
+      let detail = res.statusText;
+      try {
+        const errBody = await res.json();
+        detail = errBody.detail ?? detail;
+      } catch {
+        // non-JSON error body — keep the status text
+      }
+      throw new Error(detail);
+    }
+    return res.json();
+  },
+
+  extractDocument: (orgId: number, documentId: number) =>
+    request<ExtractDocumentResponse>(`/orgs/${orgId}/documents/${documentId}/extract`, {
+      method: "POST",
+    }),
+  applyDocumentFacts: (orgId: number, documentId: number, approvedFactIds: number[]) =>
+    request<ApplyFactsResponse>(`/orgs/${orgId}/documents/${documentId}/apply`, {
+      method: "POST",
+      body: JSON.stringify({ approved_fact_ids: approvedFactIds }),
+    }),
+  deleteDocument: (orgId: number, documentId: number) =>
+    request<void>(`/orgs/${orgId}/documents/${documentId}`, { method: "DELETE" }),
+
+  getLlmUsage: () => request<LlmUsageResponse>("/llm/usage"),
 
   getModelStatus: () => request<ModelStatusResponse>("/model/status"),
   getModelQuality: () => request<ModelQualityResponse>("/model/quality"),

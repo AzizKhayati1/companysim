@@ -9,7 +9,7 @@ more fields can become editable later without a schema change.
 """
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import date, datetime, timezone
 
 from sqlalchemy import ForeignKey, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
@@ -61,6 +61,18 @@ class OrgRecord(Base):
         back_populates="org", cascade="all, delete-orphan",
     )
     risk_snapshots: Mapped[list["EmployeeRiskSnapshot"]] = relationship(
+        back_populates="org", cascade="all, delete-orphan",
+    )
+    exit_note_records: Mapped[list["ExitNoteRecord"]] = relationship(
+        back_populates="org", cascade="all, delete-orphan",
+    )
+    source_documents: Mapped[list["SourceDocumentRecord"]] = relationship(
+        back_populates="org", cascade="all, delete-orphan",
+    )
+    extracted_facts: Mapped[list["ExtractedFactRecord"]] = relationship(
+        back_populates="org", cascade="all, delete-orphan",
+    )
+    performance_reviews: Mapped[list["PerformanceReviewRecord"]] = relationship(
         back_populates="org", cascade="all, delete-orphan",
     )
 
@@ -213,13 +225,23 @@ class TurnoverTrainingExample(Base):
 
     Features mirror ``api.scoring_frame.build_scoring_frame``'s
     ``FEATURE_COLUMNS``-shaped output (job/comp facts exact, pulse "mean" =
-    the employee's current wellbeing snapshot). ``*_pulse_trend`` and
-    ``rating_*`` aren't stored here — they're always the same constant
-    placeholder in that adapter (no week-by-week history or performance
-    reviews in this schema), so they're reconstructed at read time instead
-    of persisted as dead columns. ``quit_within_horizon`` is organic-only
-    (see ``OrganizationModel.organic_quit_ids``) — never true just because
-    an injected Layoff/Termination event removed the employee.
+    the employee's current wellbeing snapshot). ``*_pulse_trend`` is still
+    a constant placeholder in that adapter (no week-by-week pulse history
+    in this schema) and so is reconstructed at read time rather than
+    persisted as a dead column.
+
+    ``rating_last``/``rating_prev``/``rating_delta`` *used* to be in that
+    same category and deliberately weren't stored. They are stored now:
+    once ``PerformanceReviewRecord`` exists, ``build_scoring_frame`` reads
+    real ratings for any employee who has reviews ingested, so the value
+    varies per employee and per collection time and can no longer be
+    reconstructed from a constant. Rows collected before document
+    ingestion existed carry the old 3.0/3.0/0.0 — which is exactly what
+    they were, so the backfill is honest rather than an approximation.
+
+    ``quit_within_horizon`` is organic-only (see
+    ``OrganizationModel.organic_quit_ids``) — never true just because an
+    injected Layoff/Termination event removed the employee.
     """
 
     __tablename__ = "turnover_training_examples"
@@ -247,6 +269,11 @@ class TurnoverTrainingExample(Base):
     sleep_quality_pulse_mean: Mapped[float]
     energy_level_pulse_mean: Mapped[float]
     burnout_exhaustion_pulse_mean: Mapped[float]
+    # server_default backfills pre-ingestion rows with the constant they
+    # actually had, so the migration doesn't need to guess.
+    rating_last: Mapped[float] = mapped_column(default=3.0, server_default="3.0")
+    rating_prev: Mapped[float] = mapped_column(default=3.0, server_default="3.0")
+    rating_delta: Mapped[float] = mapped_column(default=0.0, server_default="0.0")
 
     org: Mapped["OrgRecord"] = relationship(back_populates="training_examples")
 
@@ -277,3 +304,226 @@ class EmployeeRiskSnapshot(Base):
     model_available: Mapped[bool]
 
     org: Mapped["OrgRecord"] = relationship(back_populates="risk_snapshots")
+
+
+class ExitNoteRecord(Base):
+    """One row per individual exit-interview note — generated in real time
+    during a Diagnose run (see ``api.exit_note_records.record_exit_notes``,
+    called from ``routers.diagnose``), or recovered after the fact by
+    ``scripts/backfill_exit_note_records.py`` from the sample quotes a
+    historical run happened to save in its ``RunRecord.response_json``
+    (``is_backfilled=True`` on those rows). Powers the Exit Notes Insights
+    page's theme-frequency, sentiment-trend, and recent-quotes views.
+    """
+
+    __tablename__ = "exit_note_records"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    org_id: Mapped[int] = mapped_column(ForeignKey("orgs.id"))
+    # Lineage-only FK, no cascade — matches EmployeeRiskSnapshot.run_id, so
+    # deleting a run via Run History doesn't erase insight history.
+    run_id: Mapped[int] = mapped_column(ForeignKey("runs.id"))
+    # Nullable only for backfilled rows: a historical run's response_json
+    # only kept sample_quotes' text, with no employee linkage to recover.
+    # Real-time rows always populate this.
+    employee_id: Mapped[int | None] = mapped_column(nullable=True)
+    text: Mapped[str] = mapped_column(Text)
+    sentiment: Mapped[float]
+    # Comma-joined theme keys from exit_notes._THEME_KEYWORDS ("" when none
+    # matched) — plain delimited text, not a JSON column: no other column
+    # in this schema stores structured JSON, and the theme lexicon is a
+    # fixed, small, comma-free snake_case set.
+    themes: Mapped[str] = mapped_column(Text, default="")
+    is_llm_generated: Mapped[bool] = mapped_column(default=False)
+    # True only for rows recovered by the backfill script, so the UI can
+    # visually distinguish "real, fully-attributed" from "recovered,
+    # approximate" provenance.
+    is_backfilled: Mapped[bool] = mapped_column(default=False)
+    # Set only for notes lifted from a real uploaded resignation letter
+    # (``routers/ingest.py``). Null for every simulated note. Deliberately a
+    # nullable FK rather than a third ``is_*`` boolean alongside
+    # is_llm_generated/is_backfilled: three orthogonal booleans would leave
+    # provenance implicit, and this way an ingested note keeps a live link
+    # back to the document it was quoted from.
+    source_document_id: Mapped[int | None] = mapped_column(
+        ForeignKey("source_documents.id"), nullable=True,
+    )
+    generated_at: Mapped[datetime] = mapped_column(default=lambda: datetime.now(timezone.utc))
+
+    org: Mapped["OrgRecord"] = relationship(back_populates="exit_note_records")
+    source_document: Mapped["SourceDocumentRecord | None"] = relationship(
+        back_populates="exit_notes",
+    )
+
+
+class SourceDocumentRecord(Base):
+    """An uploaded real-world document (roster CSV, performance review,
+    resignation letter, ...) plus its extracted plain text and provenance —
+    the raw-material end of the document-ingestion pipeline (see
+    ``api.ingest_records`` and ``companysim.ingest``).
+
+    ``raw_text`` is stored rather than the original bytes: every parser
+    downstream (rules today, LLM later) consumes text, re-upload is cheap
+    if the original is ever needed again, and keeping binary blobs out of
+    SQLite keeps the DB browsable. ``content_hash`` (sha256 of the upload
+    bytes) dedups repeat uploads per org — the same export uploaded twice
+    would otherwise stage the same change set twice. ``as_of_date`` is the
+    date the document's facts are true *as of*, supplied at upload because
+    it usually isn't recoverable from file contents — it exists so the
+    later cohort-building phase can enforce its temporal-leakage guard
+    (features must predate the outcome window; a resignation letter is
+    written *at* the outcome). ``extraction_status`` is the document's
+    lifecycle ("pending" → "extracted" | "needs_review", and
+    "needs_review" explicitly means "we refused to fabricate an extraction
+    for this kind", not "something crashed" — crashes land in
+    ``extraction_error``).
+    """
+
+    __tablename__ = "source_documents"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    org_id: Mapped[int] = mapped_column(ForeignKey("orgs.id"))
+    kind: Mapped[str]  # ingest.documents.DocumentKind values
+    filename: Mapped[str]
+    content_hash: Mapped[str]
+    raw_text: Mapped[str] = mapped_column(Text)
+    uploaded_at: Mapped[datetime] = mapped_column(default=lambda: datetime.now(timezone.utc))
+    as_of_date: Mapped[date | None] = mapped_column(nullable=True)
+    extraction_status: Mapped[str] = mapped_column(default="pending")
+    # Which parser produced the staged facts ("rules" today, "groq:<model>"
+    # once the LLM path lands) — per-fact provenance would be redundant
+    # since one extract pass uses one parser for the whole document.
+    extractor: Mapped[str | None] = mapped_column(nullable=True)
+    extraction_error: Mapped[str | None] = mapped_column(Text, nullable=True)
+
+    org: Mapped["OrgRecord"] = relationship(back_populates="source_documents")
+    # Deleting an upload withdraws everything it asserted. All three
+    # children cascade for the same reason: a staged proposal, an ingested
+    # review and an ingested exit note only exist *because* this document
+    # said so, and none of them can be audited once the evidence is gone.
+    # (Changes already applied to EmployeeRecord are not children and
+    # correctly survive — those are the org's own data now.)
+    facts: Mapped[list["ExtractedFactRecord"]] = relationship(
+        back_populates="document", cascade="all, delete-orphan",
+    )
+    performance_reviews: Mapped[list["PerformanceReviewRecord"]] = relationship(
+        back_populates="document", cascade="all, delete-orphan",
+    )
+    exit_notes: Mapped[list["ExitNoteRecord"]] = relationship(
+        back_populates="source_document", cascade="all, delete-orphan",
+    )
+
+
+class ExtractedFactRecord(Base):
+    """One proposed change staged from a document — the human-review gate
+    between "a parser read something" and "the org's data changed".
+
+    Nothing extracted is ever applied directly to ``EmployeeRecord``;
+    every fact sits here as pending until a person approves it (see
+    ``routers/ingest.py``'s apply endpoint). ``evidence_span`` is the
+    verbatim source text the value came from — same checkability
+    discipline as ``ml.diagnostics`` (every claim traces to something
+    inspectable), and the only defense against a parser misreading a
+    salary once the LLM path exists. ``target_employee_id`` is a plain
+    int, no FK — same lineage-survives-deletion reasoning as
+    ``TurnoverTrainingExample.employee_id``. ``document_id`` *is* a real
+    cascading FK, deliberately: an unapplied fact is meaningless without
+    the document whose evidence it quotes, so deleting an upload withdraws
+    its staged proposals (already-applied changes live in
+    ``EmployeeRecord`` itself and survive). Values are stored as strings
+    (``proposed_value``/``current_value``) because one staging table
+    serves fields of every type — the apply step coerces using the live
+    ORM column's Python type, not a per-fact type tag.
+    """
+
+    __tablename__ = "extracted_facts"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    document_id: Mapped[int] = mapped_column(ForeignKey("source_documents.id"))
+    org_id: Mapped[int] = mapped_column(ForeignKey("orgs.id"))
+    target_table: Mapped[str]  # "employees" (only value in Phase 2)
+    target_employee_id: Mapped[int | None] = mapped_column(nullable=True)
+    field_name: Mapped[str]
+    proposed_value: Mapped[str]
+    current_value: Mapped[str | None] = mapped_column(nullable=True)
+    confidence: Mapped[float]
+    review_status: Mapped[str] = mapped_column(default="pending")
+    evidence_span: Mapped[str] = mapped_column(Text)
+    applied_at: Mapped[datetime | None] = mapped_column(nullable=True)
+
+    document: Mapped["SourceDocumentRecord"] = relationship(back_populates="facts")
+    org: Mapped["OrgRecord"] = relationship(back_populates="extracted_facts")
+
+
+class LlmUsageRecord(Base):
+    """One billed Groq request — the row behind the token counter.
+
+    Written by ``api.llm_usage`` from whatever a router's
+    ``companysim.llm.usage.collect()`` block accumulated, so the LLM
+    modules themselves stay free of any database import (see that module's
+    docstring for why the sink exists).
+
+    One row per *request*, not per user action: a tool-calling chat answer
+    makes several round trips and each is billed separately, so collapsing
+    them would under-report. ``org_id`` is nullable and carries no
+    ForeignKey — chat and ingest are org-scoped but exit notes are
+    generated inside a run that may outlive the org, and a usage/billing
+    log should survive a deleted org rather than cascade away with it.
+    That's the opposite choice from ``ExitNoteRecord``, and deliberately:
+    an exit note without its org is meaningless, a token charge isn't.
+    """
+
+    __tablename__ = "llm_usage"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    org_id: Mapped[int | None] = mapped_column(nullable=True)
+    feature: Mapped[str]  # companysim.llm.usage.FEATURE_* values
+    model: Mapped[str]
+    prompt_tokens: Mapped[int] = mapped_column(default=0)
+    completion_tokens: Mapped[int] = mapped_column(default=0)
+    # From the provider, not summed locally — Groq bills on its own count.
+    total_tokens: Mapped[int] = mapped_column(default=0)
+    created_at: Mapped[datetime] = mapped_column(
+        default=lambda: datetime.now(timezone.utc), index=True,
+    )
+
+
+class PerformanceReviewRecord(Base):
+    """One ingested performance review — the first real *feature* source in
+    this schema, and the reason document ingestion earns its place in the
+    ML pipeline rather than just the org editor.
+
+    ``api.scoring_frame`` has always had to fake
+    ``rating_last``/``rating_prev``/``rating_delta`` at a neutral 3.0/3.0/0.0
+    because the webapp had no performance-review history to read (see that
+    module's docstring). Rows here are what turn three of the turnover
+    model's eighteen numeric features from dead constants into real signal;
+    an employee with no reviews ingested still falls back to the same
+    neutral constants, so ingestion is purely additive.
+
+    ``review_period_end`` — not the upload time — is what orders reviews
+    into last/prev, because that's the date the rating describes and the
+    date the temporal-leakage guard checks against an outcome window
+    (``ml.turnover_features.assert_no_temporal_leakage``). ``rating`` is a
+    float on the generator's 1..5 scale, matching
+    ``data/datasets.py``'s ``performance_history`` table so the offline
+    pipeline and the webapp mean the same thing by "a 3".
+    """
+
+    __tablename__ = "performance_reviews"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    org_id: Mapped[int] = mapped_column(ForeignKey("orgs.id"))
+    # Plain int, no FK — lineage survives an employee edit/delete, same
+    # reasoning as TurnoverTrainingExample.employee_id.
+    employee_id: Mapped[int]
+    # Cascading FK: a review only exists because a document was ingested,
+    # and deleting that upload should withdraw what it asserted.
+    document_id: Mapped[int] = mapped_column(ForeignKey("source_documents.id"))
+    review_period_end: Mapped[date]
+    rating: Mapped[float]
+    summary_text: Mapped[str] = mapped_column(Text, default="")
+    created_at: Mapped[datetime] = mapped_column(default=lambda: datetime.now(timezone.utc))
+
+    org: Mapped["OrgRecord"] = relationship(back_populates="performance_reviews")
+    document: Mapped["SourceDocumentRecord"] = relationship(back_populates="performance_reviews")

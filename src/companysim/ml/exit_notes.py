@@ -204,6 +204,16 @@ def _match_themes(text: str) -> set[str]:
     return {theme for theme, keywords in _THEME_KEYWORDS.items() if tokens & keywords}
 
 
+def analyze_note(text: str) -> tuple[float, list[str]]:
+    """Per-note sentiment + matched themes — the same building blocks
+    ``analyze_notes`` aggregates over a batch, exposed individually so a
+    single note can be persisted with its own scores (see
+    ``api.exit_note_records``) instead of only surviving inside a
+    discarded batch aggregate.
+    """
+    return score_sentiment(text), sorted(_match_themes(text))
+
+
 @dataclass
 class NotesAnalysis:
     n_notes: int

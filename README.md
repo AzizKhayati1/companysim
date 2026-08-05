@@ -141,6 +141,54 @@ missing, or on any API failure, the widget shows a plain, honest
 "not configured" / "temporarily unavailable" message instead of a broken
 panel. Each assistant reply shows which tools it actually consulted.
 
+### Optional: real-document ingestion
+
+Upload real HR documents (`POST /orgs/{id}/documents`) and enrich an org
+from them — roster exports, performance reviews, resignation letters.
+Everything lands in a **staging table** and nothing touches an employee
+record until a human approves it (`/apply`); every staged change carries
+the verbatim source text it came from.
+
+```bash
+pip install -e ".[llm]"       # same groq extra as above
+export GROQ_API_KEY=...
+export COMPANYSIM_LLM_INGEST=1
+```
+
+Roster CSVs are parsed deterministically (`ingest/rules_parser.py`) and
+need no key or flag at all — only free text does. A failed or disabled
+extraction stages **nothing** and parks the document as `needs_review`
+with a reason: a wrong rating written into a model feature is worse than
+no rating.
+
+This is the one thing that closes a documented gap in the ML pipeline.
+`api/scoring_frame.py` had always faked `rating_last`/`rating_prev`/
+`rating_delta` at a neutral 3.0/3.0/0.0 because the webapp had no
+performance-review history — with reviews ingested those become real,
+turning three of the turnover model's eighteen numeric features from dead
+constants into signal.
+
+Two guards are worth knowing about, both in `ingest/cohorts.py` and
+`ml/turnover_features.py`:
+
+- **Temporal leakage** — a document contributing a *feature* must predate
+  the outcome window. Enforced structurally as well as at runtime: the
+  resignation-letter extraction schema has no feature fields at all, so a
+  letter (written *at* the outcome) can only ever supply a label.
+- **The denominator rule** — you only ever receive a resignation letter
+  from someone who quit, so letters alone are a 100%-positive sample. A
+  document batch may only contribute training examples if a roster
+  establishes who *didn't* leave. Without one, `GET
+  /orgs/{id}/documents/cohort` says so rather than quietly contributing
+  nothing.
+
+Document-derived cohorts blend into `/model/train` alongside webapp-run
+examples, and the promotion log records the split
+(`extra_example_counts`) so an AUC move can be attributed to a source.
+The fixed synthetic holdout never sees ingested data, so real documents
+can only help or be a no-op — they can't degrade production or grade
+their own homework.
+
 ## Layout
 
 ```

@@ -55,6 +55,14 @@ class GateResult:
     train_report: dict[str, Any] = field(default_factory=dict)
     promoted_at: str | None = None
     n_live_examples: int = 0
+    # Breakdown of n_live_examples by origin, e.g.
+    # {"webapp_runs": 340, "documents": 120}. Without it an AUC move can't
+    # be attributed to a data source, only observed.
+    extra_example_counts: dict[str, int] = field(default_factory=dict)
+
+    @property
+    def n_document_examples(self) -> int:
+        return self.extra_example_counts.get("documents", 0)
 
 
 def evaluate_bundle_on_holdout(bundle: TurnoverModelBundle) -> dict[str, Any]:
@@ -106,14 +114,28 @@ def run_training_gate(
     tolerance: float = 0.02,
     force_promote: bool = False,
     extra_examples: pd.DataFrame | None = None,
+    extra_example_counts: dict[str, int] | None = None,
 ) -> GateResult:
     """``extra_examples``, when given, is a DataFrame already shaped like
     ``FEATURE_COLUMNS`` + ``quit_within_horizon`` — e.g. real labeled
     examples collected from webapp simulation runs
-    (``api.training_examples.load_collected_examples``) — concatenated onto
-    the freshly-generated synthetic cohort before training. This module
-    stays DB-agnostic: it only ever sees an already-built DataFrame, never
-    a database session.
+    (``api.training_examples.load_collected_examples``) or from ingested
+    documents (``api.ingest_records.load_document_examples``) —
+    concatenated onto the freshly-generated synthetic cohort before
+    training. This module stays DB-agnostic: it only ever sees an
+    already-built DataFrame, never a database session.
+
+    ``extra_example_counts`` is the caller's breakdown of what went into
+    that frame (``{"webapp_runs": n, "documents": m}``). It is recorded,
+    never acted on — blending stays one concatenation — but without it the
+    promotion log can't say *which* source moved an AUC, only that it
+    moved. Callers that don't split their sources can omit it.
+
+    Note what stays true regardless of provenance: the candidate is judged
+    on :data:`EVAL_CONFIG`, a fixed *synthetic* holdout that no ingested
+    document ever touches. Real-world data can therefore only help or be a
+    no-op — it can neither silently degrade production nor grade its own
+    homework.
     """
     train_cfg = DatasetConfig(name="train", headcount=headcount, seed=seed)
     cohort = build_turnover_cohort(train_cfg, horizon_ticks=horizon, replicates=replicates)
@@ -144,19 +166,23 @@ def run_training_gate(
             "training_headcount": headcount,
             "holdout_eval": candidate_eval,
             "n_live_examples": n_live_examples,
+            "extra_example_counts": dict(extra_example_counts or {}),
         })
         save_bundle(candidate, PRODUCTION_PATH)
 
+    counts = dict(extra_example_counts or {})
     result = GateResult(
         decision=decision, reason=reason, candidate_eval=candidate_eval,
         production_eval=production_eval, train_report=train_report.as_dict(),
         promoted_at=promoted_at, n_live_examples=n_live_examples,
+        extra_example_counts=counts,
     )
     _append_log({
         "timestamp": datetime.now(timezone.utc).isoformat(),
         "decision": decision, "reason": reason,
         "candidate_eval": candidate_eval, "production_eval": production_eval,
         "n_live_examples": n_live_examples,
+        "extra_example_counts": counts,
         "training_seed": seed, "training_headcount": headcount,
     })
     return result

@@ -4,6 +4,7 @@ import { Link, Outlet, useLocation, useParams } from "react-router-dom";
 import { api } from "../api/client";
 import { useTheme } from "../theme/ThemeContext";
 import AskVantageWidget from "./AskVantageWidget";
+import LlmTokenMeter from "./LlmTokenMeter";
 
 interface NavItem {
   key: string;
@@ -66,6 +67,40 @@ const MAIN_NAV: NavItem[] = [
         <circle cx="10" cy="10" r="8" fill="none" stroke="currentColor" strokeWidth="1.6" />
         <line x1="10" y1="6" x2="10" y2="11" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
         <circle cx="10" cy="14" r="1" fill="currentColor" />
+      </svg>
+    ),
+  },
+  {
+    key: "documents",
+    label: "Document Ingestion",
+    to: (orgId) => `/orgs/${orgId}/documents`,
+    match: (p) => /^\/orgs\/\d+\/documents$/.test(p),
+    icon: (
+      <svg width="16" height="16" viewBox="0 0 20 20">
+        <path
+          d="M4 2.5 h7 l5 5 v10 a1 1 0 0 1 -1 1 h-11 a1 1 0 0 1 -1 -1 v-14 a1 1 0 0 1 1 -1 z"
+          fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round"
+        />
+        <path d="M11 2.5 V7.5 h5" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" />
+        <path
+          d="M6.8 13.2 L8.4 14.8 L11.6 11.4"
+          fill="none" stroke="currentColor" strokeWidth="1.6"
+          strokeLinecap="round" strokeLinejoin="round"
+        />
+      </svg>
+    ),
+  },
+  {
+    key: "exit-notes",
+    label: "Exit Notes Insights",
+    to: (orgId) => `/orgs/${orgId}/exit-notes`,
+    match: (p) => /^\/orgs\/\d+\/exit-notes$/.test(p),
+    icon: (
+      <svg width="16" height="16" viewBox="0 0 20 20">
+        <rect x="3" y="2" width="14" height="16" rx="1.6" fill="none" stroke="currentColor" strokeWidth="1.6" />
+        <line x1="6.5" y1="7" x2="13.5" y2="7" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
+        <line x1="6.5" y1="10.4" x2="13.5" y2="10.4" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" opacity="0.6" />
+        <line x1="6.5" y1="13.8" x2="11" y2="13.8" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" opacity="0.6" />
       </svg>
     ),
   },
@@ -199,6 +234,12 @@ export default function AppShell() {
 
       <main className="app-main">
         <div className="app-main-inner">
+          {/* Sticky rather than fixed so it scrolls with the content column
+              and stays inside app-main-inner's max-width — a fixed badge
+              would drift over the page on a wide screen. */}
+          <div className="app-topbar">
+            <LlmTokenMeter />
+          </div>
           <Outlet />
         </div>
       </main>

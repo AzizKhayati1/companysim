@@ -12,14 +12,25 @@ It does, however, blend in every labeled example collected from real
 "constantly learn from the different simulations we do" part: the more the
 app gets used, the more real signal every retrain incorporates, still
 gated by the same promotion check as pure-synthetic training.
+
+It blends in a second real source too: cohorts derived from ingested
+documents (``api.ingest_records.load_all_document_examples``). Those come
+with a denominator requirement rather than as loose rows — see
+``ingest.cohorts`` for why a pile of resignation letters is not a
+training set — and orgs that can't produce a valid cohort simply
+contribute nothing. Both sources are reported separately in the promotion
+log via ``extra_example_counts``, so an AUC move can be attributed to a
+source instead of merely observed.
 """
 from __future__ import annotations
 
+import pandas as pd
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
 from companysim.api.database import get_db
 from companysim.api.db_models import TurnoverTrainingExample
+from companysim.api.ingest_records import load_all_document_examples
 from companysim.api.schemas import (
     ModelQualityResponse,
     ModelStatusResponse,
@@ -41,9 +52,11 @@ router = APIRouter(prefix="/model", tags=["model"])
 def model_status(db: Session = Depends(get_db)):
     metadata = get_production_status()
     pending = db.query(TurnoverTrainingExample).count()
+    _, n_document_examples = load_all_document_examples(db)
     return ModelStatusResponse(
         model_available=metadata is not None, metadata=metadata or {},
         pending_training_examples=pending,
+        pending_document_examples=n_document_examples,
     )
 
 
@@ -57,11 +70,16 @@ def model_quality():
 
 @router.post("/train", response_model=TrainModelResponse)
 def train_model(req: TrainModelRequest, db: Session = Depends(get_db)):
-    extra_examples = load_collected_examples(db)
+    run_examples = load_collected_examples(db)
+    document_examples, n_documents = load_all_document_examples(db)
+    frames = [f for f in (run_examples, document_examples) if not f.empty]
+    extra_examples = pd.concat(frames, ignore_index=True) if frames else run_examples
+    counts = {"webapp_runs": len(run_examples), "documents": n_documents}
+
     result = run_training_gate(
         headcount=req.headcount, replicates=req.replicates, horizon=req.horizon,
         seed=req.seed, tolerance=req.tolerance, force_promote=req.force_promote,
-        extra_examples=extra_examples,
+        extra_examples=extra_examples, extra_example_counts=counts,
     )
     return TrainModelResponse(
         decision=result.decision,
@@ -71,4 +89,6 @@ def train_model(req: TrainModelRequest, db: Session = Depends(get_db)):
         train_report=result.train_report,
         promoted_at=result.promoted_at,
         n_live_examples=result.n_live_examples,
+        n_document_examples=result.n_document_examples,
+        extra_example_counts=result.extra_example_counts,
     )

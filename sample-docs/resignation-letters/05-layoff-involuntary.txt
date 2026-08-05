@@ -1,0 +1,21 @@
+From: People Operations, Meridian Analytics
+To: Jane Miller <jane.miller@meridiananalytics.example>
+Date: 11 March 2026
+Subject: Notice of role elimination
+
+Dear Jane,
+
+Following the restructuring of the Engineering
+function announced last month, I am writing to confirm that your position of
+QA Engineer has been made redundant. Your employment will end on
+25 March 2026.
+
+This decision reflects the elimination of the role, not your performance,
+which has been consistently solid. You will receive severance in line with
+policy, and outplacement support has been arranged.
+
+We are sorry to be having this conversation and thank you for your
+contribution.
+
+Regards,
+People Operations

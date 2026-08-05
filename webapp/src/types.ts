@@ -168,6 +168,40 @@ export interface DiagnoseResponse {
   reports: DiagnosisReportOut[];
 }
 
+export interface ThemeFrequencyOut {
+  theme: string;
+  count: number;
+}
+
+export interface ExitNoteSentimentPointOut {
+  run_id: number;
+  generated_at: string;
+  mean_sentiment: number;
+  n_notes: number;
+}
+
+export interface ExitNoteQuoteOut {
+  id: number;
+  run_id: number;
+  employee_id: number | null;
+  text: string;
+  sentiment: number;
+  themes: string[];
+  is_llm_generated: boolean;
+  is_backfilled: boolean;
+  generated_at: string;
+}
+
+export interface ExitNotesInsightsResponse {
+  n_notes_total: number;
+  mean_sentiment_overall: number;
+  n_llm_generated_total: number;
+  n_backfilled_total: number;
+  theme_frequency: ThemeFrequencyOut[];
+  sentiment_trend: ExitNoteSentimentPointOut[];
+  recent_quotes: ExitNoteQuoteOut[];
+}
+
 export const LEVELS = ["IC1", "IC2", "IC3", "IC4", "IC5", "M1", "M2", "M3", "VP", "CXO"] as const;
 export const WORK_MODES = ["onsite", "hybrid", "remote"] as const;
 export const LIFE_EVENT_TYPES = [
@@ -299,4 +333,133 @@ export interface RiskTrendPoint {
   mean_risk: number;
   employee_count: number;
   model_available: boolean;
+}
+
+export const DOCUMENT_KINDS = [
+  "roster",
+  "offer_letter",
+  "cv",
+  "performance_review",
+  "resignation_letter",
+  "pulse_export",
+] as const;
+export type DocumentKind = (typeof DOCUMENT_KINDS)[number];
+
+export interface SourceDocumentOut {
+  id: number;
+  kind: string;
+  filename: string;
+  content_hash: string;
+  uploaded_at: string;
+  as_of_date: string | null;
+  extraction_status: string;
+  extractor: string | null;
+  extraction_error: string | null;
+}
+
+export interface ExtractedFactOut {
+  id: number;
+  document_id: number;
+  target_table: string;
+  target_employee_id: number | null;
+  field_name: string;
+  proposed_value: string;
+  current_value: string | null;
+  confidence: number;
+  review_status: string;
+  evidence_span: string;
+  applied_at: string | null;
+}
+
+export interface DocumentDetailOut extends SourceDocumentOut {
+  raw_text: string;
+  pending_facts: ExtractedFactOut[];
+}
+
+export interface ExtractDocumentResponse {
+  document: SourceDocumentOut;
+  n_facts_staged: number;
+  facts: ExtractedFactOut[];
+}
+
+export interface ApplyFactsResponse {
+  n_applied: number;
+  n_rejected: number;
+  n_employees_created: number;
+  unapplied: string[];
+}
+
+export interface IngestTotalsOut {
+  n_documents: number;
+  n_pending_facts: number;
+  n_applied_facts: number;
+  n_performance_reviews: number;
+  n_ingested_exit_notes: number;
+}
+
+export interface TokenTotalsOut {
+  requests: number;
+  prompt_tokens: number;
+  completion_tokens: number;
+  total_tokens: number;
+}
+
+export interface FeatureUsageOut {
+  feature: string;
+  requests: number;
+  total_tokens: number;
+}
+
+export interface LlmRequestOut {
+  id: number;
+  feature: string;
+  model: string;
+  org_id: number | null;
+  prompt_tokens: number;
+  completion_tokens: number;
+  total_tokens: number;
+  created_at: string;
+}
+
+export interface LlmUsageResponse {
+  all_time: TokenTotalsOut;
+  today: TokenTotalsOut;
+  week: TokenTotalsOut;
+  by_feature: FeatureUsageOut[];
+  recent: LlmRequestOut[];
+}
+
+export interface LineageFieldOut {
+  column: string;
+  value: string;
+  note: string;
+}
+
+export interface LineageTargetOut {
+  table: string;
+  state: "written" | "pending" | "applied";
+  row_id: number | null;
+  employee_id: number | null;
+  employee_name: string | null;
+  fields: LineageFieldOut[];
+}
+
+export interface DocumentLineageOut {
+  document_id: number;
+  kind: string;
+  extraction_status: string;
+  extractor: string | null;
+  targets: LineageTargetOut[];
+  downstream: string[];
+}
+
+export interface DocumentCohortOut {
+  usable: boolean;
+  reason: string;
+  window_start: string | null;
+  window_end: string | null;
+  n_positives: number;
+  n_negatives: number;
+  base_rate: number;
+  n_unmatched_resignations: number;
 }

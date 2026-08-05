@@ -45,6 +45,7 @@ from companysim.api.scoring_frame import (
     score_current_employees,
 )
 from companysim.intervene import compare_intervention as run_compare_intervention
+from companysim.llm.usage import FEATURE_CHAT, record_response
 from companysim.ml.diagnostics import explain_employee
 from companysim.scenarios.events import ManagerCoaching, RetentionBonus, WorkloadRelief
 from companysim.scenarios.scenario import Scenario
@@ -413,6 +414,9 @@ def ask_org(db: Session, org_id: int, message: str, history: list[dict[str, str]
 
     for _ in range(_MAX_TOOL_ITERATIONS):
         response = client.chat.completions.create(model=_MODEL, messages=messages, tools=tool_schemas)
+        # One record per iteration, not per question: a tool-calling answer
+        # makes several round trips and every one of them is billed.
+        record_response(response, feature=FEATURE_CHAT, model=_MODEL)
         msg = response.choices[0].message
 
         if not msg.tool_calls:

@@ -1,0 +1,20 @@
+ELENA ROSSI
+elena.rossi@meridiananalytics.example | Milan, Italy
+
+EDUCATION
+MSc Finance, Bocconi University — 2025
+BSc Economics, Bocconi University — 2023
+
+EXPERIENCE
+Financial Analyst Intern — Aventine Capital, Milan (Jun 2024 – Dec 2024)
+  · Built the quarterly variance model used by the FP&A team.
+  · Supported due diligence on two mid-market acquisitions.
+
+Teaching Assistant — Bocconi University (2023 – 2024)
+  · Corporate finance tutorials, first-year cohort.
+
+SKILLS
+Financial modelling, Python (pandas), SQL, Italian (native), English (C2)
+
+INTERESTS
+Competitive rowing, Renaissance architecture

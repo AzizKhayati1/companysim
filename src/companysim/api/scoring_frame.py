@@ -18,8 +18,15 @@ review history), so this fills in the best honest approximation for each:
   history in this schema to average over yet.
 - ``*_pulse_trend`` fields default to 0.0 — no history to compute a trend
   from.
-- ``rating_last``/``rating_prev``/``rating_delta`` default to a neutral
-  3.0/3.0/0.0 — no performance_history table in this schema.
+- ``rating_last``/``rating_prev``/``rating_delta`` are **real** for any
+  employee with ingested performance reviews (``PerformanceReviewRecord``,
+  written by ``routers/ingest.py``) — the two most recent reviews by
+  ``review_period_end``, exactly the last/prev/delta shape
+  ``ml.turnover_features._performance_features`` computes offline. An
+  employee with no reviews still falls back to a neutral 3.0/3.0/0.0, and
+  an org that has ingested nothing behaves exactly as it did before, so
+  ingestion is purely additive. This is the one placeholder document
+  ingestion has actually closed; the two above remain approximations.
 - ``department_id`` is the one field that's genuinely lossy: the model
   learned the offline pipeline's ``"dept_00".."dept_08"`` categories, not
   the webapp's integer ids, so that one-hot slice contributes nothing
@@ -35,11 +42,23 @@ import pandas as pd
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 
-from companysim.api.db_models import EmployeeRecord, EmployeeRiskSnapshot, EmployeeWellbeingRecord
+from companysim.api.db_models import (
+    EmployeeRecord,
+    EmployeeRiskSnapshot,
+    EmployeeWellbeingRecord,
+    PerformanceReviewRecord,
+)
 from companysim.ml.registry import TurnoverModelBundle, load_bundle
 from companysim.ml.turnover_features import FEATURE_COLUMNS
 
 PRODUCTION_MODEL_PATH = Path("models/turnover_production.joblib")
+
+# Neutral fallback for an employee with no ingested reviews — the same
+# values build_scoring_frame hardcoded for every employee before
+# PerformanceReviewRecord existed, and the same neutral midpoint
+# ml.turnover_features.build_feature_frame fills for an offline employee
+# too new to have been reviewed.
+NEUTRAL_RATING = 3.0
 
 # Wellbeing columns pulled per-employee for root-cause diagnosis (segment- or
 # individual-level) — a different, richer slice than build_scoring_frame's
@@ -68,6 +87,40 @@ def build_driver_frame(db: Session, org_id: int) -> pd.DataFrame:
     return pd.DataFrame(records)
 
 
+def rating_features(db: Session, org_id: int) -> dict[int, tuple[float, float, float]]:
+    """employee_id -> (rating_last, rating_prev, rating_delta) from ingested
+    reviews. Only employees with at least one review appear; callers fill
+    :data:`NEUTRAL_RATING` for the rest.
+
+    With a single review, prev == last (delta 0.0) rather than a neutral
+    3.0 — mirroring ``ml.turnover_features._performance_features``, which
+    makes the same choice offline so "one review" means the same thing in
+    both pipelines. Ordered by ``review_period_end`` (what the rating
+    describes), never by upload time.
+    """
+    rows = (
+        db.query(PerformanceReviewRecord)
+        .filter(PerformanceReviewRecord.org_id == org_id)
+        .order_by(
+            PerformanceReviewRecord.employee_id,
+            PerformanceReviewRecord.review_period_end.desc(),
+        )
+        .all()
+    )
+    by_employee: dict[int, list[float]] = {}
+    for row in rows:
+        ratings = by_employee.setdefault(row.employee_id, [])
+        if len(ratings) < 2:
+            ratings.append(float(row.rating))
+
+    out: dict[int, tuple[float, float, float]] = {}
+    for employee_id, ratings in by_employee.items():
+        last = ratings[0]
+        prev = ratings[1] if len(ratings) > 1 else last
+        out[employee_id] = (last, prev, last - prev)
+    return out
+
+
 def build_scoring_frame(db: Session, org_id: int) -> pd.DataFrame:
     rows = (
         db.query(EmployeeRecord, EmployeeWellbeingRecord)
@@ -78,9 +131,13 @@ def build_scoring_frame(db: Session, org_id: int) -> pd.DataFrame:
     team_sizes: dict[int, int] = {}
     for emp, _ in rows:
         team_sizes[emp.team_id] = team_sizes.get(emp.team_id, 0) + 1
+    ratings = rating_features(db, org_id)
 
     records = []
     for emp, wb in rows:
+        rating_last, rating_prev, rating_delta = ratings.get(
+            emp.id, (NEUTRAL_RATING, NEUTRAL_RATING, 0.0),
+        )
         records.append({
             "employee_id": emp.id,
             "department_id": str(emp.department_id),
@@ -103,9 +160,9 @@ def build_scoring_frame(db: Session, org_id: int) -> pd.DataFrame:
             "sleep_quality_pulse_trend": 0.0,
             "energy_level_pulse_trend": 0.0,
             "burnout_exhaustion_pulse_trend": 0.0,
-            "rating_last": 3.0,
-            "rating_prev": 3.0,
-            "rating_delta": 0.0,
+            "rating_last": rating_last,
+            "rating_prev": rating_prev,
+            "rating_delta": rating_delta,
         })
     return pd.DataFrame(records)
 

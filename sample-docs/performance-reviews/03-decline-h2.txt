@@ -1,0 +1,21 @@
+MERIDIAN ANALYTICS — HALF-YEAR PERFORMANCE REVIEW
+
+Employee:      John Jensen
+Email:         john.jensen@meridiananalytics.example
+Role:          QA Engineer (IC4)
+Review period: 1 July 2025 – 31 December 2025
+Reviewer:      Daniel Okafor, Engineering Manager
+
+OVERALL RATING: 2 out of 5 — Below expectations
+
+Summary
+A marked drop from the first half. Two of three committed deliverables
+slipped, and the quality of review feedback has fallen off. Several
+one-to-ones were cancelled at short notice.
+
+Development areas
+- Re-establish a predictable delivery cadence.
+- Re-engage with the team's review process.
+
+Note: this is the second consecutive review discussing focus. A structured
+support plan starts next quarter.

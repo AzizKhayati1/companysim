@@ -12,8 +12,19 @@ What's allowed instead: job/comp facts, and rolling aggregates of
 self-reported pulse-survey data + performance ratings — proxies for the
 same underlying state, observed with realistic noise and non-response
 (``wellness_snapshots`` already drops ~25% of rows per week).
+
+Real ingested documents (``companysim.ingest``) introduce a *second*
+leakage boundary that the column-name check above cannot see. A feature
+can be perfectly legitimate by column and still be cheating by date: a
+performance review written after the outcome window opened describes the
+future, and a resignation letter is written *at* the outcome itself.
+:func:`assert_no_temporal_leakage` is the guard for that axis; the
+structural half of the defense is that the resignation-letter extraction
+schema carries no feature fields at all, so it cannot contribute one.
 """
 from __future__ import annotations
+
+from datetime import date
 
 import numpy as np
 import pandas as pd
@@ -47,6 +58,34 @@ def assert_no_leakage(df: pd.DataFrame) -> None:
             f"Leakage columns present in training features: {sorted(leaked)}. "
             "These are internal sim latents that mechanistically determine the "
             "label — see companysim.ml.turnover_features module docstring."
+        )
+
+
+def assert_no_temporal_leakage(
+    feature_dates: dict[str, date], window_start: date,
+) -> None:
+    """Every document contributing a *feature* must predate the outcome
+    window. ``feature_dates`` maps a human-readable source label (a
+    filename, a review period) to the date its facts are true as of;
+    ``window_start`` is the day the outcome window opens.
+
+    Strict inequality is deliberate: a review dated exactly on
+    ``window_start`` was written at the boundary, and there's no way from
+    a date alone to know whether it was recorded before or after the
+    outcome began accruing. Rejecting the tie is the conservative reading,
+    and matches how :mod:`companysim.ml.turnover_labels` treats a horizon
+    as strictly forward-looking from day 0.
+    """
+    leaked = {
+        label: as_of for label, as_of in feature_dates.items() if as_of >= window_start
+    }
+    if leaked:
+        detail = ", ".join(f"{label} (as of {as_of})" for label, as_of in sorted(leaked.items()))
+        raise ValueError(
+            f"Temporal leakage: {len(leaked)} feature source(s) are dated on or after "
+            f"the outcome window start {window_start}: {detail}. Features must describe "
+            "state observable strictly before the window opens — see the "
+            "companysim.ml.turnover_features module docstring."
         )
 
 

@@ -1,0 +1,23 @@
+From: Kelly Richards <kelly.richards@meridiananalytics.example>
+To: People Operations, Meridian Analytics
+Date: 3 March 2026
+Subject: Notice of resignation
+
+Dear People team,
+
+I'm resigning from my role as SRE. My final day will be
+20 March 2026.
+
+The reason is straightforward: pay. I've raised compensation in each of my
+last three review cycles and each time was told the band was under review.
+I've now accepted an offer elsewhere that is roughly 30% above what I'm on
+here for the same scope of work. I felt genuinely underpaid relative to what
+I was delivering, and the financial pressure at home made that hard to keep
+absorbing.
+
+None of this is a complaint about the work itself, which I enjoyed, or the
+people, who I'll miss. I'll leave clean handover notes for everything I own.
+
+Kind regards,
+Kelly Richards
+SRE

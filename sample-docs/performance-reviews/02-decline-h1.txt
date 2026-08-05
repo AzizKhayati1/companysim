@@ -1,0 +1,17 @@
+MERIDIAN ANALYTICS — HALF-YEAR PERFORMANCE REVIEW
+
+Employee:      John Jensen
+Email:         john.jensen@meridiananalytics.example
+Role:          QA Engineer (IC4)
+Review period: 1 January 2025 – 30 June 2025
+Reviewer:      Daniel Okafor, Engineering Manager
+
+OVERALL RATING: 4 out of 5 — Exceeds expectations
+
+Summary
+A strong half. Shipped the notifications rewrite on schedule and picked up
+the on-call rota without being asked. Code review turnaround is among the
+fastest on the team.
+
+Development areas
+- Written design docs lag behind the implementation.

@@ -1,0 +1,24 @@
+HANA KOWALSKI
+hana.kowalski@meridiananalytics.example · Kraków, Poland
+
+APPLYING FOR: Data Scientist, Product department
+
+SUMMARY
+Data scientist with 11 years of experience across marketplace pricing,
+demand forecasting and experimentation. Currently Staff Data Scientist at
+Vellum Retail.
+
+EXPERIENCE
+
+Staff Data Scientist — Vellum Retail (2019 – present)
+  · Owns the pricing elasticity model driving £40m of annual revenue.
+  · Built the company's experimentation platform from scratch.
+
+Senior Data Scientist — Northbrook Analytics (2015 – 2019)
+Data Analyst — Northbrook Analytics (2013 – 2015)
+
+EDUCATION
+PhD Statistics, Jagiellonian University, 2013
+
+SKILLS
+Python, R, causal inference, Bayesian modelling, dbt, Spark

@@ -1,0 +1,39 @@
+MERIDIAN ANALYTICS
+120 Fenchurch Street, London EC3M 5BA
+
+3 February 2026
+
+Ms Nadia Osei
+nadia.osei@meridiananalytics.example
+
+Dear Nadia,
+
+OFFER OF EMPLOYMENT — BACKEND ENGINEER
+
+We are delighted to offer you the position of Backend Engineer at Meridian
+Analytics, joining the Engineering department. This letter sets out the
+principal terms.
+
+Position:        Backend Engineer
+Level:           IC3
+Department:      Engineering
+Team:            Engineering Team 2
+Reporting to:    Priya Raman, Engineering Manager
+Start date:      2 March 2026
+Base salary:     GBP 128,000 per annum, paid monthly in arrears
+Bonus:           Up to 10% of base, discretionary, subject to company
+                 and individual performance
+Equity:          4,000 options vesting over four years with a one-year cliff
+Sign-on:         GBP 5,000, repayable pro rata if you leave within 12 months
+Location:        London, hybrid (minimum two days on site)
+
+This offer is conditional on satisfactory references and your right to work
+in the United Kingdom.
+
+Please confirm acceptance by returning a signed copy before 17 February 2026.
+
+Yours sincerely,
+
+Alison Pike
+Director of Engineering
+Meridian Analytics

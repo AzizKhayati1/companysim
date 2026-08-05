@@ -1,0 +1,36 @@
+From: Krista Robertson <krista.robertson@meridiananalytics.example>
+To: People Operations, Meridian Analytics
+Date: 12 February 2026
+Subject: Notice of resignation
+
+Dear Rachel,
+
+I'm writing to formally resign from my role as Full-Stack Engineer at
+Meridian Analytics. My last working day will be 27 February 2026, which
+gives a little over two weeks' notice as set out in my contract.
+
+This wasn't a quick decision. Over the last year the workload became
+genuinely unsustainable — I've been carrying two people's worth of tasks
+since the platform team shrank in the spring, and every conversation about
+resourcing ended with "after the next release". I've been running on empty
+for months and I'm exhausted in a way a holiday doesn't fix.
+
+What made it final was feeling unsupported when I raised it. I brought the
+capacity problem up in three separate one-to-ones and never got concrete
+guidance or any real feedback on what to drop. It started to feel like
+speaking up about it was pointless, so eventually I stopped.
+
+I want to be clear this isn't about any one person, and I'm not leaving
+angry. My teammates on Payments have been brilliant, and I'm genuinely
+proud of the migration we shipped in November. I'd have stayed if the
+workload conversation had gone differently.
+
+Over my remaining days I'll finish the reconciliation service handover,
+write up the on-call runbook properly, and make sure Dmitri has everything
+he needs to pick up my open tickets.
+
+Thank you for the last two years.
+
+Kind regards,
+Krista Robertson
+Full-Stack Engineer, Payments Platform

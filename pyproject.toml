@@ -37,6 +37,7 @@ api = [
     "sqlalchemy>=2.0",
     "fpdf2>=2.7",
     "alembic>=1.13",
+    "pypdf>=4.0",
 ]
 notebooks = [
     "jupyter>=1.0",

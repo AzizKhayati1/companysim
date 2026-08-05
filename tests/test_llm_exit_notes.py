@@ -136,10 +136,10 @@ def test_mixed_generator_falls_back_to_template_on_failure(monkeypatch):
     driver_frame = pd.DataFrame([
         {"employee_id": 1, "workload_perceived": 0.95, "manager_support_score": 0.15},
     ])
-    notes, n_llm = llm_exit_notes.generate_notes_for_employees_mixed(
+    notes, llm_employee_ids = llm_exit_notes.generate_notes_for_employees_mixed(
         driver_frame, [1], np.random.default_rng(1),
     )
-    assert n_llm == 0
+    assert llm_employee_ids == set()
     assert 1 in notes
     assert len(notes[1]) > 0
 
@@ -154,12 +154,12 @@ def test_mixed_generator_counts_successful_llm_notes(monkeypatch):
         {"employee_id": 1, "workload_perceived": 0.95, "manager_support_score": 0.15},
         {"employee_id": 2, "workload_perceived": 0.5, "manager_support_score": 0.5},
     ])
-    notes, n_llm = llm_exit_notes.generate_notes_for_employees_mixed(
+    notes, llm_employee_ids = llm_exit_notes.generate_notes_for_employees_mixed(
         driver_frame, [1, 2], np.random.default_rng(1),
     )
     # Employee 2 is neutral (no bad drivers), so it always falls back to the template
     # generator regardless of the LLM path — only employee 1 should count as LLM-written.
-    assert n_llm == 1
+    assert llm_employee_ids == {1}
     assert notes[1] == "The workload was unsustainable and I had to leave."
 
 

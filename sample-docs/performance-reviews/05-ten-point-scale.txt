@@ -1,0 +1,13 @@
+QUARTERLY CHECK-IN — MERIDIAN ANALYTICS
+
+Name:    Tina Holland
+Email:   tina.holland@meridiananalytics.example
+Period:  Q3 2025, ending 30 September 2025
+Manager: Priya Raman
+
+Performance score: 7/10
+
+Commentary
+Solid, dependable quarter. Nothing slipped, nothing spectacular. Handled the
+vendor integration competently despite unclear requirements from the vendor
+side. Would benefit from more initiative on scoping work before it lands.

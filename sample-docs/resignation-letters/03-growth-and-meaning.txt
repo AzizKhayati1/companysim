@@ -1,0 +1,21 @@
+From: Stephen Miller <stephen.miller@meridiananalytics.example>
+To: People Operations, Meridian Analytics
+Date: 18 February 2026
+Subject: Notice of resignation
+
+Hi,
+
+Please accept this as formal notice of my resignation from the
+Frontend Engineer position. My last day will be 4 March 2026.
+
+I've been in the same scope for nearly three years now. The work started to
+feel pointless — I struggled to see the impact of what I was shipping, and
+the growth conversations never turned into anything concrete. I asked twice
+about moving toward a more senior remit and got encouragement but no path.
+
+I'm moving to a role where the remit is broader. I'm grateful for what I
+learned here and happy to help however I can during the transition.
+
+Kind regards,
+Stephen Miller
+Frontend Engineer

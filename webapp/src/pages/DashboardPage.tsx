@@ -5,6 +5,7 @@ import {
   CartesianGrid,
   Line,
   LineChart,
+  ReferenceLine,
   ResponsiveContainer,
   Tooltip,
   XAxis,
@@ -12,6 +13,7 @@ import {
 } from "recharts";
 import { api } from "../api/client";
 import { formatDateTime } from "../utils/format";
+import { buildPromotionMarkers } from "../utils/promotionMarkers";
 
 const TIER_COLOR: Record<string, string> = {
   high: "var(--danger)",
@@ -46,6 +48,11 @@ export default function DashboardPage() {
   });
   const trend = trendQuery.data ?? [];
 
+  const modelQualityQuery = useQuery({
+    queryKey: ["model-quality"],
+    queryFn: api.getModelQuality,
+  });
+
   const runsQuery = useQuery({ queryKey: ["runs", orgId, "all"], queryFn: () => api.listRuns(orgId) });
   const runCount = runsQuery.data?.length ?? 0;
 
@@ -60,10 +67,12 @@ export default function DashboardPage() {
     .sort((a, b) => b.turnover_probability - a.turnover_probability)
     .slice(0, 3);
 
-  const trendData = trend.map((p) => ({
+  const trendData = trend.map((p, i) => ({
+    index: i,
     date: formatDateTime(p.computed_at).split(",")[0],
     risk: Math.round(p.mean_risk * 1000) / 10,
   }));
+  const promotionMarkers = buildPromotionMarkers(trend, modelQualityQuery.data?.history ?? []);
 
   const deptCards = depts.map((d) => {
     const deptEmps = employees.filter((e) => e.department_id === d.id);
@@ -131,9 +140,25 @@ export default function DashboardPage() {
               <ResponsiveContainer width="100%" height={200}>
                 <LineChart data={trendData} margin={{ top: 5, right: 10, left: 0, bottom: 5 }}>
                   <CartesianGrid strokeDasharray="3 3" opacity={0.2} />
-                  <XAxis dataKey="date" fontSize={11} />
+                  <XAxis
+                    dataKey="index"
+                    fontSize={11}
+                    tickFormatter={(i) => trendData[i]?.date ?? ""}
+                  />
                   <YAxis fontSize={11} unit="%" domain={[0, 100]} />
-                  <Tooltip formatter={(v) => [`${v}%`, "Mean risk"]} />
+                  <Tooltip
+                    labelFormatter={(i) => trendData[i]?.date ?? ""}
+                    formatter={(v) => [`${v}%`, "Mean risk"]}
+                  />
+                  {promotionMarkers.map((m) => (
+                    <ReferenceLine
+                      key={m.index}
+                      x={m.index}
+                      stroke="var(--text-3)"
+                      strokeDasharray="3 3"
+                      label={{ value: m.label, position: "top", fontSize: 9, fill: "var(--text-3)" }}
+                    />
+                  ))}
                   <Line type="monotone" dataKey="risk" stroke="var(--accent)" strokeWidth={2} dot={{ r: 3 }} />
                 </LineChart>
               </ResponsiveContainer>

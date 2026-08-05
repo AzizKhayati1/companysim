@@ -4,6 +4,7 @@ import {
   CartesianGrid,
   Line,
   LineChart,
+  ReferenceLine,
   ResponsiveContainer,
   Tooltip,
   XAxis,
@@ -11,6 +12,7 @@ import {
 } from "recharts";
 import { api } from "../api/client";
 import { formatDateTime } from "../utils/format";
+import { buildPromotionMarkers } from "../utils/promotionMarkers";
 
 const TIER_COLOR: Record<string, string> = {
   high: "var(--danger)",
@@ -65,6 +67,10 @@ export default function EmployeeRiskHistoryPage() {
     queryKey: ["risk-drivers", orgId, employeeId],
     queryFn: () => api.getEmployeeRiskDrivers(orgId, employeeId),
   });
+  const modelQualityQuery = useQuery({
+    queryKey: ["model-quality"],
+    queryFn: api.getModelQuality,
+  });
 
   const depts = deptsQuery.data ?? [];
   const teams = teamsQuery.data ?? [];
@@ -81,10 +87,12 @@ export default function EmployeeRiskHistoryPage() {
 
   const drivers = driversQuery.data ?? [];
 
-  const chartData = points.map((p) => ({
+  const chartData = points.map((p, i) => ({
+    index: i,
     date: new Date(p.computed_at).toLocaleDateString("en-US"),
     probability: Math.round(p.turnover_probability * 1000) / 10,
   }));
+  const promotionMarkers = buildPromotionMarkers(points, modelQualityQuery.data?.history ?? []);
 
   return (
     <div className="page">
@@ -160,7 +168,8 @@ export default function EmployeeRiskHistoryPage() {
             <p className="muted">
               One point per Simulate/Diagnose run against this org, scored at the moment the run
               happened — a rising trend means recent org changes are pushing this person's
-              predicted risk up.
+              predicted risk up. Dashed lines mark when the production model itself was retrained
+              and promoted, which can shift a score even when nothing about this person changed.
             </p>
             {historyQuery.isLoading && <p className="muted">Loading...</p>}
             {!historyQuery.isLoading && points.length === 0 && (
@@ -173,9 +182,25 @@ export default function EmployeeRiskHistoryPage() {
               <ResponsiveContainer width="100%" height={220}>
                 <LineChart data={chartData} margin={{ top: 5, right: 10, left: 0, bottom: 5 }}>
                   <CartesianGrid strokeDasharray="3 3" opacity={0.2} />
-                  <XAxis dataKey="date" fontSize={11} />
+                  <XAxis
+                    dataKey="index"
+                    fontSize={11}
+                    tickFormatter={(i) => chartData[i]?.date ?? ""}
+                  />
                   <YAxis fontSize={11} unit="%" domain={[0, 100]} />
-                  <Tooltip formatter={(value) => [`${value}%`, "Turnover probability"]} />
+                  <Tooltip
+                    labelFormatter={(i) => chartData[i]?.date ?? ""}
+                    formatter={(value) => [`${value}%`, "Turnover probability"]}
+                  />
+                  {promotionMarkers.map((m) => (
+                    <ReferenceLine
+                      key={m.index}
+                      x={m.index}
+                      stroke="var(--text-3)"
+                      strokeDasharray="3 3"
+                      label={{ value: m.label, position: "top", fontSize: 9, fill: "var(--text-3)" }}
+                    />
+                  ))}
                   <Line
                     type="monotone"
                     dataKey="probability"

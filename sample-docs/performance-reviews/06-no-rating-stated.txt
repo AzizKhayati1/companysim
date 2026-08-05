@@ -1,0 +1,14 @@
+INFORMAL FEEDBACK NOTE — not a formal review
+
+Re:      Sarah Bailey (sarah.bailey@meridiananalytics.example)
+Date:    14 November 2025
+From:    Team retrospective notes
+
+Peer comments collected during the quarterly retrospective. This is not a
+scored review and no rating was assigned.
+
+- "Unblocks people quickly, always willing to pair."
+- "Design instincts are good; documentation could be better."
+- "Would like to see them present at the engineering all-hands."
+
+Formal review scheduled for January.
