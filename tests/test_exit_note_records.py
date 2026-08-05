@@ -73,6 +73,10 @@ def client(db_session_factory):
 def _clear_llm_flag(monkeypatch):
     monkeypatch.delenv(llm_exit_notes._FLAG_VAR, raising=False)
     monkeypatch.delenv("GROQ_API_KEY", raising=False)
+    # Pin the provider: these fixtures stub the Groq SDK, so a machine with
+    # COMPANYSIM_LLM_PROVIDER=bedrock exported would otherwise route them
+    # down the Bedrock branch and fail for a reason unrelated to the test.
+    monkeypatch.setenv("COMPANYSIM_LLM_PROVIDER", "groq")
 
 
 def _forced_quit_request(dept_id: int) -> dict:

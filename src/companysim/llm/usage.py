@@ -64,15 +64,38 @@ def record(call: LlmCall) -> None:
 
 
 def record_response(response: Any, *, feature: str, model: str) -> None:
-    """Record straight from a Groq response object.
+    """Record straight from a raw Groq response object.
 
     Tolerates a response with no ``usage`` attribute rather than raising —
     a token counter must never be the reason a working feature breaks.
+
+    Prefer :func:`record_completion` at call sites: it takes the
+    provider-normalized :class:`~companysim.llm.provider.ChatResponse`, so
+    it reports the same numbers whether Groq or Bedrock served the call.
+    This function remains for anything holding a raw SDK object.
     """
     usage = getattr(response, "usage", None)
     record(LlmCall(
         feature=feature,
         model=model,
+        prompt_tokens=int(getattr(usage, "prompt_tokens", 0) or 0),
+        completion_tokens=int(getattr(usage, "completion_tokens", 0) or 0),
+        total_tokens=int(getattr(usage, "total_tokens", 0) or 0),
+    ))
+
+
+def record_completion(response: Any, *, feature: str) -> None:
+    """Record a normalized ``ChatResponse``.
+
+    The model name comes off the response rather than from the caller, so
+    a usage row always names the model that actually served the request —
+    which is the whole point of the row once two providers are in play and
+    the answer is a deployment setting rather than a constant in the code.
+    """
+    usage = getattr(response, "usage", None)
+    record(LlmCall(
+        feature=feature,
+        model=str(getattr(response, "model", "") or ""),
         prompt_tokens=int(getattr(usage, "prompt_tokens", 0) or 0),
         completion_tokens=int(getattr(usage, "completion_tokens", 0) or 0),
         total_tokens=int(getattr(usage, "total_tokens", 0) or 0),

@@ -1,18 +1,22 @@
-"""Optional real-LLM "ask your org" chatbot — Groq, behind a flag.
+"""Optional real-LLM "ask your org" chatbot — behind a flag.
 
-The second Groq integration in this codebase (after
+The second LLM integration in this codebase (after
 ``ml/llm_exit_notes.py``), and the same opt-in shape: off by default,
-needs both ``COMPANYSIM_LLM_CHAT=1`` and a ``GROQ_API_KEY`` to do
+needs both ``COMPANYSIM_LLM_CHAT=1`` and a credentialed provider to do
 anything. Unlike exit notes there's no template fallback — a chat feature
 has nothing sensible to degrade to, so a disabled flag or a failed call
 surfaces as a plain, honest message instead of a broken page.
 
 The model never invents numbers: it answers only by calling the read-only
-tool functions below. Groq's API is OpenAI-compatible tool calling, not
-automatic like the Gemini SDK this originally used — there's no built-in
-introspection or call-execution loop, so this module builds the JSON tool
-schema from each function's signature/docstring itself (:func:`_tool_schema`)
-and runs the call → execute → feed-result-back loop itself (:func:`ask_org`).
+tool functions below. Tool calling here is manual, not automatic like the
+Gemini SDK this originally used — there's no built-in introspection or
+call-execution loop, so this module builds the JSON tool schema from each
+function's signature/docstring itself (:func:`_tool_schema`) and runs the
+call → execute → feed-result-back loop itself (:func:`ask_org`). The
+transcript is kept in OpenAI shape throughout;
+``companysim.llm.provider`` translates it for Bedrock, so this loop is
+provider-independent.
+
 Every tool is grounded in the exact same DB queries and scoring/diagnosis
 logic the rest of the app already uses and already tests
 (``scoring_frame.score_current_employees``, ``scoring_frame.build_driver_frame``,
@@ -28,7 +32,6 @@ from __future__ import annotations
 
 import inspect
 import json
-import os
 import typing
 from collections.abc import Callable
 from dataclasses import dataclass, field
@@ -45,13 +48,13 @@ from companysim.api.scoring_frame import (
     score_current_employees,
 )
 from companysim.intervene import compare_intervention as run_compare_intervention
-from companysim.llm.usage import FEATURE_CHAT, record_response
+from companysim.llm import provider
+from companysim.llm.usage import FEATURE_CHAT, record_completion
 from companysim.ml.diagnostics import explain_employee
 from companysim.scenarios.events import ManagerCoaching, RetentionBonus, WorkloadRelief
 from companysim.scenarios.scenario import Scenario
 
 _FLAG_VAR = "COMPANYSIM_LLM_CHAT"
-_MODEL = "llama-3.3-70b-versatile"
 _MAX_TOOL_ITERATIONS = 6
 
 _SYSTEM_INSTRUCTION = (
@@ -68,17 +71,10 @@ _SYSTEM_INSTRUCTION = (
 
 
 def is_chat_enabled() -> bool:
-    """True only when the flag is on, a key is present, and the optional
-    ``groq`` package (the ``llm`` extra) is actually installed."""
-    if os.environ.get(_FLAG_VAR, "").strip().lower() not in {"1", "true", "yes"}:
-        return False
-    if not os.environ.get("GROQ_API_KEY"):
-        return False
-    try:
-        import groq  # noqa: F401, PLC0415
-    except ImportError:
-        return False
-    return True
+    """True only when the flag is on and the active provider has both its
+    SDK and its credentials — see :func:`companysim.llm.provider.is_enabled`.
+    """
+    return provider.is_enabled(_FLAG_VAR)
 
 
 @dataclass
@@ -397,8 +393,6 @@ def ask_org(db: Session, org_id: int, message: str, history: list[dict[str, str]
     router) is responsible for turning an exception into a friendly
     "temporarily unavailable" reply rather than a 500.
     """
-    from groq import Groq  # noqa: PLC0415
-
     calls_made: list[str] = []
     tool_fns = build_tools(db, org_id, calls_made)
     tool_map = {fn.__name__: fn for fn in tool_fns}
@@ -410,45 +404,39 @@ def ask_org(db: Session, org_id: int, message: str, history: list[dict[str, str]
         messages.append({"role": role, "content": turn.get("content", "")})
     messages.append({"role": "user", "content": message})
 
-    client = Groq(api_key=os.environ["GROQ_API_KEY"])
-
     for _ in range(_MAX_TOOL_ITERATIONS):
-        response = client.chat.completions.create(model=_MODEL, messages=messages, tools=tool_schemas)
+        response = provider.complete(messages, tools=tool_schemas)
         # One record per iteration, not per question: a tool-calling answer
         # makes several round trips and every one of them is billed.
-        record_response(response, feature=FEATURE_CHAT, model=_MODEL)
-        msg = response.choices[0].message
+        record_completion(response, feature=FEATURE_CHAT)
 
-        if not msg.tool_calls:
-            reply = (msg.content or "").strip()
+        if not response.tool_calls:
+            reply = (response.text or "").strip()
             if not reply:
-                raise ValueError("Groq returned no text")
+                raise ValueError("The model returned no text")
             return ChatResult(reply=reply, tools_used=calls_made)
 
+        # Re-serialized into the OpenAI shape rather than kept as objects:
+        # that shape is this loop's transcript format, and the provider
+        # layer translates it for Bedrock on the way back out.
         messages.append({
             "role": "assistant",
-            "content": msg.content,
+            "content": response.text,
             "tool_calls": [
                 {
                     "id": tc.id, "type": "function",
-                    "function": {"name": tc.function.name, "arguments": tc.function.arguments},
+                    "function": {"name": tc.name, "arguments": json.dumps(tc.arguments)},
                 }
-                for tc in msg.tool_calls
+                for tc in response.tool_calls
             ],
         })
-        for tc in msg.tool_calls:
-            fn = tool_map.get(tc.function.name)
+        for tc in response.tool_calls:
+            fn = tool_map.get(tc.name)
             if fn is None:
-                result = json.dumps({"error": f"Unknown tool '{tc.function.name}'"})
+                result = json.dumps({"error": f"Unknown tool '{tc.name}'"})
             else:
                 try:
-                    args = json.loads(tc.function.arguments or "{}")
-                    # A parameterless tool call sometimes comes back as the
-                    # JSON literal "null" (not "{}") — treat any non-dict
-                    # parse result as "no arguments" rather than crashing.
-                    if not isinstance(args, dict):
-                        args = {}
-                    result = fn(**args)
+                    result = fn(**tc.arguments)
                 except Exception as exc:
                     result = json.dumps({"error": str(exc)})
             messages.append({"role": "tool", "tool_call_id": tc.id, "content": result})

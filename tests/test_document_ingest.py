@@ -38,6 +38,10 @@ def _clear_ingest_llm_flag(monkeypatch):
     different code path here."""
     monkeypatch.delenv(llm_parser._FLAG_VAR, raising=False)
     monkeypatch.delenv("GROQ_API_KEY", raising=False)
+    # Pin the provider: these fixtures stub the Groq SDK, so a machine with
+    # COMPANYSIM_LLM_PROVIDER=bedrock exported would otherwise route them
+    # down the Bedrock branch and fail for a reason unrelated to the test.
+    monkeypatch.setenv("COMPANYSIM_LLM_PROVIDER", "groq")
 
 
 @pytest.fixture()

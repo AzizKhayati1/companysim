@@ -123,18 +123,61 @@ If either is missing: `pip install -e ".[dev,ml,viz,api,llm]"` /
 ## Optional LLM features
 
 All off by default; the app works fully without them. Set before launching
-the backend (the frontend needs nothing):
+the backend (the frontend needs nothing). `.env.example` documents every
+variable — copy it to `.env` and the launch command above picks it up.
+
+**Pick a provider**, then set that provider's credentials:
+
+| Variable | Value |
+|---|---|
+| `COMPANYSIM_LLM_PROVIDER` | `groq` (default) or `bedrock` |
+
+| Groq | AWS Bedrock |
+|---|---|
+| `GROQ_API_KEY` | `AWS_DEFAULT_REGION` (**required** — no default) |
+| | `AWS_ACCESS_KEY_ID` + `AWS_SECRET_ACCESS_KEY`, *or* `AWS_PROFILE`, *or* an IAM role |
+| | `COMPANYSIM_BEDROCK_MODEL_ID` |
+
+Then turn on whichever features you want:
 
 | Variable | Enables |
 |---|---|
-| `GROQ_API_KEY` | required by all three below |
 | `COMPANYSIM_LLM_EXIT_NOTES=1` | LLM-written exit notes during `/diagnose` |
 | `COMPANYSIM_LLM_CHAT=1` | the "Ask Vantage" chat widget |
-| `COMPANYSIM_LLM_INGEST=1` | free-text document extraction (reviews, resignation letters) |
+| `COMPANYSIM_LLM_INGEST=1` | free-text extraction (reviews, letters, offers, CVs) |
 
 Without them, exit notes fall back to the template generator, chat shows a
 "not configured" message, and document extraction parks free-text uploads as
 `needs_review` — none of these are errors.
+
+**Verify before trusting it:**
+
+```bash
+set -a; . ./.env; set +a
+.venv/Scripts/python scripts/check_llm_provider.py     # exits 0 when a real call worked
+```
+
+Run this on any new machine and after any `.env` change. Every LLM feature
+here fails *silently by design* — extraction parks the document, exit notes
+use templates, chat reports an outage — so a misconfiguration is otherwise
+indistinguishable from a model that declined. The script checks each layer
+separately (SDK → credentials → STS identity → model id → live call) and
+names the one that broke.
+
+**Bedrock gotchas the script will tell you about:**
+
+- **The region is mandatory.** Bedrock's endpoint is regional and boto3
+  raises `NoRegionError` rather than defaulting. `AWS_DEFAULT_REGION=eu-west-2`.
+- **EU regions need the `eu.` inference-profile prefix.** A bare
+  `anthropic.claude-...` id is rejected with `ValidationException` in
+  `eu-west-2`; it has to be `eu.anthropic.claude-...`. List what the
+  account can actually call:
+  `aws bedrock list-inference-profiles --region eu-west-2`
+- **Model access is granted per account**, in the Bedrock console under
+  *Model access*. Valid credentials plus an ungranted model still fails.
+- **`bedrock:InvokeModel` is a separate permission** from being able to
+  authenticate — an `AccessDeniedException` after a good STS identity means
+  the IAM policy, not the keys.
 
 ## Driving it
 

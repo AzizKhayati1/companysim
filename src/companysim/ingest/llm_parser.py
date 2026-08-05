@@ -24,8 +24,6 @@ this path.
 """
 from __future__ import annotations
 
-import json
-import os
 from typing import TypeVar
 
 from pydantic import BaseModel, ValidationError
@@ -36,10 +34,10 @@ from companysim.ingest.schemas import (
     PerformanceReviewExtract,
     ResignationLetterExtract,
 )
-from companysim.llm.usage import FEATURE_INGEST, record_response
+from companysim.llm import provider
+from companysim.llm.usage import FEATURE_INGEST, record_completion
 
 _FLAG_VAR = "COMPANYSIM_LLM_INGEST"
-MODEL = "llama-3.3-70b-versatile"
 _MAX_OUTPUT_TOKENS = 600
 # Extraction is a reading task, not a writing one — unlike exit-note
 # *generation* (temperature 0.9 for variety), we want the most likely
@@ -97,39 +95,24 @@ Document:
 
 
 def is_ingest_llm_enabled() -> bool:
-    """True only when the flag is on, a key is present, and the optional
-    ``groq`` package (the ``llm`` extra) is actually installed."""
-    if os.environ.get(_FLAG_VAR, "").strip().lower() not in {"1", "true", "yes"}:
-        return False
-    if not os.environ.get("GROQ_API_KEY"):
-        return False
-    try:
-        import groq  # noqa: F401, PLC0415
-    except ImportError:
-        return False
-    return True
+    """True only when the flag is on and the active provider has both its
+    SDK and its credentials — see :func:`companysim.llm.provider.is_enabled`.
+    """
+    return provider.is_enabled(_FLAG_VAR)
 
 
 def _complete_json(prompt: str) -> dict | None:
     try:
-        from groq import Groq  # noqa: PLC0415
-
-        client = Groq(api_key=os.environ["GROQ_API_KEY"])
-        response = client.chat.completions.create(
-            model=MODEL,
-            messages=[{"role": "user", "content": prompt}],
+        response = provider.complete(
+            [{"role": "user", "content": prompt}],
             max_tokens=_MAX_OUTPUT_TOKENS,
             temperature=_TEMPERATURE,
-            response_format={"type": "json_object"},
+            json_mode=True,
         )
         # Recorded before the response is inspected: a call that returned
         # unparseable JSON still burned tokens and still has to be billed.
-        record_response(response, feature=FEATURE_INGEST, model=MODEL)
-        text = (response.choices[0].message.content or "").strip()
-        if not text:
-            return None
-        parsed = json.loads(text)
-        return parsed if isinstance(parsed, dict) else None
+        record_completion(response, feature=FEATURE_INGEST)
+        return provider.parse_json_object(response.text)
     except Exception:
         return None
 

@@ -632,9 +632,17 @@ def _extract_cv(db: Session, org_id: int, doc: SourceDocumentRecord):
 
 
 def _llm_extractor_label() -> str:
-    from companysim.ingest.llm_parser import MODEL  # noqa: PLC0415
+    """``provider:model`` — stamped onto every document this path touches.
 
-    return f"groq:{MODEL}"
+    Both halves are deployment settings now, so the label is resolved per
+    call rather than baked in as a constant. A document extracted under
+    Groq and one re-extracted under Bedrock stay distinguishable in the
+    lineage view, which is the only way to explain a changed reading of
+    the same file after a provider switch.
+    """
+    from companysim.llm import provider  # noqa: PLC0415
+
+    return f"{provider.active_provider()}:{provider.model_id()}"
 
 
 _LLM_KINDS = {

@@ -48,6 +48,12 @@ notebooks = [
 ]
 llm = [
     "groq>=1.0",
+    # Bedrock is reached through boto3's `bedrock-runtime` Converse API.
+    # Both SDKs ship together because the provider is chosen at runtime by
+    # COMPANYSIM_LLM_PROVIDER, not at install time — a deployment that can
+    # only install one of them would fail on a config change rather than
+    # on a deploy, which is the worse place to find out.
+    "boto3>=1.35",
 ]
 
 [project.scripts]

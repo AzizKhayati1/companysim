@@ -72,6 +72,10 @@ def _fake_groq_tool_call_then_final(tool_name: str, tool_args: dict | None, fina
 def _clear_flag(monkeypatch):
     monkeypatch.delenv("COMPANYSIM_LLM_CHAT", raising=False)
     monkeypatch.delenv("GROQ_API_KEY", raising=False)
+    # Pin the provider: these fixtures stub the Groq SDK, so a machine with
+    # COMPANYSIM_LLM_PROVIDER=bedrock exported would otherwise route them
+    # down the Bedrock branch and fail for a reason unrelated to the test.
+    monkeypatch.setenv("COMPANYSIM_LLM_PROVIDER", "groq")
 
 
 @pytest.fixture()
