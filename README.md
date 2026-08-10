@@ -235,6 +235,11 @@ the Bedrock console, so valid credentials plus an ungranted model still
 fails. `aws bedrock list-inference-profiles --region eu-west-2` lists what
 an account can actually call.
 
+**[docs/bedrock-setup.md](docs/bedrock-setup.md)** is the full walkthrough:
+the IAM policy to paste, model-access grants, per-machine `.env` setup, an
+error→cause→fix table, and how to drop the static keys for an IAM role in
+production.
+
 Usage rows record the model that *actually served* each call rather than a
 constant, so the token meter stays correct across a provider switch and
 Bedrock spend is never attributed to Groq.
