@@ -226,16 +226,22 @@ All three LLM features share one backend, chosen at runtime. Nothing in
 both onto one interface, so switching is a config change, not a code change.
 
 ```bash
-pip install -e ".[llm]"        # installs both SDKs (groq + boto3)
+pip install -e ".[llm]"        # both SDKs; or .[bedrock] / .[groq] for one
 cp .env.example .env           # then edit .env — it documents every variable
 ```
 
 | | Groq (default) | AWS Bedrock |
 |---|---|---|
 | `COMPANYSIM_LLM_PROVIDER` | `groq` or unset | `bedrock` |
+| Extra | `.[groq]` | `.[bedrock]` |
 | Credentials | `GROQ_API_KEY` | boto3's chain: static keys, `AWS_PROFILE`, or an IAM role |
 | Region | n/a | `AWS_DEFAULT_REGION` — **mandatory**, no default |
 | Model | `COMPANYSIM_GROQ_MODEL_ID` | `COMPANYSIM_BEDROCK_MODEL_ID` |
+
+`.[llm]` installs both and is the sensible default on a dev machine, since
+it makes switching (or rolling back) a config change rather than a
+reinstall. A committed deployment can install just one — nothing imports
+either SDK at module scope, so the unused provider is merely unavailable.
 
 Bedrock goes through the **Converse** API rather than `InvokeModel`: it is
 model-agnostic, reports usage in one documented place, and supports tool

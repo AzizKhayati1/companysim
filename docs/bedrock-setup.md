@@ -143,8 +143,10 @@ pip install -e ".[dev,ml,viz,api,llm]"
 cd webapp && npm install && cd ..
 ```
 
-`boto3` is part of the `llm` extra now, so there is nothing extra to install
-for Bedrock.
+`.[llm]` installs both provider SDKs. If this machine is committed to
+Bedrock and you would rather not carry the Groq SDK, use
+`.[dev,ml,viz,api,bedrock]` instead — nothing imports either SDK at module
+scope, so the Groq path just becomes unavailable rather than broken.
 
 ### B2. Create `.env`
 
@@ -373,12 +375,24 @@ rollback if Bedrock has a bad day.
 Mostly nothing, by design — `llm/provider.py` normalizes both onto one
 interface. Two differences are worth knowing:
 
-**JSON mode.** Groq constrains decoding to valid JSON at the sampler.
-Bedrock's Converse API has no equivalent, so that path relies on the prompt
-plus markdown-fence stripping. Both are then validated by the same pydantic
-schema, which is the check that actually protects the database — so this
-changes how often a call is *wasted*, never whether a bad value can reach an
-employee record.
+**JSON mode.** Groq constrains decoding to valid JSON at the sampler, so
+its replies are always bare. Bedrock's Converse API has no equivalent, and
+a model told "return only JSON" still routinely writes "Here is the
+extracted data:" first or adds a closing pleasantry. `parse_json_object`
+therefore strips markdown fences *and* falls back to the first balanced
+`{...}` in the reply, counting braces with string-awareness so a brace
+inside `summary_text` doesn't confuse it.
+
+This is deliberately **not** solved by forcing a tool call with the target
+schema, which would guarantee structure but destroy the refusal contract: a
+forced call has to populate every required field, so a model that should
+have reported a missing rating would invent one instead. Tolerating chatter
+is the cheaper mistake than manufacturing data.
+
+Either way the same pydantic schema validates the result, and that is the
+check which actually protects the database — the difference changes how
+often a call is *wasted*, never whether a bad value can reach an employee
+record.
 
 **Tool calling.** Groq uses OpenAI-shaped `tool_calls` with JSON-string
 arguments; Bedrock uses `toolUse` blocks with already-parsed dicts. The

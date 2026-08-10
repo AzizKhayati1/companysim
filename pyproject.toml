@@ -46,13 +46,22 @@ notebooks = [
     "ipykernel>=6.29",
     "plotly>=5.22",
 ]
+# One extra per provider, so a deployment that has committed to one need
+# not carry the other's SDK. Nothing imports either at module scope —
+# `llm/provider.py` imports inside the branch that uses it — so installing
+# only `bedrock` leaves the Groq path merely unavailable, not broken.
+groq = [
+    "groq>=1.0",
+]
+bedrock = [
+    # Reached through boto3's `bedrock-runtime` Converse API.
+    "boto3>=1.35",
+]
+# Both. The sensible default for a dev machine: the provider is chosen at
+# runtime by COMPANYSIM_LLM_PROVIDER, so having both installed makes
+# switching (or rolling back) a config change rather than a reinstall.
 llm = [
     "groq>=1.0",
-    # Bedrock is reached through boto3's `bedrock-runtime` Converse API.
-    # Both SDKs ship together because the provider is chosen at runtime by
-    # COMPANYSIM_LLM_PROVIDER, not at install time — a deployment that can
-    # only install one of them would fail on a config change rather than
-    # on a deploy, which is the worse place to find out.
     "boto3>=1.35",
 ]
 

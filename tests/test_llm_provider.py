@@ -210,6 +210,45 @@ def test_non_objects_parse_to_none(raw):
     assert provider.parse_json_object(raw) is None
 
 
+@pytest.mark.parametrize("raw", [
+    'Here is the extracted data:\n{"a": 1}',
+    '{"a": 1}\n\nLet me know if you need anything else.',
+    'Sure! Here you go:\n```json\n{"a": 1}\n```\nHope that helps.',
+    'I read the document and found:\n\n  {"a": 1}\n',
+])
+def test_json_surrounded_by_chatter_is_recovered(raw):
+    """The JSON-mode parity gap. Groq constrains decoding at the sampler so
+    its replies are always bare; Bedrock has no equivalent and a model told
+    'return only JSON' still writes a preamble. Without recovery those
+    replies park a perfectly readable document as unreadable."""
+    assert provider.parse_json_object(raw) == {"a": 1}
+
+
+def test_recovery_survives_braces_and_quotes_inside_prose():
+    """Extraction payloads carry free text (summary_text, note_text) that
+    can contain a brace or an escaped quote — which is why this counts
+    braces with string awareness instead of matching a regex."""
+    raw = 'Result:\n{"note_text": "he said \\"enough {sic}\\" and left", "a": 3}'
+    assert provider.parse_json_object(raw) == {
+        "note_text": 'he said "enough {sic}" and left', "a": 3,
+    }
+
+
+def test_recovery_does_not_invent_an_object_from_prose():
+    """The refusal contract depends on this: a reply with no JSON must stay
+    None so the document is parked, never salvaged into a fake reading."""
+    assert provider.parse_json_object(
+        "I could not find a rating anywhere in this document.") is None
+
+
+def test_an_error_refusal_survives_recovery():
+    # The {"error": ...} contract has to keep working through the fallback,
+    # since that is how a model reports a missing field.
+    assert provider.parse_json_object(
+        'Here is my response:\n{"error": "no rating stated"}'
+    ) == {"error": "no rating stated"}
+
+
 # ---- Converse translation ----------------------------------------------
 
 
@@ -290,6 +329,12 @@ def _stub_bedrock(monkeypatch, response: dict, captured: dict | None = None):
         return types.SimpleNamespace(converse=converse)
 
     monkeypatch.setattr(boto3, "client", client)
+    # Session too, not just client: readiness asks boto3 what credentials it
+    # resolved, and leaving that real would make the test depend on whether
+    # the machine running it happens to have ~/.aws configured.
+    monkeypatch.setattr(
+        boto3, "Session",
+        lambda *a, **k: types.SimpleNamespace(get_credentials=lambda: object()))
     monkeypatch.setenv("COMPANYSIM_LLM_PROVIDER", "bedrock")
     monkeypatch.setenv("AWS_DEFAULT_REGION", "eu-west-2")
 
@@ -432,6 +477,50 @@ def test_a_bedrock_api_error_is_swallowed_into_none(monkeypatch):
     monkeypatch.setenv(llm_parser._FLAG_VAR, "1")
 
     assert llm_parser.extract_performance_review("text") is None
+
+
+def test_extraction_works_with_the_groq_package_not_installed(monkeypatch):
+    """A Bedrock-only deployment installs `.[bedrock]` and has no groq SDK
+    at all. Nothing may import it at module scope, or that install would
+    fail on import rather than on use."""
+    from companysim.ingest import llm_parser
+
+    monkeypatch.setitem(sys.modules, "groq", None)  # import groq -> ImportError
+    monkeypatch.delenv("GROQ_API_KEY", raising=False)
+    _stub_bedrock(monkeypatch, {
+        "output": {"message": {"content": [{"text": json.dumps({
+            "employee_email": "a@b.com", "review_period_end": "2025-12-31",
+            "rating": 4.0, "summary_text": "ok",
+        })}]}},
+        "usage": {"inputTokens": 10, "outputTokens": 5, "totalTokens": 15},
+    })
+    monkeypatch.setenv(llm_parser._FLAG_VAR, "1")
+
+    assert llm_parser.is_ingest_llm_enabled() is True
+    result = llm_parser.extract_performance_review("text")
+    assert result is not None
+    assert result.rating == 4.0
+
+
+def test_bedrock_extraction_survives_a_chatty_reply(monkeypatch):
+    """End-to-end version of the recovery test — the shape most likely to
+    appear in practice on Bedrock and never on Groq."""
+    from companysim.ingest import llm_parser
+
+    payload = json.dumps({
+        "employee_email": "a@b.com", "review_period_end": "2025-12-31",
+        "rating": 2.5, "summary_text": "mixed half",
+    })
+    _stub_bedrock(monkeypatch, {
+        "output": {"message": {"content": [
+            {"text": f"Here is the extracted data:\n\n```json\n{payload}\n```"}]}},
+        "usage": {"inputTokens": 40, "outputTokens": 20, "totalTokens": 60},
+    })
+    monkeypatch.setenv(llm_parser._FLAG_VAR, "1")
+
+    result = llm_parser.extract_performance_review("a review")
+    assert result is not None
+    assert result.rating == 2.5
 
 
 def test_exit_notes_fall_back_when_bedrock_fails(monkeypatch):

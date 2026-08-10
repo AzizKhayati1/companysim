@@ -215,14 +215,73 @@ def extract_json_text(text: str) -> str:
     return cleaned.strip()
 
 
+def _first_json_object(text: str) -> str | None:
+    """The first balanced ``{...}`` in ``text``, or ``None``.
+
+    Brace counting rather than a regex, because a regex cannot tell a brace
+    inside a string literal from a structural one — and extraction payloads
+    routinely carry prose (``summary_text``, ``note_text``) that can contain
+    either a brace or an escaped quote.
+    """
+    start = text.find("{")
+    if start == -1:
+        return None
+    depth = 0
+    in_string = False
+    escaped = False
+    for i in range(start, len(text)):
+        ch = text[i]
+        if in_string:
+            if escaped:
+                escaped = False
+            elif ch == "\\":
+                escaped = True
+            elif ch == '"':
+                in_string = False
+            continue
+        if ch == '"':
+            in_string = True
+        elif ch == "{":
+            depth += 1
+        elif ch == "}":
+            depth -= 1
+            if depth == 0:
+                return text[start:i + 1]
+    return None
+
+
 def parse_json_object(text: str | None) -> dict | None:
+    """Parse a model's reply into a dict, or ``None``.
+
+    Tries the whole (de-fenced) reply first, then falls back to the first
+    balanced object embedded in it. That fallback is not sloppiness — it is
+    the JSON-mode parity gap made survivable. Groq constrains decoding to
+    valid JSON at the sampler, so its replies are always bare; Bedrock's
+    Converse API has no equivalent, and a model told "return only JSON"
+    still routinely writes "Here is the extracted data:" first or adds a
+    closing pleasantry. Without this, those replies parse as nothing and
+    the document is parked as unreadable — the tokens spent, the content
+    perfectly good, and the reviewer told the model refused when it did not.
+
+    Deliberately *not* solved by forcing a tool call with the target schema,
+    which would guarantee structure but destroy the refusal contract: a
+    forced call must populate every required field, so a model that should
+    have reported a missing rating would invent one instead. Tolerating
+    chatter is the cheaper mistake than manufacturing data.
+    """
     if not text:
         return None
-    try:
-        parsed = json.loads(extract_json_text(text))
-    except (ValueError, TypeError):
-        return None
-    return parsed if isinstance(parsed, dict) else None
+    cleaned = extract_json_text(text)
+    for candidate in (cleaned, _first_json_object(cleaned)):
+        if not candidate:
+            continue
+        try:
+            parsed = json.loads(candidate)
+        except (ValueError, TypeError):
+            continue
+        if isinstance(parsed, dict):
+            return parsed
+    return None
 
 
 # --------------------------------------------------------------------------
