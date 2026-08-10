@@ -121,36 +121,79 @@ def flag_enabled(flag_var: str) -> bool:
     return os.environ.get(flag_var, "").strip().lower() in _TRUTHY
 
 
+def provider_problem() -> str | None:
+    """``None`` when the active provider could serve a call right now, else
+    one specific sentence saying what is missing. Ignores feature flags.
+
+    This text reaches users — it is what an upload's ``needs_review``
+    reason says — so it has to be a diagnosis rather than a checklist. A
+    generic "needs a key and a flag" message became actively misleading the
+    moment a second provider existed: someone who has configured AWS
+    credentials but not ``COMPANYSIM_LLM_PROVIDER`` gets told to set a
+    *Groq* key, which describes a problem they do not have and hides the
+    one they do. So every branch names the active provider first.
+    """
+    if active_provider() == PROVIDER_BEDROCK:
+        try:
+            import boto3  # noqa: PLC0415
+        except ImportError:
+            return ("Provider is 'bedrock' but boto3 is not installed — "
+                    'run: pip install -e ".[llm]"')
+        if not (os.environ.get("AWS_REGION") or os.environ.get("AWS_DEFAULT_REGION")):
+            return ("Provider is 'bedrock' but no AWS region is set. Bedrock's "
+                    "endpoint is regional and has no default — set "
+                    "AWS_DEFAULT_REGION (e.g. eu-west-2).")
+        try:
+            resolved = boto3.Session().get_credentials() is not None
+        except Exception:
+            resolved = False
+        if not resolved:
+            return ("Provider is 'bedrock' but boto3 resolved no credentials. "
+                    "Set AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY, or "
+                    "AWS_PROFILE, or attach an IAM role.")
+        return None
+
+    try:
+        import groq  # noqa: F401, PLC0415
+    except ImportError:
+        return ("Provider is 'groq' but the groq package is not installed — "
+                'run: pip install -e ".[llm]"')
+    if not os.environ.get("GROQ_API_KEY"):
+        return ("Provider is 'groq' (the default) but GROQ_API_KEY is not set. "
+                "If you meant to use AWS Bedrock, set "
+                "COMPANYSIM_LLM_PROVIDER=bedrock — configuring AWS credentials "
+                "alone does not switch provider.")
+    return None
+
+
 def provider_ready() -> bool:
-    """True when the active provider has both its SDK and its credentials.
+    """True when the active provider has everything it needs to make a call.
 
     Credentials are checked the way each provider actually resolves them:
     Groq needs an env var and nothing else, while Bedrock delegates to
     boto3's chain — so an IAM role with no environment variables at all is
     correctly reported as ready, and a missing role is correctly reported
     as not.
+
+    The region counts as a requirement rather than a detail: without one no
+    Bedrock call can succeed, so calling the feature available would mean
+    every document failing separately instead of the feature saying plainly
+    that it is not configured.
     """
-    if active_provider() == PROVIDER_BEDROCK:
-        try:
-            import boto3  # noqa: PLC0415
-        except ImportError:
-            return False
-        try:
-            return boto3.Session().get_credentials() is not None
-        except Exception:
-            return False
-    if not os.environ.get("GROQ_API_KEY"):
-        return False
-    try:
-        import groq  # noqa: F401, PLC0415
-    except ImportError:
-        return False
-    return True
+    return provider_problem() is None
+
+
+def unavailable_reason(flag_var: str) -> str | None:
+    """``None`` when the feature can run, else why not — its own flag first,
+    then the provider."""
+    if not flag_enabled(flag_var):
+        return f"{flag_var}=1 is not set."
+    return provider_problem()
 
 
 def is_enabled(flag_var: str) -> bool:
     """The gate every feature uses: its own flag, plus a usable provider."""
-    return flag_enabled(flag_var) and provider_ready()
+    return unavailable_reason(flag_var) is None
 
 
 # --------------------------------------------------------------------------

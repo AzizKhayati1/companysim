@@ -1,9 +1,10 @@
-"""Optional real-LLM document extraction — Groq, behind a flag.
+"""Optional real-LLM document extraction — behind a flag.
 
-The third Groq integration in this codebase, after ``ml/llm_exit_notes.py``
+The third LLM integration in this codebase, after ``ml/llm_exit_notes.py``
 and ``api/org_chat.py``, and it follows the same opt-in shape: off by
-default, needs both ``COMPANYSIM_LLM_INGEST=1`` and a ``GROQ_API_KEY``,
-and the whole test suite plus CI runs without either.
+default, needs both ``COMPANYSIM_LLM_INGEST=1`` and a credentialed provider
+(``companysim.llm.provider`` — Groq or AWS Bedrock), and the whole test
+suite plus CI runs without either.
 
 Where it *differs* from those two is the fallback policy, and the
 difference is deliberate. Exit notes fall back to a template generator;
@@ -15,9 +16,11 @@ write a wrong rating into a model feature under the appearance of real
 data. ``ingest/rules_parser.py`` stays the default for anything
 structured enough not to need a model.
 
-Structured output is enforced twice: Groq's JSON mode constrains the
-response to valid JSON, then the pydantic schema in ``ingest/schemas.py``
-validates the fields. Anything that fails either check is a ``None``, not
+Structured output is enforced twice: the provider constrains the response
+toward valid JSON (Groq's JSON mode at the sampler; on Bedrock, the prompt
+plus fence stripping), then the pydantic schema in ``ingest/schemas.py``
+validates the fields. The second check is the one that protects the
+database. Anything that fails either check is a ``None``, not
 a guess — and because ``ResignationLetterExtract`` has no feature fields,
 even a maximally confused model cannot introduce temporal leakage through
 this path.

@@ -1,5 +1,5 @@
 """'Ask your org' chatbot endpoint — see ``api/org_chat.py`` for the
-Groq-backed tool-calling implementation this wraps.
+tool-calling implementation this wraps.
 """
 from __future__ import annotations
 
@@ -11,6 +11,7 @@ from companysim.api.db_models import OrgRecord
 from companysim.api.llm_usage import record_llm_calls
 from companysim.api.org_chat import ask_org, is_chat_enabled
 from companysim.api.schemas import ChatRequest, ChatResponse
+from companysim.llm import provider
 from companysim.llm.usage import collect
 
 router = APIRouter(prefix="/orgs/{org_id}/chat", tags=["chat"])
@@ -28,9 +29,9 @@ def ask_org_chat(org_id: int, req: ChatRequest, db: Session = Depends(get_db)):
     _get_org_or_404(db, org_id)
 
     if not is_chat_enabled():
+        reason = provider.unavailable_reason("COMPANYSIM_LLM_CHAT") or ""
         return ChatResponse(
-            reply="Ask-your-org chat isn't configured on this server — it needs both "
-                  "GROQ_API_KEY and COMPANYSIM_LLM_CHAT=1 set (see the README).",
+            reply=f"Ask-your-org chat isn't configured on this server. {reason}",
             llm_available=False,
         )
 

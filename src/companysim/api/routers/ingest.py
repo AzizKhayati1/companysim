@@ -668,10 +668,15 @@ def extract_document(org_id: int, document_id: int, db: Session = Depends(get_db
         return _empty_extract(doc)
 
     if not is_ingest_llm_enabled():
+        # The specific reason, not a checklist — this text is the only
+        # feedback a user gets, and "set a GROQ_API_KEY" is the wrong
+        # advice for someone who has configured Bedrock.
+        from companysim.llm import provider  # noqa: PLC0415
+
         mark_needs_review(
             db, doc,
-            "Free-text extraction needs COMPANYSIM_LLM_INGEST=1, a GROQ_API_KEY, "
-            "and the 'llm' extra installed. Nothing was extracted.",
+            "Free-text extraction is not configured, so nothing was extracted. "
+            + (provider.unavailable_reason("COMPANYSIM_LLM_INGEST") or ""),
         )
         return _empty_extract(doc)
 

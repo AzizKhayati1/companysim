@@ -75,6 +75,7 @@ def test_bedrock_readiness_follows_boto3_not_env_vars(monkeypatch):
     to ask boto3 what it resolved rather than looking for keys."""
     boto3 = pytest.importorskip("boto3")
     monkeypatch.setenv("COMPANYSIM_LLM_PROVIDER", "bedrock")
+    monkeypatch.setenv("AWS_DEFAULT_REGION", "eu-west-2")  # separately required
 
     monkeypatch.setattr(
         boto3, "Session",
@@ -99,6 +100,94 @@ def test_missing_sdk_reports_not_ready(monkeypatch):
     monkeypatch.setenv("COMPANYSIM_LLM_PROVIDER", "bedrock")
     monkeypatch.setitem(sys.modules, "boto3", None)  # import boto3 -> ImportError
     assert provider.provider_ready() is False
+
+
+def test_bedrock_without_a_region_is_not_ready(monkeypatch):
+    """No region means no call can ever succeed, so the honest report is
+    'not configured' rather than every document failing separately."""
+    boto3 = pytest.importorskip("boto3")
+    monkeypatch.setenv("COMPANYSIM_LLM_PROVIDER", "bedrock")
+    monkeypatch.setattr(
+        boto3, "Session",
+        lambda *a, **k: types.SimpleNamespace(get_credentials=lambda: object()))
+    assert provider.provider_ready() is False
+    monkeypatch.setenv("AWS_DEFAULT_REGION", "eu-west-2")
+    assert provider.provider_ready() is True
+
+
+# ---- the diagnosis users actually read ----------------------------------
+
+
+def test_configuring_aws_without_switching_provider_says_so(monkeypatch):
+    """The regression that prompted this: AWS credentials set, provider
+    left at its default, and the old message told the user to set a Groq
+    key — advice for a problem they did not have, hiding the one they did.
+    """
+    pytest.importorskip("groq")
+    monkeypatch.setenv("AWS_ACCESS_KEY_ID", "AKIA")
+    monkeypatch.setenv("AWS_SECRET_ACCESS_KEY", "secret")
+    monkeypatch.setenv("AWS_DEFAULT_REGION", "eu-west-2")
+    monkeypatch.setenv("COMPANYSIM_LLM_INGEST", "1")
+
+    reason = provider.unavailable_reason("COMPANYSIM_LLM_INGEST")
+    assert reason is not None
+    assert "COMPANYSIM_LLM_PROVIDER=bedrock" in reason
+
+
+def test_the_flag_is_reported_before_the_provider(monkeypatch):
+    # Nothing else can be wrong yet if the feature was never turned on.
+    reason = provider.unavailable_reason("COMPANYSIM_LLM_INGEST")
+    assert reason == "COMPANYSIM_LLM_INGEST=1 is not set."
+
+
+def test_a_missing_region_is_named_specifically(monkeypatch):
+    boto3 = pytest.importorskip("boto3")
+    monkeypatch.setenv("COMPANYSIM_LLM_PROVIDER", "bedrock")
+    monkeypatch.setenv("COMPANYSIM_LLM_INGEST", "1")
+    monkeypatch.setattr(
+        boto3, "Session",
+        lambda *a, **k: types.SimpleNamespace(get_credentials=lambda: object()))
+    reason = provider.unavailable_reason("COMPANYSIM_LLM_INGEST")
+    assert "AWS_DEFAULT_REGION" in reason
+
+
+def test_missing_bedrock_credentials_are_named_specifically(monkeypatch):
+    boto3 = pytest.importorskip("boto3")
+    monkeypatch.setenv("COMPANYSIM_LLM_PROVIDER", "bedrock")
+    monkeypatch.setenv("AWS_DEFAULT_REGION", "eu-west-2")
+    monkeypatch.setenv("COMPANYSIM_LLM_INGEST", "1")
+    monkeypatch.setattr(
+        boto3, "Session",
+        lambda *a, **k: types.SimpleNamespace(get_credentials=lambda: None))
+    reason = provider.unavailable_reason("COMPANYSIM_LLM_INGEST")
+    assert "AWS_ACCESS_KEY_ID" in reason
+    assert "bedrock" in reason
+
+
+def test_a_working_config_has_no_reason(monkeypatch):
+    boto3 = pytest.importorskip("boto3")
+    monkeypatch.setenv("COMPANYSIM_LLM_PROVIDER", "bedrock")
+    monkeypatch.setenv("AWS_DEFAULT_REGION", "eu-west-2")
+    monkeypatch.setenv("COMPANYSIM_LLM_INGEST", "1")
+    monkeypatch.setattr(
+        boto3, "Session",
+        lambda *a, **k: types.SimpleNamespace(get_credentials=lambda: object()))
+    assert provider.unavailable_reason("COMPANYSIM_LLM_INGEST") is None
+
+
+def test_no_user_facing_message_hardcodes_groq():
+    """Guards the actual regression: a provider-specific string baked into
+    a message shown to everyone, whichever provider they configured."""
+    from pathlib import Path
+
+    src = Path(provider.__file__).resolve().parents[1]
+    for rel in ("api/routers/ingest.py", "api/routers/chat.py"):
+        text = (src / rel).read_text(encoding="utf-8")
+        for line in text.splitlines():
+            stripped = line.strip()
+            if stripped.startswith("#") or "GROQ_API_KEY" not in line:
+                continue
+            pytest.fail(f"{rel} mentions GROQ_API_KEY outside a comment: {stripped}")
 
 
 # ---- JSON handling ------------------------------------------------------
