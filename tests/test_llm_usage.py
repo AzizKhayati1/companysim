@@ -299,3 +299,191 @@ def test_roster_extraction_records_nothing(client, db_session_factory):
 
     db = db_session_factory()
     assert db.query(LlmUsageRecord).count() == 0
+
+
+# ---- Bedrock ------------------------------------------------------------
+#
+# The provider layer normalizes usage, but "the meter tracks Bedrock too"
+# is a claim about the whole chain -- Converse's usage block, the sink, the
+# router's collect() wrapper, the row, and the aggregate the counter reads.
+# Only an end-to-end assertion covers that, so these drive the real
+# endpoints with boto3 stubbed rather than testing the translation twice.
+
+
+def _stub_bedrock_converse(monkeypatch, *, input_tokens, output_tokens, total, text):
+    boto3 = pytest.importorskip("boto3")
+
+    def client(name, **kwargs):
+        return types.SimpleNamespace(converse=lambda **kw: {
+            "output": {"message": {"content": [{"text": text}]}},
+            "usage": {
+                "inputTokens": input_tokens,
+                "outputTokens": output_tokens,
+                "totalTokens": total,
+            },
+        })
+
+    monkeypatch.setattr(boto3, "client", client)
+    monkeypatch.setattr(
+        boto3, "Session",
+        lambda *a, **k: types.SimpleNamespace(get_credentials=lambda: object()))
+    monkeypatch.setenv("COMPANYSIM_LLM_PROVIDER", "bedrock")
+    monkeypatch.setenv("AWS_DEFAULT_REGION", "eu-west-2")
+    monkeypatch.setenv(llm_parser._FLAG_VAR, "1")
+
+
+BEDROCK_MODEL = "eu.anthropic.claude-sonnet-4-20250514-v1:0"
+
+
+def test_bedrock_extraction_is_metered(client, db_session_factory, monkeypatch):
+    org, employee = _make_org(client)
+    _stub_bedrock_converse(
+        monkeypatch, input_tokens=310, output_tokens=45, total=355,
+        text=json.dumps({
+            "employee_email": employee["email"],
+            "review_period_end": "2025-12-31",
+            "rating": 4.0,
+            "summary_text": "solid",
+        }),
+    )
+    monkeypatch.setenv("COMPANYSIM_BEDROCK_MODEL_ID", BEDROCK_MODEL)
+
+    doc = client.post(
+        f"/orgs/{org['id']}/documents",
+        files={"file": ("r.txt", b"a review", "text/plain")},
+        data={"kind": "performance_review"},
+    ).json()
+    resp = client.post(f"/orgs/{org['id']}/documents/{doc['id']}/extract").json()
+    assert resp["document"]["extraction_status"] == "extracted"
+
+    db = db_session_factory()
+    row = db.query(LlmUsageRecord).one()
+    assert (row.prompt_tokens, row.completion_tokens, row.total_tokens) == (310, 45, 355)
+    assert row.feature == FEATURE_INGEST
+    assert row.org_id == org["id"]
+    # The model that actually served it, not a constant -- otherwise Bedrock
+    # spend would be filed under Groq after a provider switch.
+    assert row.model == BEDROCK_MODEL
+
+
+def test_the_meter_endpoint_reports_bedrock_usage(client, monkeypatch):
+    org, employee = _make_org(client)
+    _stub_bedrock_converse(
+        monkeypatch, input_tokens=100, output_tokens=20, total=120,
+        text=json.dumps({
+            "employee_email": employee["email"],
+            "review_period_end": "2025-12-31",
+            "rating": 3.0, "summary_text": "ok",
+        }),
+    )
+    doc = client.post(
+        f"/orgs/{org['id']}/documents",
+        files={"file": ("r.txt", b"a review", "text/plain")},
+        data={"kind": "performance_review"},
+    ).json()
+    client.post(f"/orgs/{org['id']}/documents/{doc['id']}/extract")
+
+    body = client.get("/llm/usage").json()
+    assert body["all_time"]["total_tokens"] == 120
+    assert body["all_time"]["requests"] == 1
+    assert body["today"]["total_tokens"] == 120
+    assert {f["feature"] for f in body["by_feature"]} == {FEATURE_INGEST}
+    assert body["recent"][0]["model"].startswith("eu.anthropic.")
+
+
+def test_a_fenced_bedrock_reply_is_still_metered(client, db_session_factory, monkeypatch):
+    """Bedrock has no JSON mode, so Claude often wraps output in a fence.
+    The extraction still succeeds -- and would have to be billed either
+    way, since the tokens were spent before anyone looked at the text."""
+    org, employee = _make_org(client)
+    payload = json.dumps({
+        "employee_email": employee["email"], "review_period_end": "2025-12-31",
+        "rating": 5.0, "summary_text": "excellent",
+    })
+    _stub_bedrock_converse(
+        monkeypatch, input_tokens=90, output_tokens=30, total=120,
+        text=f"```json\n{payload}\n```",
+    )
+    doc = client.post(
+        f"/orgs/{org['id']}/documents",
+        files={"file": ("r.txt", b"a review", "text/plain")},
+        data={"kind": "performance_review"},
+    ).json()
+    resp = client.post(f"/orgs/{org['id']}/documents/{doc['id']}/extract").json()
+
+    assert resp["document"]["extraction_status"] == "extracted"
+    db = db_session_factory()
+    assert db.query(LlmUsageRecord).one().total_tokens == 120
+
+
+def test_a_bedrock_call_with_no_usage_block_still_records_a_row(
+    client, db_session_factory, monkeypatch,
+):
+    """A row of zeros is honest and distinguishable from no call at all;
+    dropping it would silently under-report the request count."""
+    boto3 = pytest.importorskip("boto3")
+    monkeypatch.setattr(boto3, "client", lambda name, **kw: types.SimpleNamespace(
+        converse=lambda **k: {"output": {"message": {"content": [{"text": "{}"}]}}}))
+    monkeypatch.setattr(boto3, "Session", lambda *a, **k: types.SimpleNamespace(
+        get_credentials=lambda: object()))
+    monkeypatch.setenv("COMPANYSIM_LLM_PROVIDER", "bedrock")
+    monkeypatch.setenv("AWS_DEFAULT_REGION", "eu-west-2")
+    monkeypatch.setenv(llm_parser._FLAG_VAR, "1")
+
+    org, _ = _make_org(client)
+    doc = client.post(
+        f"/orgs/{org['id']}/documents",
+        files={"file": ("r.txt", b"a review", "text/plain")},
+        data={"kind": "performance_review"},
+    ).json()
+    client.post(f"/orgs/{org['id']}/documents/{doc['id']}/extract")
+
+    db = db_session_factory()
+    row = db.query(LlmUsageRecord).one()
+    assert row.total_tokens == 0
+    assert row.model.startswith("eu.anthropic.")
+
+
+# ---- /llm/status --------------------------------------------------------
+
+
+def test_status_reports_the_running_provider(client, monkeypatch):
+    """The question 'is this actually on Bedrock?' has no other answer:
+    .env on disk may differ from what the process was started with."""
+    boto3 = pytest.importorskip("boto3")
+    monkeypatch.setattr(boto3, "Session", lambda *a, **k: types.SimpleNamespace(
+        get_credentials=lambda: object()))
+    monkeypatch.setenv("COMPANYSIM_LLM_PROVIDER", "bedrock")
+    monkeypatch.setenv("AWS_DEFAULT_REGION", "eu-west-2")
+    monkeypatch.setenv("COMPANYSIM_BEDROCK_MODEL_ID", BEDROCK_MODEL)
+    monkeypatch.setenv(llm_parser._FLAG_VAR, "1")
+
+    body = client.get("/llm/status").json()
+    assert body["provider"] == "bedrock"
+    assert body["model"] == BEDROCK_MODEL
+    assert body["provider_ready"] is True
+    assert body["provider_problem"] is None
+    assert body["features"]["ingest"] is True
+
+
+def test_status_explains_a_provider_left_at_its_default(client, monkeypatch):
+    """AWS credentials set but the provider never switched — the exact
+    misconfiguration the old fixed error message could not describe."""
+    pytest.importorskip("groq")
+    monkeypatch.setenv("AWS_ACCESS_KEY_ID", "AKIA")
+    monkeypatch.setenv("AWS_SECRET_ACCESS_KEY", "s")
+    monkeypatch.setenv("AWS_DEFAULT_REGION", "eu-west-2")
+    monkeypatch.setenv(llm_parser._FLAG_VAR, "1")
+
+    body = client.get("/llm/status").json()
+    assert body["provider"] == "groq"
+    assert body["provider_ready"] is False
+    assert "COMPANYSIM_LLM_PROVIDER=bedrock" in body["provider_problem"]
+    assert body["features"]["ingest"] is False
+
+
+def test_status_never_returns_credential_values(client, monkeypatch):
+    monkeypatch.setenv("GROQ_API_KEY", "gsk_supersecretvalue")
+    monkeypatch.setenv("AWS_SECRET_ACCESS_KEY", "aws_supersecretvalue")
+    body = client.get("/llm/status").text
+    assert "supersecretvalue" not in body

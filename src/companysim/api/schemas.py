@@ -408,7 +408,7 @@ class LlmRequestOut(BaseModel):
 
 
 class LlmUsageResponse(BaseModel):
-    """Token spend across every Groq-backed feature. Windows are UTC;
+    """Token spend across every LLM-backed feature. Windows are UTC;
     ``week`` is a rolling 7×24h window, not a calendar week."""
 
     all_time: TokenTotalsOut
@@ -416,6 +416,27 @@ class LlmUsageResponse(BaseModel):
     week: TokenTotalsOut
     by_feature: list[FeatureUsageOut] = []
     recent: list[LlmRequestOut] = []
+
+
+class LlmStatusResponse(BaseModel):
+    """What the *running server* thinks its LLM configuration is.
+
+    Exists because the environment a server was started with is otherwise
+    unknowable from outside it, and that is exactly the thing that goes
+    wrong: editing ``.env`` after launch changes nothing, and a provider
+    left at its default silently ignores whatever credentials were set for
+    the other one. Reading a file on disk cannot answer either question —
+    only the process can.
+
+    Reports no credential values, just whether they resolved.
+    """
+
+    provider: str
+    model: str
+    provider_ready: bool
+    # Human-readable and specific; None when everything is configured.
+    provider_problem: str | None = None
+    features: dict[str, bool] = {}
 
 
 class LineageFieldOut(BaseModel):

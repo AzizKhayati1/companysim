@@ -4,7 +4,9 @@ import { api } from "../api/client";
 import { formatDateTime } from "../utils/format";
 
 /**
- * Top-right token meter for every Groq-backed feature.
+ * Top-right token meter for every LLM-backed feature, whichever provider
+ * (Groq or AWS Bedrock) served the call — usage rows carry the model that
+ * actually answered, so the meter needs no provider awareness of its own.
  *
  * Numbers only — no chart. There are three windows and a handful of
  * per-feature rows; a bar chart of four categories would be decoration
@@ -178,11 +180,23 @@ export default function LlmTokenMeter() {
                   {full(lastRequest.prompt_tokens)} in / {full(lastRequest.completion_tokens)} out
                 </div>
                 <div>{formatDateTime(lastRequest.created_at)}</div>
-                <div style={{ fontFamily: "var(--mono)", fontSize: 11.5 }}>{lastRequest.model}</div>
+                {/* Bedrock inference-profile ids run to ~44 characters, far
+                    longer than a Groq model name, and would only wrap here by
+                    luck (at their hyphens). `anywhere` makes that a guarantee
+                    rather than a property of one vendor's naming. */}
+                <div
+                  style={{
+                    fontFamily: "var(--mono)",
+                    fontSize: 11.5,
+                    overflowWrap: "anywhere",
+                  }}
+                >
+                  {lastRequest.model}
+                </div>
               </div>
             ) : (
               <p className="muted" style={{ fontSize: 12.5, margin: 0 }}>
-                No LLM requests recorded yet. The optional Groq features are off by default —
+                No LLM requests recorded yet. The optional LLM features are off by default —
                 see the README for the flags.
               </p>
             )}
