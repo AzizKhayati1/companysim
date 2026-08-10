@@ -215,17 +215,20 @@ set -a; . ./.env; set +a                              # Git Bash
 .venv/Scripts/python scripts/check_llm_provider.py
 ```
 
-PowerShell has no `set -a`; either use Git Bash, or export the three values
-by hand for the check:
+PowerShell has no `set -a`. Load the file the same way
+`scripts/start-dev.ps1` does:
 
 ```powershell
-$env:COMPANYSIM_LLM_PROVIDER="bedrock"
-$env:AWS_DEFAULT_REGION="eu-west-2"
-$env:AWS_ACCESS_KEY_ID="AKIA..."
-$env:AWS_SECRET_ACCESS_KEY="..."
-$env:COMPANYSIM_BEDROCK_MODEL_ID="eu.anthropic..."
+Get-Content .env | Where-Object { $_ -match '^\s*[^#\s][^=]*=' } |
+  ForEach-Object { $n,$v = $_ -split '=',2; Set-Item -Path "Env:$($n.Trim())" -Value $v.Trim() }
 .venv\Scripts\python scripts\check_llm_provider.py
 ```
+
+It skips comments and blank lines, and splits on the **first** `=` only, so
+a secret containing `=` survives intact.
+
+Either way the values live only in that shell session — open a new terminal
+and you need to load them again.
 
 A healthy run:
 
@@ -284,9 +287,22 @@ making one real call, so a failure names the layer that broke.
 
 ### Then start it
 
-```bash
-/run-servers          # or the commands in .claude/skills/run-servers/SKILL.md
+```powershell
+.\scripts\start-dev.ps1        # Windows
 ```
+
+```bash
+./scripts/start-dev.sh         # macOS / Linux / Git Bash
+```
+
+These load `.env` themselves, start both servers, wait for readiness and
+smoke-test them — so you do not need to repeat the loading step above
+before running the app. Stop with `.\scripts\stop-dev.ps1`, or Ctrl-C on
+the shell script.
+
+(There is also a `/run-servers` Claude Code skill in `.claude/skills/`. It
+documents the same two commands and is only a convenience for that editor —
+the scripts above are the dependency-free path and work anywhere.)
 
 The token meter in the top-right will now show your Bedrock model name —
 usage rows record whichever model actually served each call, so nothing

@@ -81,6 +81,34 @@ streamlit run src/companysim/dashboard/app.py
 pytest
 ```
 
+### Running the webapp
+
+Two servers, and both must be up: the React frontend calls the API on
+`localhost:8611`, and the API's CORS policy only accepts `localhost:5173`.
+
+```powershell
+.\scripts\start-dev.ps1        # Windows
+```
+
+```bash
+./scripts/start-dev.sh         # macOS / Linux / Git Bash
+```
+
+Either one loads `.env`, starts both servers, waits for readiness and
+smoke-tests them. Stop with `.\scripts\stop-dev.ps1` (Windows) or Ctrl-C.
+
+Neither port is configurable on its own: `webapp/src/api/client.ts` pins
+the API at 8611 with no env override, and `api/main.py` pins CORS to
+`localhost:5173`. Change one without the other and the UI renders
+perfectly, then fails every request with an opaque error.
+
+To run them by hand instead, in two terminals:
+
+```bash
+.venv/Scripts/python -m uvicorn companysim.api.main:app --port 8611
+cd webapp && npm run dev
+```
+
 ### Webapp/API database migrations
 
 The webapp's SQLite DB (`data/app.db`) is schema-versioned with Alembic —
