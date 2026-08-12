@@ -195,12 +195,17 @@ def test_unknown_roster_email_stages_new_hire_marker(client):
     assert fact["target_employee_id"] is None
 
 
-def test_resignation_letter_extracts_nothing_and_needs_review(client, db_session_factory):
+def test_resignation_letter_extracts_nothing_when_unconfigured(client, db_session_factory):
     """With the ingest LLM off (the default, and CI), a free-text document
-    stages nothing and says why. The *reason* moved from "no parser" to
-    "not configured" once ``ingest/llm_parser.py`` landed; the invariant
-    that matters — zero fabricated facts — is unchanged. See
-    tests/test_llm_ingest.py for the enabled path."""
+    stages nothing.
+
+    The observable outcome has moved twice as this matured: first the reason
+    went from "no parser" to "not configured", then the document stopped
+    carrying a reason at all and stayed ``pending``. Being unconfigured is a
+    fact about the server, not the file, and freezing it onto the row made
+    it outlive the fix. The invariant that actually matters — zero
+    fabricated facts — has never changed. See tests/test_llm_ingest.py for
+    the enabled path."""
     org = _make_org(client)
     doc = _upload(
         client, org["id"], "letter.txt",
@@ -209,8 +214,8 @@ def test_resignation_letter_extracts_nothing_and_needs_review(client, db_session
 
     body = client.post(f"/orgs/{org['id']}/documents/{doc['id']}/extract").json()
     assert body["n_facts_staged"] == 0
-    assert body["document"]["extraction_status"] == "needs_review"
-    assert body["document"]["extraction_error"]
+    assert body["document"]["extraction_status"] == "pending"
+    assert body["document"]["extraction_error"] is None
 
     db = db_session_factory()
     assert db.query(ExtractedFactRecord).filter_by(org_id=org["id"]).count() == 0

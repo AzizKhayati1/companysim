@@ -126,17 +126,40 @@ def test_flag_and_key_together_enable_it(enabled_llm):
     assert llm_parser.is_ingest_llm_enabled() is True
 
 
-def test_extract_without_flag_stages_nothing_and_needs_review(client, db_session_factory):
+def test_extract_without_flag_stages_nothing_and_stays_pending(client, db_session_factory):
+    """Unconfigured leaves the document `pending` with no stored reason.
+
+    `needs_review` means "we read this and could not use it" — a judgement
+    about the document, which is why its reason is frozen onto the row.
+    Being unconfigured is not that: nothing was read. Freezing a reason here
+    records a *server setting* as a property of the file, where it then
+    survives the fix and goes on claiming a missing API key long after one
+    is present. Configuration state is live state, reported by
+    GET /llm/status instead.
+    """
     org, _ = _make_org(client)
     doc = _upload(client, org["id"], "performance_review")
 
     body = client.post(f"/orgs/{org['id']}/documents/{doc['id']}/extract").json()
     assert body["n_facts_staged"] == 0
-    assert body["document"]["extraction_status"] == "needs_review"
-    assert "COMPANYSIM_LLM_INGEST" in body["document"]["extraction_error"]
+    assert body["document"]["extraction_status"] == "pending"
+    assert body["document"]["extraction_error"] is None
 
     db = db_session_factory()
     assert db.query(PerformanceReviewRecord).count() == 0
+
+
+def test_a_genuine_refusal_still_freezes_its_reason(client, db_session_factory, enabled_llm):
+    """The counterpart: a judgement *about the document* must still be
+    stored, or the reviewer loses why it was rejected."""
+    enabled_llm.setattr("groq.Groq", _fake_groq_client('{"error": "no rating stated"}'))
+    org, _ = _make_org(client)
+    doc = _upload(client, org["id"], "performance_review")
+
+    body = client.post(f"/orgs/{org['id']}/documents/{doc['id']}/extract").json()
+    assert body["document"]["extraction_status"] == "needs_review"
+    assert body["document"]["extraction_error"]
+    assert db_session_factory().query(PerformanceReviewRecord).count() == 0
 
 
 # ---- performance reviews ----------------------------------------------

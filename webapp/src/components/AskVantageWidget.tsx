@@ -95,9 +95,13 @@ export default function AskVantageWidget({ orgId }: { orgId: number }) {
           </div>
         )}
         {notConfigured && (
+          // The server's reply already carries the specific reason (which
+          // provider is active and what it is missing). Repeating a fixed
+          // checklist here would contradict it the moment the deployment
+          // uses the other provider.
           <p className="muted" style={{ fontSize: 11.5, margin: 0 }}>
-            Needs <code>GROQ_API_KEY</code> and <code>COMPANYSIM_LLM_CHAT=1</code> set on the
-            server (see the README).
+            Needs <code>COMPANYSIM_LLM_CHAT=1</code> and a configured LLM provider —
+            see <code>GET /llm/status</code> for what this server resolved.
           </p>
         )}
       </div>

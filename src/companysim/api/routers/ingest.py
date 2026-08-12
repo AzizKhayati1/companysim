@@ -668,16 +668,23 @@ def extract_document(org_id: int, document_id: int, db: Session = Depends(get_db
         return _empty_extract(doc)
 
     if not is_ingest_llm_enabled():
-        # The specific reason, not a checklist — this text is the only
-        # feedback a user gets, and "set a GROQ_API_KEY" is the wrong
-        # advice for someone who has configured Bedrock.
-        from companysim.llm import provider  # noqa: PLC0415
-
-        mark_needs_review(
-            db, doc,
-            "Free-text extraction is not configured, so nothing was extracted. "
-            + (provider.unavailable_reason("COMPANYSIM_LLM_INGEST") or ""),
-        )
+        # Left `pending`, with no stored reason, and that is the point.
+        #
+        # `needs_review` means "we read this and could not use it" — a
+        # judgement about the document, which is why the reason is frozen
+        # onto the row. Being unconfigured is not that: nothing was read and
+        # nothing was judged, so freezing a reason here records a server
+        # setting as though it were a property of the file. It then survives
+        # the fix, and the document goes on claiming a missing API key long
+        # after one is present, on every page load, forever.
+        #
+        # Configuration state is live state, so it is reported live — by the
+        # banner on the Documents page, from GET /llm/status. Leaving the
+        # document `pending` also makes it honestly retryable rather than
+        # looking permanently rejected.
+        doc.extraction_status = "pending"
+        doc.extraction_error = None
+        db.commit()
         return _empty_extract(doc)
 
     # Tokens are recorded even when the handler parks the document — a
