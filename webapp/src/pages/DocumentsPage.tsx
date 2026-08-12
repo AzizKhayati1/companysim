@@ -88,6 +88,15 @@ export default function DocumentsPage() {
     queryFn: () => api.getDocumentLineage(orgId, selectedDocId!),
     enabled: selectedDocId !== null,
   });
+  // Not org-scoped and not invalidated by refreshAll: this describes the
+  // server's environment, which no action on this page can change. It is
+  // the live counterpart to each document's stored extraction_error.
+  const llmStatusQuery = useQuery({
+    queryKey: ["llm-status"],
+    queryFn: () => api.getLlmStatus(),
+    staleTime: 30_000,
+  });
+  const llmStatus = llmStatusQuery.data;
 
   const refreshAll = () => {
     queryClient.invalidateQueries({ queryKey: ["documents", orgId] });
@@ -218,6 +227,26 @@ export default function DocumentsPage() {
         </div>
       )}
 
+      {/* Free-text extraction fails silently by design — a document parks
+          itself as "needs review" whether the model declined or the server
+          was never configured. Those look identical per-document, so the
+          server's live state is stated once, here, where it is read before
+          uploading rather than discovered afterwards. Rosters are excluded
+          from the warning: they parse deterministically and never need a
+          provider at all. */}
+      {llmStatus && !llmStatus.features?.ingest && (
+        <div className="card" style={{ borderLeft: "3px solid var(--warning)" }}>
+          <strong>Free-text extraction is off.</strong>{" "}
+          {llmStatus.provider_problem ?? "COMPANYSIM_LLM_INGEST=1 is not set."}
+          <p className="muted" style={{ margin: "8px 0 0" }}>
+            Roster CSVs still parse normally — they never call a model. Everything
+            else will upload and park as <em>needs review</em>. The server reads
+            its configuration once at startup, so restart it after editing{" "}
+            <code>.env</code>.
+          </p>
+        </div>
+      )}
+
       <div className="card">
         <h2>Upload a document</h2>
         <p className="muted" style={{ marginBottom: 12 }}>{KIND_HINTS[kind]}</p>
@@ -325,9 +354,27 @@ export default function DocumentsPage() {
         <div className="card">
           <h2>Review — {detail.filename}</h2>
           {detail.extraction_error && (
-            <p className="muted" style={{ marginBottom: 12 }}>
-              <strong>Not extracted:</strong> {detail.extraction_error}
-            </p>
+            <>
+              <p className="muted" style={{ marginBottom: 12 }}>
+                <strong>Not extracted:</strong> {detail.extraction_error}
+              </p>
+              {/* The reason above is a *stored* string, written when Extract
+                  last ran — not a live check. Fixing the configuration does
+                  not rewrite it, so after a provider change the panel keeps
+                  reporting a problem that no longer exists. Saying so, and
+                  only when the server is now ready, turns a confusing
+                  contradiction into an obvious next step. */}
+              {llmStatus?.features?.ingest && (
+                <p
+                  className="muted"
+                  style={{ marginBottom: 12, borderLeft: "2px solid var(--accent)", paddingLeft: 10 }}
+                >
+                  That reason is from the last extraction attempt. Extraction is
+                  working now ({llmStatus.provider} · {llmStatus.model}) — run{" "}
+                  <strong>Extract</strong> again to retry this document.
+                </p>
+              )}
+            </>
           )}
           {facts.length === 0 && !detail.extraction_error && (
             <p className="muted">

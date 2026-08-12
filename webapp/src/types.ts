@@ -429,6 +429,15 @@ export interface LlmUsageResponse {
   recent: LlmRequestOut[];
 }
 
+/** What the *running server* resolved — see GET /llm/status. */
+export interface LlmStatusResponse {
+  provider: string;
+  model: string;
+  provider_ready: boolean;
+  provider_problem: string | null;
+  features: Record<string, boolean>;
+}
+
 export interface LineageFieldOut {
   column: string;
   value: string;

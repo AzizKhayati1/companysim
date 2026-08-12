@@ -17,6 +17,7 @@ import type {
   ExitNotesInsightsResponse,
   ExtractDocumentResponse,
   IngestTotalsOut,
+  LlmStatusResponse,
   LlmUsageResponse,
   ModelQualityResponse,
   ModelStatusResponse,
@@ -214,6 +215,7 @@ export const api = {
     request<void>(`/orgs/${orgId}/documents/${documentId}`, { method: "DELETE" }),
 
   getLlmUsage: () => request<LlmUsageResponse>("/llm/usage"),
+  getLlmStatus: () => request<LlmStatusResponse>("/llm/status"),
 
   getModelStatus: () => request<ModelStatusResponse>("/model/status"),
   getModelQuality: () => request<ModelQualityResponse>("/model/quality"),
