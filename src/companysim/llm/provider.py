@@ -103,11 +103,19 @@ class ChatResponse:
 def active_provider() -> str:
     """Which provider this process is configured to use.
 
-    Defaults to Groq so an existing ``.env`` keeps working untouched after
-    a pull — switching is an explicit act, never a side effect of upgrading.
+    **Defaults to Bedrock.** This started as Groq-default so an existing
+    ``.env`` would keep working after a pull, and that turned out to be the
+    wrong trade: the failure it produces is silent and self-concealing.
+    Someone who configures AWS credentials and does not know a separate
+    provider variable exists gets a process that ignores those credentials
+    entirely, reports itself unconfigured, and — before the message was
+    fixed — advised setting a *Groq* key. Bedrock is now the deployment
+    target, so it is what an unconfigured process should attempt; Groq
+    remains one explicit env var away, which is the right shape for a
+    fallback rather than a default.
     """
     value = os.environ.get(_PROVIDER_VAR, "").strip().lower()
-    return PROVIDER_BEDROCK if value == PROVIDER_BEDROCK else PROVIDER_GROQ
+    return PROVIDER_GROQ if value == PROVIDER_GROQ else PROVIDER_BEDROCK
 
 
 def model_id() -> str:
@@ -148,9 +156,17 @@ def provider_problem() -> str | None:
         except Exception:
             resolved = False
         if not resolved:
-            return ("Provider is 'bedrock' but boto3 resolved no credentials. "
-                    "Set AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY, or "
-                    "AWS_PROFILE, or attach an IAM role.")
+            hint = ""
+            # The mirror image of the trap that made Bedrock the default: a
+            # Groq key sitting unused because the provider was never set.
+            # Naming it turns "no credentials" into an obvious one-line fix.
+            if os.environ.get("GROQ_API_KEY"):
+                hint = (" A GROQ_API_KEY is set but unused — if you meant to "
+                        "use Groq, set COMPANYSIM_LLM_PROVIDER=groq.")
+            return ("Provider is 'bedrock' (the default) but boto3 resolved no "
+                    "credentials. Set AWS_ACCESS_KEY_ID and "
+                    "AWS_SECRET_ACCESS_KEY, or AWS_PROFILE, or attach an IAM "
+                    "role." + hint)
         return None
 
     try:
@@ -159,10 +175,9 @@ def provider_problem() -> str | None:
         return ("Provider is 'groq' but the groq package is not installed — "
                 'run: pip install -e ".[llm]"')
     if not os.environ.get("GROQ_API_KEY"):
-        return ("Provider is 'groq' (the default) but GROQ_API_KEY is not set. "
-                "If you meant to use AWS Bedrock, set "
-                "COMPANYSIM_LLM_PROVIDER=bedrock — configuring AWS credentials "
-                "alone does not switch provider.")
+        return ("Provider is 'groq' but GROQ_API_KEY is not set. Unset "
+                "COMPANYSIM_LLM_PROVIDER to use AWS Bedrock, which is the "
+                "default.")
     return None
 
 

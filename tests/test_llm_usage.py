@@ -466,19 +466,22 @@ def test_status_reports_the_running_provider(client, monkeypatch):
     assert body["features"]["ingest"] is True
 
 
-def test_status_explains_a_provider_left_at_its_default(client, monkeypatch):
-    """AWS credentials set but the provider never switched — the exact
-    misconfiguration the old fixed error message could not describe."""
-    pytest.importorskip("groq")
-    monkeypatch.setenv("AWS_ACCESS_KEY_ID", "AKIA")
-    monkeypatch.setenv("AWS_SECRET_ACCESS_KEY", "s")
+def test_status_explains_an_unconfigured_bedrock_default(client, monkeypatch):
+    """The default is Bedrock, so a machine with only a Groq key configured
+    is now the confusing case — and status has to name the one-line fix
+    rather than just reporting absent AWS credentials."""
+    boto3 = pytest.importorskip("boto3")
+    monkeypatch.setattr(boto3, "Session", lambda *a, **k: types.SimpleNamespace(
+        get_credentials=lambda: None))
+    monkeypatch.delenv("COMPANYSIM_LLM_PROVIDER", raising=False)
     monkeypatch.setenv("AWS_DEFAULT_REGION", "eu-west-2")
+    monkeypatch.setenv("GROQ_API_KEY", "gsk_unused")
     monkeypatch.setenv(llm_parser._FLAG_VAR, "1")
 
     body = client.get("/llm/status").json()
-    assert body["provider"] == "groq"
+    assert body["provider"] == "bedrock"
     assert body["provider_ready"] is False
-    assert "COMPANYSIM_LLM_PROVIDER=bedrock" in body["provider_problem"]
+    assert "COMPANYSIM_LLM_PROVIDER=groq" in body["provider_problem"]
     assert body["features"]["ingest"] is False
 
 

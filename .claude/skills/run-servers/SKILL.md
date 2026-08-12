@@ -130,11 +130,11 @@ variable — copy it to `.env` and the launch command above picks it up.
 
 | Variable | Value |
 |---|---|
-| `COMPANYSIM_LLM_PROVIDER` | `groq` (default) or `bedrock` |
+| `COMPANYSIM_LLM_PROVIDER` | `bedrock` (default) or `groq` |
 
-| Groq | AWS Bedrock |
+| AWS Bedrock (default) | Groq |
 |---|---|
-| `GROQ_API_KEY` | `AWS_DEFAULT_REGION` (**required** — no default) |
+| `AWS_DEFAULT_REGION` (**required** — no default) | `GROQ_API_KEY` |
 | | `AWS_ACCESS_KEY_ID` + `AWS_SECRET_ACCESS_KEY`, *or* `AWS_PROFILE`, *or* an IAM role |
 | | `COMPANYSIM_BEDROCK_MODEL_ID` |
 

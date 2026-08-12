@@ -162,6 +162,8 @@ that *does* travel, and it documents every variable.
 Open `.env` and set:
 
 ```ini
+# Bedrock is the default, so this line is optional — set it anyway to make
+# the intent explicit to whoever reads the file next.
 COMPANYSIM_LLM_PROVIDER=bedrock
 
 AWS_DEFAULT_REGION=eu-west-2
@@ -175,8 +177,9 @@ COMPANYSIM_LLM_EXIT_NOTES=0
 COMPANYSIM_LLM_CHAT=0
 ```
 
-`GROQ_API_KEY` can be left blank — nothing reads it once the provider is
-`bedrock`.
+`GROQ_API_KEY` can be left blank — nothing reads it under the Bedrock
+default. If one is set and Bedrock has no credentials, the status endpoint
+says so explicitly rather than only reporting missing AWS keys.
 
 **The region is not optional.** Bedrock's endpoint is regional and boto3
 raises `NoRegionError` rather than picking a default, so an otherwise
