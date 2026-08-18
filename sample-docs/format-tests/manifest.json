@@ -1,0 +1,298 @@
+[
+ {
+  "kind": "roster",
+  "name": "roster-semicolon-delimited-french-excel.csv",
+  "path": "D:\\companysim\\sample-docs\\format-tests\\roster-semicolon-delimited-french-excel.csv",
+  "tests": "`;` separator \u2014 the default of Excel on a French/European locale",
+  "expect": "REFUSED: no email column (DictReader assumes comma)",
+  "as_of": "2026-01-01"
+ },
+ {
+  "kind": "roster",
+  "name": "roster-tab-delimited-export.csv",
+  "path": "D:\\companysim\\sample-docs\\format-tests\\roster-tab-delimited-export.csv",
+  "tests": "Tab separator, common from database exports",
+  "expect": "REFUSED: no email column",
+  "as_of": "2026-01-01"
+ },
+ {
+  "kind": "roster",
+  "name": "roster-european-decimal-comma-salary.csv",
+  "path": "D:\\companysim\\sample-docs\\format-tests\\roster-european-decimal-comma-salary.csv",
+  "tests": "Salary written 85000,50 \u2014 decimal comma, French/German convention",
+  "expect": "SILENT CORRUPTION: comma stripped -> 8500050",
+  "as_of": "2026-01-01"
+ },
+ {
+  "kind": "roster",
+  "name": "roster-german-thousands-dot-decimal-comma.csv",
+  "path": "D:\\companysim\\sample-docs\\format-tests\\roster-german-thousands-dot-decimal-comma.csv",
+  "tests": "Salary written 85.000,50 \u2014 dot thousands + comma decimal",
+  "expect": "SILENT CORRUPTION: -> 85.0005",
+  "as_of": "2026-01-01"
+ },
+ {
+  "kind": "roster",
+  "name": "roster-space-thousands-separator.csv",
+  "path": "D:\\companysim\\sample-docs\\format-tests\\roster-space-thousands-separator.csv",
+  "tests": "Salary written '85 000' \u2014 the official French thousands separator",
+  "expect": "REFUSED or row skipped: float() rejects the space",
+  "as_of": "2026-01-01"
+ },
+ {
+  "kind": "roster",
+  "name": "roster-salary-with-currency-suffix-eur.csv",
+  "path": "D:\\companysim\\sample-docs\\format-tests\\roster-salary-with-currency-suffix-eur.csv",
+  "tests": "Salary written '85000 EUR' rather than a bare number",
+  "expect": "REJECTED: only '$' is stripped",
+  "as_of": "2026-01-01"
+ },
+ {
+  "kind": "roster",
+  "name": "roster-salary-in-tunisian-dinar.csv",
+  "path": "D:\\companysim\\sample-docs\\format-tests\\roster-salary-in-tunisian-dinar.csv",
+  "tests": "Non-USD currency with a three-decimal minor unit (TND)",
+  "expect": "Parsed as a plain number; currency is silently lost",
+  "as_of": "2026-01-01"
+ },
+ {
+  "kind": "roster",
+  "name": "roster-utf8-bom-excel-export.csv",
+  "path": "D:\\companysim\\sample-docs\\format-tests\\roster-utf8-bom-excel-export.csv",
+  "tests": "UTF-8 byte-order mark before the header, as Excel writes it",
+  "expect": "OK: utf-8-sig decode strips the BOM",
+  "as_of": "2026-01-01"
+ },
+ {
+  "kind": "roster",
+  "name": "roster-latin1-encoded-accented-names.csv",
+  "path": "D:\\companysim\\sample-docs\\format-tests\\roster-latin1-encoded-accented-names.csv",
+  "tests": "Latin-1 encoding with accented French names",
+  "expect": "OK: falls back to latin-1 after UTF-8 fails",
+  "as_of": "2026-01-01"
+ },
+ {
+  "kind": "roster",
+  "name": "roster-title-rows-above-header.csv",
+  "path": "D:\\companysim\\sample-docs\\format-tests\\roster-title-rows-above-header.csv",
+  "tests": "Two report/title lines before the real header, as Excel exports do",
+  "expect": "REFUSED: line 1 is read as the header",
+  "as_of": "2026-01-01"
+ },
+ {
+  "kind": "roster",
+  "name": "roster-trailing-total-and-blank-rows.csv",
+  "path": "D:\\companysim\\sample-docs\\format-tests\\roster-trailing-total-and-blank-rows.csv",
+  "tests": "A TOTAL row and blank padding after the data, as spreadsheets add",
+  "expect": "Data rows OK; the TOTAL row should be skipped (no email)",
+  "as_of": "2026-01-01"
+ },
+ {
+  "kind": "roster",
+  "name": "roster-quoted-fields-containing-commas.csv",
+  "path": "D:\\companysim\\sample-docs\\format-tests\\roster-quoted-fields-containing-commas.csv",
+  "tests": "Quoted values containing commas (job title with a comma)",
+  "expect": "OK: csv module handles quoting",
+  "as_of": "2026-01-01"
+ },
+ {
+  "kind": "roster",
+  "name": "roster-same-employee-listed-twice-conflicting.csv",
+  "path": "D:\\companysim\\sample-docs\\format-tests\\roster-same-employee-listed-twice-conflicting.csv",
+  "tests": "One employee on two rows with different salaries",
+  "expect": "OPEN DEFECT: last row silently wins, no conflict raised",
+  "as_of": "2026-01-01"
+ },
+ {
+  "kind": "roster",
+  "name": "roster-single-data-row-minimal-columns.csv",
+  "path": "D:\\companysim\\sample-docs\\format-tests\\roster-single-data-row-minimal-columns.csv",
+  "tests": "Smallest valid roster: email column only",
+  "expect": "OK: one row, nothing to propose",
+  "as_of": "2026-01-01"
+ },
+ {
+  "kind": "performance_review",
+  "name": "performance-review-markdown-with-rating-table.md",
+  "path": "D:\\companysim\\sample-docs\\format-tests\\performance-review-markdown-with-rating-table.md",
+  "tests": "Markdown with the rating inside a pipe table",
+  "expect": "Should extract 4.0 from the table",
+  "as_of": "2025-12-31"
+ },
+ {
+  "kind": "resignation_letter",
+  "name": "resignation-letter-markdown-formatted.md",
+  "path": "D:\\companysim\\sample-docs\\format-tests\\resignation-letter-markdown-formatted.md",
+  "tests": "Markdown resignation with headings and a bullet list",
+  "expect": "Should extract normally; markup must not leak into note_text",
+  "as_of": "2026-03-31"
+ },
+ {
+  "kind": "performance_review",
+  "name": "performance-review-single-page-formal.pdf",
+  "path": "D:\\companysim\\sample-docs\\format-tests\\performance-review-single-page-formal.pdf",
+  "tests": "Straightforward one-page PDF",
+  "expect": "Should extract 4.5",
+  "as_of": "2025-12-31"
+ },
+ {
+  "kind": "resignation_letter",
+  "name": "resignation-letter-two-page-pdf.pdf",
+  "path": "D:\\companysim\\sample-docs\\format-tests\\resignation-letter-two-page-pdf.pdf",
+  "tests": "Content split across two PDF pages",
+  "expect": "Both pages must be concatenated before extraction",
+  "as_of": "2026-04-30"
+ },
+ {
+  "kind": "cv",
+  "name": "cv-two-column-layout-interleaves-on-extract.pdf",
+  "path": "D:\\companysim\\sample-docs\\format-tests\\cv-two-column-layout-interleaves-on-extract.pdf",
+  "tests": "Two visual columns \u2014 PDF text order follows the content stream, not the eye",
+  "expect": "Text likely interleaves; extraction may still recover email + name",
+  "as_of": "2026-04-01"
+ },
+ {
+  "kind": "offer_letter",
+  "name": "offer-letter-pdf-with-letterhead-and-footer.pdf",
+  "path": "D:\\companysim\\sample-docs\\format-tests\\offer-letter-pdf-with-letterhead-and-footer.pdf",
+  "tests": "Letterhead and footer noise around the substantive terms",
+  "expect": "Should extract department + base salary, ignoring footer",
+  "as_of": "2026-10-01"
+ },
+ {
+  "kind": "resignation_letter",
+  "name": "resignation-letter-written-in-french.txt",
+  "path": "D:\\companysim\\sample-docs\\format-tests\\resignation-letter-written-in-french.txt",
+  "tests": "Entirely French prose \u2014 the working language of many Sopra HR clients",
+  "expect": "Should extract; note_text will be French",
+  "as_of": "2026-09-30"
+ },
+ {
+  "kind": "performance_review",
+  "name": "performance-review-written-in-french.txt",
+  "path": "D:\\companysim\\sample-docs\\format-tests\\performance-review-written-in-french.txt",
+  "tests": "French review with the rating expressed as 'Note globale : 4/5'",
+  "expect": "Should extract 4.0",
+  "as_of": "2025-12-31"
+ },
+ {
+  "kind": "resignation_letter",
+  "name": "resignation-letter-mixed-french-and-english.txt",
+  "path": "D:\\companysim\\sample-docs\\format-tests\\resignation-letter-mixed-french-and-english.txt",
+  "tests": "Code-switching between French and English mid-document",
+  "expect": "Should still extract email + date",
+  "as_of": "2026-05-15"
+ },
+ {
+  "kind": "performance_review",
+  "name": "performance-review-letter-grade-scale-a-to-f.txt",
+  "path": "D:\\companysim\\sample-docs\\format-tests\\performance-review-letter-grade-scale-a-to-f.txt",
+  "tests": "Rating given as a letter grade with no numeric scale stated",
+  "expect": "Ambiguous: A on an A-F scale should map to 5.0",
+  "as_of": "2025-12-31"
+ },
+ {
+  "kind": "performance_review",
+  "name": "performance-review-percentage-score-82.txt",
+  "path": "D:\\companysim\\sample-docs\\format-tests\\performance-review-percentage-score-82.txt",
+  "tests": "Score as a percentage rather than a scale point",
+  "expect": "82% should map to roughly 4.1 on 1-5",
+  "as_of": "2025-12-31"
+ },
+ {
+  "kind": "performance_review",
+  "name": "performance-review-star-rating-four-of-five.txt",
+  "path": "D:\\companysim\\sample-docs\\format-tests\\performance-review-star-rating-four-of-five.txt",
+  "tests": "Rating drawn as star glyphs",
+  "expect": "Should read 4.0 from the glyphs",
+  "as_of": "2025-12-31"
+ },
+ {
+  "kind": "performance_review",
+  "name": "performance-review-inverted-scale-1-is-best.txt",
+  "path": "D:\\companysim\\sample-docs\\format-tests\\performance-review-inverted-scale-1-is-best.txt",
+  "tests": "German-style scale where 1 is BEST and 5 is worst",
+  "expect": "TRAP: naive reading gives 1.0 when the true 1-5-higher-better value is 5.0",
+  "as_of": "2025-12-31"
+ },
+ {
+  "kind": "resignation_letter",
+  "name": "resignation-letter-ambiguous-date-03-04-2026.txt",
+  "path": "D:\\companysim\\sample-docs\\format-tests\\resignation-letter-ambiguous-date-03-04-2026.txt",
+  "tests": "Date written 03/04/2026 with no locale cue",
+  "expect": "AMBIGUOUS: 3 April (EU) or 4 March (US) \u2014 no way to disambiguate",
+  "as_of": "2026-04-03"
+ },
+ {
+  "kind": "performance_review",
+  "name": "performance-review-fiscal-year-ends-in-june.txt",
+  "path": "D:\\companysim\\sample-docs\\format-tests\\performance-review-fiscal-year-ends-in-june.txt",
+  "tests": "Review period is a fiscal year (Jul-Jun), not a calendar year",
+  "expect": "review_period_end must be 2025-06-30, not 2025-12-31",
+  "as_of": "2025-06-30"
+ },
+ {
+  "kind": "performance_review",
+  "name": "performance-review-two-employees-in-one-file.txt",
+  "path": "D:\\companysim\\sample-docs\\format-tests\\performance-review-two-employees-in-one-file.txt",
+  "tests": "Two complete reviews concatenated into one upload",
+  "expect": "Schema holds one employee \u2014 the second must not be silently dropped",
+  "as_of": "2025-12-31"
+ },
+ {
+  "kind": "resignation_letter",
+  "name": "resignation-letter-empty-file.txt",
+  "path": "D:\\companysim\\sample-docs\\format-tests\\resignation-letter-empty-file.txt",
+  "tests": "Zero-byte upload",
+  "expect": "Must refuse cleanly, not crash",
+  "as_of": "2026-01-01"
+ },
+ {
+  "kind": "resignation_letter",
+  "name": "resignation-letter-whitespace-only.txt",
+  "path": "D:\\companysim\\sample-docs\\format-tests\\resignation-letter-whitespace-only.txt",
+  "tests": "Whitespace only \u2014 looks non-empty by size",
+  "expect": "Must refuse cleanly",
+  "as_of": "2026-01-01"
+ },
+ {
+  "kind": "resignation_letter",
+  "name": "resignation-letter-email-thread-with-quoted-replies.txt",
+  "path": "D:\\companysim\\sample-docs\\format-tests\\resignation-letter-email-thread-with-quoted-replies.txt",
+  "tests": "Forwarded thread where the resignation is buried under quoted replies",
+  "expect": "Must attribute to the resigning employee, not the last sender",
+  "as_of": "2026-09-30"
+ },
+ {
+  "kind": "performance_review",
+  "name": "performance-review-very-long-15kb-buried-rating.txt",
+  "path": "D:\\companysim\\sample-docs\\format-tests\\performance-review-very-long-15kb-buried-rating.txt",
+  "tests": "~15 KB of filler with the rating in the final paragraph",
+  "expect": "Tests context handling \u2014 rating must survive the length",
+  "as_of": "2025-12-31"
+ },
+ {
+  "kind": "performance_review",
+  "name": "performance-review-ocr-garbled-characters.txt",
+  "path": "D:\\companysim\\sample-docs\\format-tests\\performance-review-ocr-garbled-characters.txt",
+  "tests": "Simulated OCR damage: rn->m, l->1, O->0 confusions",
+  "expect": "Should still recover email and rating, or refuse honestly",
+  "as_of": "2025-12-31"
+ },
+ {
+  "kind": "offer_letter",
+  "name": "offer-letter-salary-in-tunisian-dinar.txt",
+  "path": "D:\\companysim\\sample-docs\\format-tests\\offer-letter-salary-in-tunisian-dinar.txt",
+  "tests": "Compensation in TND with a local formatting convention",
+  "expect": "base_salary should be the number; currency is not modelled",
+  "as_of": "2026-10-01"
+ },
+ {
+  "kind": "roster",
+  "name": "roster-excel-workbook-unsupported-type.xlsx",
+  "path": "D:\\companysim\\sample-docs\\format-tests\\roster-excel-workbook-unsupported-type.xlsx",
+  "tests": "A real .xlsx binary signature \u2014 an unsupported file type",
+  "expect": "Must refuse with the supported-types message, not crash",
+  "as_of": "2026-01-01"
+ }
+]

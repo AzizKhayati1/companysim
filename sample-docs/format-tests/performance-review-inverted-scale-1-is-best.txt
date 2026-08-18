@@ -1,0 +1,16 @@
+LEISTUNGSBEURTEILUNG / PERFORMANCE APPRAISAL
+
+Mitarbeiter / Employee: Brenda Richardson
+E-Mail: brenda.richardson@meridiananalytics.example
+Zeitraum / Period: 01.01.2025 - 31.12.2025
+
+Gesamtnote / Overall grade: 1
+
+Notenskala / Grading scale:
+  1 = sehr gut (excellent)
+  2 = gut (good)
+  3 = befriedigend (satisfactory)
+  4 = ausreichend (sufficient)
+  5 = mangelhaft (poor)
+
+Hervorragende Leistung im gesamten Zeitraum.

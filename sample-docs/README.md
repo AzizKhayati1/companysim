@@ -2,6 +2,14 @@
 
 Test fixtures for the **Document Ingestion** page (`/orgs/:id/documents`).
 
+> **See also [`format-tests/`](format-tests/README.md)** — 37 documents that
+> vary the *container* rather than the content: delimiters, encodings,
+> locales, rating scales, date orders, PDF layout and file type. The files
+> here test whether the pipeline extracts the right content; those test
+> whether it survives the format it arrives in. Two defects are already
+> confirmed there, including a silent 100× salary error on European decimal
+> commas.
+
 Generated against **org 9 "Meridian Analytics"** (400 employees, seed 2026).
 Every file that names an internal person uses a real employee's email from
 that org, so matching actually succeeds. Against any other org those rows

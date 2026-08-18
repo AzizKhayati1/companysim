@@ -1,0 +1,11 @@
+MERIDIAN ANALYTICS TUNISIE
+
+Candidate:   Youssef Gharbi
+Email:       youssef.gharbi@meridiananalytics.example
+Position:    Backend Engineer
+Level:       IC2
+Department:  Engineering
+Start date:  1 October 2026
+Salaire brut annuel: 78 000,000 TND
+
+Signed, People Operations
