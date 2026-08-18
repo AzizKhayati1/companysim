@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, useParams } from "react-router-dom";
 import { api } from "../api/client";
@@ -97,6 +97,23 @@ export default function DocumentsPage() {
     staleTime: 30_000,
   });
   const llmStatus = llmStatusQuery.data;
+
+  // The review panel sits above the documents table, so a selection made
+  // from a row far down the list lands off-screen above the viewport —
+  // the button would look like it did nothing. Scrolling to the panel is
+  // what makes the move an improvement rather than a relocation.
+  const reviewRef = useRef<HTMLDivElement>(null);
+  const scrollToReview = () => {
+    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    reviewRef.current?.scrollIntoView({
+      behavior: reduced ? "auto" : "smooth",
+      block: "start",
+    });
+  };
+  useEffect(() => {
+    if (selectedDocId !== null) scrollToReview();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedDocId]);
 
   const refreshAll = () => {
     queryClient.invalidateQueries({ queryKey: ["documents", orgId] });
@@ -247,112 +264,19 @@ export default function DocumentsPage() {
         </div>
       )}
 
-      <div className="card">
-        <h2>Upload a document</h2>
-        <p className="muted" style={{ marginBottom: 12 }}>{KIND_HINTS[kind]}</p>
-        <div className="row" style={{ flexWrap: "wrap", gap: 12, alignItems: "flex-end" }}>
-          <label>
-            Type
-            <select value={kind} onChange={(e) => setKind(e.target.value as DocumentKind)}>
-              {DOCUMENT_KINDS.map((k) => (
-                <option key={k} value={k}>{KIND_LABELS[k] ?? k}</option>
-              ))}
-            </select>
-          </label>
-          <label>
-            As-of date
-            <input type="date" value={asOfDate} onChange={(e) => setAsOfDate(e.target.value)} />
-          </label>
-          <label>
-            File
-            <input ref={fileRef} type="file" accept=".csv,.txt,.md,.pdf" />
-          </label>
-          <button
-            className="btn btn-primary"
-            disabled={uploadMutation.isPending}
-            onClick={() => {
-              const file = fileRef.current?.files?.[0];
-              if (!file) { setError("Choose a file first."); return; }
-              uploadMutation.mutate(file);
+      {detail && (
+        <div className="card" ref={reviewRef}>
+          <div
+            style={{
+              display: "flex", alignItems: "baseline", justifyContent: "space-between",
+              gap: 16, flexWrap: "wrap",
             }}
           >
-            {uploadMutation.isPending ? "Uploading..." : "Upload"}
-          </button>
-        </div>
-        <p className="muted" style={{ marginTop: 10 }}>
-          The as-of date is the date the document's facts are true as of. For a roster it defines
-          the training window's start; it is what stops a document written after an outcome from
-          being used to predict it.
-        </p>
-      </div>
-
-      <div className="card">
-        <h2>Documents</h2>
-        {docsQuery.isLoading && <p className="muted">Loading...</p>}
-        {!docsQuery.isLoading && documents.length === 0 && (
-          <p className="muted">No documents uploaded yet.</p>
-        )}
-        {documents.length > 0 && (
-          <div className="data-list">
-            <div className="data-list-scroll">
-              <div
-                className="data-list-header"
-                style={{ gridTemplateColumns: "1fr 150px 120px 130px 190px" }}
-              >
-                <div>File</div>
-                <div>Type</div>
-                <div>As of</div>
-                <div>Status</div>
-                <div>Actions</div>
-              </div>
-              {documents.map((d) => (
-                <div
-                  key={d.id}
-                  className={`data-list-row${selectedDocId === d.id ? " active" : ""}`}
-                  style={{ gridTemplateColumns: "1fr 150px 120px 130px 190px" }}
-                >
-                  <div>
-                    <strong>{d.filename}</strong>
-                    <div className="muted" style={{ fontSize: 12 }}>
-                      {formatDateTime(d.uploaded_at)}
-                    </div>
-                  </div>
-                  <div className="muted">{KIND_LABELS[d.kind] ?? d.kind}</div>
-                  <div className="muted">{d.as_of_date ?? "—"}</div>
-                  <div style={{ color: statusColor(d.extraction_status) }}>
-                    {STATUS_LABELS[d.extraction_status] ?? d.extraction_status}
-                  </div>
-                  <div style={{ display: "flex", gap: 6 }}>
-                    <button
-                      className="btn"
-                      disabled={extractMutation.isPending}
-                      onClick={() => extractMutation.mutate(d.id)}
-                    >
-                      Extract
-                    </button>
-                    <button
-                      className="btn"
-                      onClick={() => { setSelectedDocId(d.id); setApproved(new Set()); }}
-                    >
-                      Review
-                    </button>
-                    <button
-                      className="btn btn-danger"
-                      onClick={() => deleteMutation.mutate(d.id)}
-                    >
-                      Delete
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
+            <h2 style={{ marginTop: 0 }}>Review — {detail.filename}</h2>
+            <button className="btn" onClick={() => setSelectedDocId(null)}>
+              Close
+            </button>
           </div>
-        )}
-      </div>
-
-      {detail && (
-        <div className="card">
-          <h2>Review — {detail.filename}</h2>
           {detail.extraction_error && (
             <>
               <p className="muted" style={{ marginBottom: 12 }}>
@@ -482,6 +406,116 @@ export default function DocumentsPage() {
           )}
         </div>
       )}
+
+      <div className="card">
+        <h2>Upload a document</h2>
+        <p className="muted" style={{ marginBottom: 12 }}>{KIND_HINTS[kind]}</p>
+        <div className="row" style={{ flexWrap: "wrap", gap: 12, alignItems: "flex-end" }}>
+          <label>
+            Type
+            <select value={kind} onChange={(e) => setKind(e.target.value as DocumentKind)}>
+              {DOCUMENT_KINDS.map((k) => (
+                <option key={k} value={k}>{KIND_LABELS[k] ?? k}</option>
+              ))}
+            </select>
+          </label>
+          <label>
+            As-of date
+            <input type="date" value={asOfDate} onChange={(e) => setAsOfDate(e.target.value)} />
+          </label>
+          <label>
+            File
+            <input ref={fileRef} type="file" accept=".csv,.txt,.md,.pdf" />
+          </label>
+          <button
+            className="btn btn-primary"
+            disabled={uploadMutation.isPending}
+            onClick={() => {
+              const file = fileRef.current?.files?.[0];
+              if (!file) { setError("Choose a file first."); return; }
+              uploadMutation.mutate(file);
+            }}
+          >
+            {uploadMutation.isPending ? "Uploading..." : "Upload"}
+          </button>
+        </div>
+        <p className="muted" style={{ marginTop: 10 }}>
+          The as-of date is the date the document's facts are true as of. For a roster it defines
+          the training window's start; it is what stops a document written after an outcome from
+          being used to predict it.
+        </p>
+      </div>
+
+      <div className="card">
+        <h2>Documents</h2>
+        {docsQuery.isLoading && <p className="muted">Loading...</p>}
+        {!docsQuery.isLoading && documents.length === 0 && (
+          <p className="muted">No documents uploaded yet.</p>
+        )}
+        {documents.length > 0 && (
+          <div className="data-list">
+            <div className="data-list-scroll">
+              <div
+                className="data-list-header"
+                style={{ gridTemplateColumns: "1fr 150px 120px 130px 190px" }}
+              >
+                <div>File</div>
+                <div>Type</div>
+                <div>As of</div>
+                <div>Status</div>
+                <div>Actions</div>
+              </div>
+              {documents.map((d) => (
+                <div
+                  key={d.id}
+                  className={`data-list-row${selectedDocId === d.id ? " active" : ""}`}
+                  style={{ gridTemplateColumns: "1fr 150px 120px 130px 190px" }}
+                >
+                  <div>
+                    <strong>{d.filename}</strong>
+                    <div className="muted" style={{ fontSize: 12 }}>
+                      {formatDateTime(d.uploaded_at)}
+                    </div>
+                  </div>
+                  <div className="muted">{KIND_LABELS[d.kind] ?? d.kind}</div>
+                  <div className="muted">{d.as_of_date ?? "—"}</div>
+                  <div style={{ color: statusColor(d.extraction_status) }}>
+                    {STATUS_LABELS[d.extraction_status] ?? d.extraction_status}
+                  </div>
+                  <div style={{ display: "flex", gap: 6 }}>
+                    <button
+                      className="btn"
+                      disabled={extractMutation.isPending}
+                      onClick={() => extractMutation.mutate(d.id)}
+                    >
+                      Extract
+                    </button>
+                    <button
+                      className="btn"
+                      onClick={() => {
+                        // Re-selecting the row already open is not a state
+                        // change, so the effect never fires — scroll here
+                        // too or the button appears dead on a second click.
+                        if (selectedDocId === d.id) scrollToReview();
+                        setSelectedDocId(d.id);
+                        setApproved(new Set());
+                      }}
+                    >
+                      Review
+                    </button>
+                    <button
+                      className="btn btn-danger"
+                      onClick={() => deleteMutation.mutate(d.id)}
+                    >
+                      Delete
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
 
       <div className="card">
         <h2>Training cohort</h2>
