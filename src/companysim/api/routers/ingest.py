@@ -64,7 +64,7 @@ from companysim.api.schemas import (
     LineageTargetOut,
     SourceDocumentOut,
 )
-from companysim.ingest.documents import DocumentKind, extract_text
+from companysim.ingest.documents import DocumentKind, extract_text_with_source
 from companysim.ingest.llm_parser import (
     extract_cv,
     extract_offer_letter,
@@ -117,6 +117,7 @@ def _doc_out(doc: SourceDocumentRecord) -> SourceDocumentOut:
         as_of_date=doc.as_of_date.isoformat() if doc.as_of_date else None,
         extraction_status=doc.extraction_status, extractor=doc.extractor,
         extraction_error=doc.extraction_error,
+        text_source=doc.text_source,
     )
 
 
@@ -150,15 +151,24 @@ def upload_document(
             raise HTTPException(400, f"as_of_date {as_of_date!r} is not an ISO date") from None
 
     data = file.file.read()
-    try:
-        raw_text = extract_text(file.filename or "upload", data)
-    except ValueError as exc:
-        raise HTTPException(400, str(exc)) from None
+    # The collect block is here rather than around extraction because OCR
+    # runs at upload: a photographed page is transcribed once, when it
+    # arrives, and re-extracting it later reuses the stored text. Without
+    # this the only billable work an upload does would go unmetered.
+    with collect() as calls:
+        try:
+            raw_text, text_source = extract_text_with_source(
+                file.filename or "upload", data)
+        except ValueError as exc:
+            record_llm_calls(db, calls, org_id=org_id)
+            raise HTTPException(400, str(exc)) from None
+    record_llm_calls(db, calls, org_id=org_id)
 
     try:
         doc = save_document(
             db, org_id, kind=kind, filename=file.filename or "upload",
             data=data, raw_text=raw_text, as_of_date=parsed_date,
+            text_source=text_source,
         )
     except DuplicateDocumentError as exc:
         raise HTTPException(409, str(exc)) from None

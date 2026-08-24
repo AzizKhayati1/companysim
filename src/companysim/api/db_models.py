@@ -387,6 +387,11 @@ class SourceDocumentRecord(Base):
     filename: Mapped[str]
     content_hash: Mapped[str]
     raw_text: Mapped[str] = mapped_column(Text)
+    # How raw_text was obtained: 'native' or 'ocr:<backend>'. A
+    # transcription is a *reading* of a page, not a copy of it — it can
+    # misread a digit in a salary in a way a decoded CSV cannot — so the
+    # distinction has to survive to the review screen.
+    text_source: Mapped[str] = mapped_column(default="native", server_default="native")
     uploaded_at: Mapped[datetime] = mapped_column(default=lambda: datetime.now(timezone.utc))
     as_of_date: Mapped[date | None] = mapped_column(nullable=True)
     extraction_status: Mapped[str] = mapped_column(default="pending")

@@ -334,6 +334,9 @@ class SourceDocumentOut(BaseModel):
     extraction_status: str
     extractor: str | None
     extraction_error: str | None
+    # 'native' or 'ocr:<backend>' — shown so a reviewer knows a value was
+    # read off a photograph rather than decoded from a file.
+    text_source: str = "native"
 
 
 class ExtractedFactOut(BaseModel):

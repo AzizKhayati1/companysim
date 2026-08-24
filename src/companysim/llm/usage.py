@@ -32,6 +32,9 @@ from typing import Any
 FEATURE_EXIT_NOTES = "exit_notes"
 FEATURE_CHAT = "chat"
 FEATURE_INGEST = "ingest"
+# OCR runs at *upload* rather than at extraction, so its spend would
+# otherwise be invisible next to the extraction it enables.
+FEATURE_OCR = "ocr"
 
 
 @dataclass(frozen=True)

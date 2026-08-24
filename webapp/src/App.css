@@ -876,3 +876,18 @@
   inset: 0;
   border-radius: 999px;
 }
+
+/* Marks a document whose text came from OCR rather than from a decoder.
+   Label plus border rather than colour alone, so it survives a colour-vision
+   difference and a greyscale print. */
+.chip-ocr {
+  display: inline-block;
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  padding: 1px 5px;
+  border: 1px solid var(--warning);
+  border-radius: 3px;
+  color: var(--text-h);
+  vertical-align: 2px;
+}

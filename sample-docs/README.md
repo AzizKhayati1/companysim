@@ -9,6 +9,11 @@ Test fixtures for the **Document Ingestion** page (`/orgs/:id/documents`).
 > whether it survives the format it arrives in. Two defects are already
 > confirmed there, including a silent 100× salary error on European decimal
 > commas.
+>
+> **See also [`paper-scans/`](paper-scans/README.md)** — photographed paper,
+> for the OCR route. A photo produces the same `raw_text` a typed document
+> would, then travels the identical pipeline; what differs is that facts
+> from it are staged at reduced confidence and the row is marked OCR.
 
 Generated against **org 9 "Meridian Analytics"** (400 employees, seed 2026).
 Every file that names an internal person uses a real employee's email from

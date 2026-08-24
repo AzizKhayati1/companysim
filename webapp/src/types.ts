@@ -355,6 +355,8 @@ export interface SourceDocumentOut {
   extraction_status: string;
   extractor: string | null;
   extraction_error: string | null;
+  /** "native" for a decoded file, "ocr:<backend>" for a photo or scan. */
+  text_source: string;
 }
 
 export interface ExtractedFactOut {

@@ -23,8 +23,12 @@ const KIND_HINTS: Record<DocumentKind, string> = {
     + "Staged as a new-hire proposal; approving it creates the employee.",
   cv: "Proposes a candidate. A CV usually doesn't state a department or salary — those are "
     + "the offer's job — so approving one is normally refused until an offer letter follows.",
-  performance_review: "Free text or PDF. Needs the LLM extractor configured.",
-  resignation_letter: "Free text or PDF. Needs the LLM extractor configured.",
+  performance_review:
+    "Free text, PDF, or a photo of a paper form. Needs the LLM extractor configured; "
+    + "photos and scans are transcribed on upload and marked OCR.",
+  resignation_letter:
+    "Free text, PDF, or a photo of a signed letter. Needs the LLM extractor configured; "
+    + "photos and scans are transcribed on upload and marked OCR.",
   pulse_export: "Not parsed yet — uploads are stored and parked for review.",
 };
 
@@ -425,7 +429,11 @@ export default function DocumentsPage() {
           </label>
           <label>
             File
-            <input ref={fileRef} type="file" accept=".csv,.txt,.md,.pdf" />
+            <input
+              ref={fileRef}
+              type="file"
+              accept=".csv,.txt,.md,.pdf,.png,.jpg,.jpeg,.webp,.gif,.tif,.tiff,.bmp"
+            />
           </label>
           <button
             className="btn btn-primary"
@@ -473,6 +481,17 @@ export default function DocumentsPage() {
                 >
                   <div>
                     <strong>{d.filename}</strong>
+                    {d.text_source?.startsWith("ocr") && (
+                      <>
+                        {" "}
+                        <span
+                          className="chip-ocr"
+                          title={`Text transcribed by ${d.text_source.slice(4)} — a reading of the page, not a copy of it`}
+                        >
+                          OCR
+                        </span>
+                      </>
+                    )}
                     <div className="muted" style={{ fontSize: 12 }}>
                       {formatDateTime(d.uploaded_at)}
                     </div>

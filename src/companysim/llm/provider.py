@@ -357,7 +357,7 @@ def _complete_groq(
 # --------------------------------------------------------------------------
 
 
-def _bedrock_client():
+def bedrock_client():
     import boto3  # noqa: PLC0415
 
     # Region resolution is boto3's, not ours, except for one fallback: the
@@ -466,7 +466,7 @@ def _complete_bedrock(
     if tools:
         kwargs["toolConfig"] = _to_converse_tools(tools)
 
-    response = _bedrock_client().converse(**kwargs)
+    response = bedrock_client().converse(**kwargs)
 
     text_parts: list[str] = []
     calls: list[ToolCall] = []

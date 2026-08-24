@@ -25,7 +25,7 @@ from companysim.api.db_models import (
     SourceDocumentRecord,
 )
 from companysim.ingest.cohorts import CohortValidationError, build_document_cohort
-from companysim.ingest.documents import DocumentKind
+from companysim.ingest.documents import DocumentKind, is_ocr_source
 from companysim.ingest.reconcile import ProposedChange
 from companysim.ml.exit_notes import analyze_note
 from companysim.ml.turnover_features import FEATURE_COLUMNS
@@ -41,7 +41,7 @@ def content_hash_of(data: bytes) -> str:
 
 def save_document(
     db: Session, org_id: int, *, kind: str, filename: str, data: bytes,
-    raw_text: str, as_of_date: date | None,
+    raw_text: str, as_of_date: date | None, text_source: str = "native",
 ) -> SourceDocumentRecord:
     digest = content_hash_of(data)
     exists = (
@@ -57,6 +57,7 @@ def save_document(
     doc = SourceDocumentRecord(
         org_id=org_id, kind=kind, filename=filename, content_hash=digest,
         raw_text=raw_text, as_of_date=as_of_date, extraction_status="pending",
+        text_source=text_source,
     )
     db.add(doc)
     db.commit()
@@ -81,6 +82,14 @@ def get_document(db: Session, org_id: int, document_id: int) -> SourceDocumentRe
     )
 
 
+# A transcription is a reading of a page, not a copy of it: OCR can turn a
+# 3 into an 8 in a salary, and no downstream check would catch it because
+# both are valid numbers. Every fact from a photographed or scanned source
+# is therefore staged below the confidence the same fact would carry from a
+# decoded file, so the review screen ranks it accordingly.
+OCR_CONFIDENCE_SCALE = 0.7
+
+
 def save_extracted_facts(
     db: Session, document: SourceDocumentRecord, changes: list[ProposedChange],
     *, extractor: str,
@@ -90,13 +99,18 @@ def save_extracted_facts(
     document is never "extracted" with its facts lost to a failed second
     commit.
     """
+    # Applied here rather than at each call site because every extraction
+    # path funnels through this function, and a discount that has to be
+    # remembered per path is one that will eventually be forgotten on a
+    # new one.
+    scale = OCR_CONFIDENCE_SCALE if is_ocr_source(document.text_source) else 1.0
     facts = [
         ExtractedFactRecord(
             document_id=document.id, org_id=document.org_id,
             target_table="employees",
             target_employee_id=c.target_employee_id,
             field_name=c.field_name, proposed_value=c.proposed_value,
-            current_value=c.current_value, confidence=c.confidence,
+            current_value=c.current_value, confidence=round(c.confidence * scale, 4),
             review_status="pending", evidence_span=c.evidence_span,
         )
         for c in changes
