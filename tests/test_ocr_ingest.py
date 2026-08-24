@@ -323,3 +323,40 @@ def test_facts_from_a_photograph_are_staged_at_lower_confidence(
     # A CSV cell would be 1.0; the same value read off a photograph is not.
     assert fact.confidence == pytest.approx(OCR_CONFIDENCE_SCALE)
     assert fact.confidence < 1.0
+
+
+# ---- status ------------------------------------------------------------
+
+
+def test_status_reports_ocr_separately_from_the_llm_provider(client, monkeypatch):
+    """"Can this server read a photograph" is a different question from
+    "can it extract" — different backends, different failure modes — and
+    the file picker's accept list is built from image_suffixes, so a wrong
+    answer here greys the file out with no error to search for."""
+    body = client.get("/llm/status").json()
+    assert body["ocr_provider"] == "off"
+    assert body["ocr_available"] is False
+    assert "OCR backend" in body["ocr_problem"]
+    assert ".jpg" in body["image_suffixes"]
+    assert ".png" in body["image_suffixes"]
+
+
+def test_status_reports_ocr_ready_when_a_backend_resolves(client, monkeypatch):
+    boto3 = pytest.importorskip("boto3")
+    monkeypatch.setattr(boto3, "Session", lambda *a, **k: types.SimpleNamespace(
+        get_credentials=lambda: object()))
+    monkeypatch.setenv("AWS_DEFAULT_REGION", "eu-west-2")
+
+    body = client.get("/llm/status").json()
+    assert body["ocr_provider"] == "bedrock"
+    assert body["ocr_available"] is True
+    assert body["ocr_problem"] is None
+
+
+def test_image_suffixes_match_what_the_door_actually_accepts(client):
+    """The picker offers exactly what extract_text routes to OCR. If these
+    drift, a file the backend would read cannot be selected."""
+    body = client.get("/llm/status").json()
+    assert set(body["image_suffixes"]) == ocr.IMAGE_SUFFIXES
+    for suffix in body["image_suffixes"]:
+        assert ocr.suffix_is_image(suffix)

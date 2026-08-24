@@ -14,6 +14,7 @@ from sqlalchemy.orm import Session
 from companysim.api.database import get_db
 from companysim.api.llm_usage import usage_summary
 from companysim.api.schemas import LlmStatusResponse, LlmUsageResponse
+from companysim.ingest import ocr
 from companysim.llm import provider
 
 router = APIRouter(prefix="/llm", tags=["llm"])
@@ -48,4 +49,8 @@ def get_llm_status():
         features={
             name: provider.is_enabled(var) for name, var in _FEATURE_FLAGS.items()
         },
+        ocr_provider=ocr.active_provider(),
+        ocr_available=ocr.is_available(),
+        ocr_problem=ocr.ocr_problem(),
+        image_suffixes=sorted(ocr.IMAGE_SUFFIXES),
     )

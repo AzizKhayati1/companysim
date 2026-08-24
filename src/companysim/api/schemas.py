@@ -440,6 +440,13 @@ class LlmStatusResponse(BaseModel):
     # Human-readable and specific; None when everything is configured.
     provider_problem: str | None = None
     features: dict[str, bool] = {}
+    # OCR resolves independently of the chat/extraction provider — it has
+    # its own backend list and its own failure modes — so "can this server
+    # read a photograph" is a separate question from "can it extract".
+    ocr_provider: str = "off"
+    ocr_available: bool = False
+    ocr_problem: str | None = None
+    image_suffixes: list[str] = []
 
 
 class LineageFieldOut(BaseModel):

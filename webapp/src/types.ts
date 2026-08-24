@@ -438,6 +438,11 @@ export interface LlmStatusResponse {
   provider_ready: boolean;
   provider_problem: string | null;
   features: Record<string, boolean>;
+  ocr_provider: string;
+  ocr_available: boolean;
+  ocr_problem: string | null;
+  /** Image extensions this server can read, e.g. [".jpg", ".png"]. */
+  image_suffixes: string[];
 }
 
 export interface LineageFieldOut {

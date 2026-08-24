@@ -101,6 +101,8 @@ export default function DocumentsPage() {
     staleTime: 30_000,
   });
   const llmStatus = llmStatusQuery.data;
+  const imageSuffixes = llmStatus?.image_suffixes ?? [];
+  const acceptAttr = [".csv", ".txt", ".md", ".pdf", ...imageSuffixes].join(",");
 
   // The review panel sits above the documents table, so a selection made
   // from a row far down the list lands off-screen above the viewport —
@@ -411,6 +413,17 @@ export default function DocumentsPage() {
         </div>
       )}
 
+      {llmStatus && !llmStatus.ocr_available && (
+        <div className="card" style={{ borderLeft: "3px solid var(--warning)" }}>
+          <strong>Photos and scans cannot be read.</strong>{" "}
+          {llmStatus.ocr_problem}
+          <p className="muted" style={{ margin: "8px 0 0" }}>
+            Typed files ({".txt"}, {".md"}, {".csv"}, {".pdf"} with a text layer) are
+            unaffected. A scanned PDF — one with no text layer — also needs OCR.
+          </p>
+        </div>
+      )}
+
       <div className="card">
         <h2>Upload a document</h2>
         <p className="muted" style={{ marginBottom: 12 }}>{KIND_HINTS[kind]}</p>
@@ -429,11 +442,12 @@ export default function DocumentsPage() {
           </label>
           <label>
             File
-            <input
-              ref={fileRef}
-              type="file"
-              accept=".csv,.txt,.md,.pdf,.png,.jpg,.jpeg,.webp,.gif,.tif,.tiff,.bmp"
-            />
+            {/* The image half comes from the server rather than a literal.
+                A hardcoded list silently drifts from what the backend
+                accepts, and the symptom is the worst kind: the file picker
+                greys the file out, so it reads as "images are not
+                supported" without any error to search for. */}
+            <input ref={fileRef} type="file" accept={acceptAttr} />
           </label>
           <button
             className="btn btn-primary"
