@@ -2,12 +2,17 @@ import { EVENT_TYPE_LABELS, type ScenarioEventIn, type SimulateResponse } from "
 import { buildEventMarkers } from "../utils/eventMarkers";
 import FanChart from "./FanChart";
 
+/* One hue per metric, each in its own chart — these are small multiples,
+ * not five series sharing an axis, so the hues carry identity across
+ * cards rather than needing to be told apart within one plot. Every one
+ * clears 3:1 on the surface. Literal hex, not tokens: a chart mark is
+ * data, and must not re-colour when the theme accent changes. */
 const METRICS: { key: string; label: string; color: string }[] = [
   { key: "active_headcount", label: "Active headcount", color: "#6d28d9" },
-  { key: "mean_engagement", label: "Mean engagement", color: "#0891b2" },
-  { key: "mean_productivity", label: "Mean productivity", color: "#16a34a" },
+  { key: "mean_engagement", label: "Mean engagement", color: "#0369a1" },
+  { key: "mean_productivity", label: "Mean productivity", color: "#be185d" },
   { key: "mean_turnover_risk", label: "Mean turnover risk", color: "#dc2626" },
-  { key: "mean_burnout", label: "Mean burnout", color: "#ea580c" },
+  { key: "mean_burnout", label: "Mean burnout", color: "#c2410c" },
 ];
 
 export default function SimulationResults({

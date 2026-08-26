@@ -5,8 +5,8 @@ import type { LineageTargetOut } from "../types";
  * lands in → what that feeds downstream.
  *
  * Deliberately NOT colour-coded by destination table. The app's four
- * non-neutral tokens fail as a categorical palette — accent (#00867a) vs
- * success (#1f9d55) is ΔE 10.1 in normal vision, below the readable
+ * non-neutral tokens fail as a categorical palette — the accent and the
+ * 'good' status sit too close in normal vision, below the readable
  * floor, and warning vs success is ΔE 4.8 under protanopia — so hue here
  * would encode identity that a reader cannot actually decode. Table
  * identity is carried by its monospaced name instead.

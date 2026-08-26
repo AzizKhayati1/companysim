@@ -102,6 +102,7 @@ export default function DocumentsPage() {
   const [kind, setKind] = useState<DocumentKind>("roster");
   const [asOfDate, setAsOfDate] = useState("");
   const [selectedDocId, setSelectedDocId] = useState<number | null>(null);
+  const [statusFilter, setStatusFilter] = useState<string>("all");
   const [approved, setApproved] = useState<Set<number>>(new Set());
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
@@ -232,6 +233,21 @@ export default function DocumentsPage() {
   });
 
   const documents = docsQuery.data ?? [];
+
+  // The queue, not the catalogue. 135 rows is a filing cabinet; "18 need
+  // your decision" is a task. Counts drive both the headline and the
+  // strip, so they can never disagree with the list.
+  const counts = {
+    all: documents.length,
+    extracted: documents.filter((d) => d.extraction_status === "extracted").length,
+    needs_review: documents.filter((d) => d.extraction_status === "needs_review").length,
+    pending: documents.filter((d) => d.extraction_status === "pending").length,
+  };
+  const visibleDocuments =
+    statusFilter === "all"
+      ? documents
+      : documents.filter((d) => d.extraction_status === statusFilter);
+  const pct = (n: number) => (counts.all ? (n / counts.all) * 100 : 0);
   const totals = totalsQuery.data;
   const cohort = cohortQuery.data;
   const detail = detailQuery.data;
@@ -251,11 +267,16 @@ export default function DocumentsPage() {
     <div className="page">
       <div className="page-header">
         <div>
-          <h1 className="page-title">Document Ingestion</h1>
+          <div className="page-eyebrow">Data · Documents</div>
+          <h1 className="page-title">
+            {counts.needs_review > 0
+              ? `${counts.needs_review} need your decision`
+              : counts.all > 0
+                ? "Nothing waiting on you"
+                : "Document Ingestion"}
+          </h1>
           <p className="page-subtitle">
-            {orgQuery.data?.name} — upload real HR documents to enrich this org. Every proposed
-            change is staged for your review with the source text it came from; nothing is written
-            to an employee record until you approve it.
+            {orgQuery.data?.name} — nothing reaches an employee record until you approve it.
           </p>
         </div>
       </div>
@@ -308,6 +329,131 @@ export default function DocumentsPage() {
         </div>
       )}
 
+
+      {counts.all > 0 && (
+        <div className="queue-strip">
+          <div className="queue-bar" role="img"
+               aria-label={`${counts.extracted} extracted, ${counts.needs_review} need review, ${counts.pending} not extracted`}>
+            <div className="queue-seg queue-seg-done" style={{ width: `${pct(counts.extracted)}%` }} />
+            <div className="queue-seg queue-seg-review" style={{ width: `${pct(counts.needs_review)}%` }} />
+            <div className="queue-seg queue-seg-idle" style={{ width: `${pct(counts.pending)}%` }} />
+          </div>
+          <div className="queue-legend">
+            <span><i className="queue-dot queue-seg-done" />{counts.extracted} extracted</span>
+            <span><i className="queue-dot queue-seg-review" />{counts.needs_review} need review</span>
+            <span><i className="queue-dot queue-seg-idle" />{counts.pending} not extracted</span>
+            <span className="queue-total">{counts.all} documents</span>
+          </div>
+        </div>
+      )}
+
+      {counts.all > 0 && (
+        <div className="segmented" role="tablist" aria-label="Filter by status">
+          {([
+            ["all", `All ${counts.all}`],
+            ["needs_review", `Needs review ${counts.needs_review}`],
+            ["extracted", `Extracted ${counts.extracted}`],
+            ["pending", `Not extracted ${counts.pending}`],
+          ] as const).map(([value, label]) => (
+            <button
+              key={value}
+              type="button"
+              role="tab"
+              aria-selected={statusFilter === value}
+              className={`segmented-item${statusFilter === value ? " active" : ""}`}
+              onClick={() => setStatusFilter(value)}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+      )}
+
+      {/* 7/5. The inspector used to sit above a 135-row table, so a
+          decision meant losing your place in the list. Side by side,
+          picking and deciding are the same glance. */}
+      <div className={`doc-split${detail ? " has-detail" : ""}`}>
+      <div className="card">
+        <h2>Documents</h2>
+        {docsQuery.isLoading && <p className="muted">Loading...</p>}
+        {!docsQuery.isLoading && visibleDocuments.length === 0 && (
+          <p className="muted">No documents uploaded yet.</p>
+        )}
+        {visibleDocuments.length > 0 && (
+          <div className="data-list">
+            <div className="data-list-scroll">
+              <div
+                className="data-list-header"
+                style={{ gridTemplateColumns: "1fr 150px 120px 130px 190px" }}
+              >
+                <div>File</div>
+                <div>Type</div>
+                <div>As of</div>
+                <div>Status</div>
+                <div>Actions</div>
+              </div>
+              {visibleDocuments.map((d) => (
+                <div
+                  key={d.id}
+                  className={`data-list-row${selectedDocId === d.id ? " active" : ""}`}
+                  style={{ gridTemplateColumns: "1fr 150px 120px 130px 190px" }}
+                >
+                  <div>
+                    <strong>{d.filename}</strong>
+                    {d.text_source?.startsWith("ocr") && (
+                      <>
+                        {" "}
+                        <span
+                          className="chip-ocr"
+                          title={`Text transcribed by ${d.text_source.slice(4)} — a reading of the page, not a copy of it`}
+                        >
+                          OCR
+                        </span>
+                      </>
+                    )}
+                    <div className="muted" style={{ fontSize: 12 }}>
+                      {formatDateTime(d.uploaded_at)}
+                    </div>
+                  </div>
+                  <div className="muted">{KIND_LABELS[d.kind] ?? d.kind}</div>
+                  <div className="muted">{d.as_of_date ?? "—"}</div>
+                  <div>
+                    <StatusChip status={d.extraction_status} />
+                  </div>
+                  <div style={{ display: "flex", gap: 6 }}>
+                    <button
+                      className="btn"
+                      disabled={extractMutation.isPending}
+                      onClick={() => extractMutation.mutate(d.id)}
+                    >
+                      Extract
+                    </button>
+                    <button
+                      className="btn"
+                      onClick={() => {
+                        // Re-selecting the row already open is not a state
+                        // change, so the effect never fires — scroll here
+                        // too or the button appears dead on a second click.
+                        if (selectedDocId === d.id) scrollToReview();
+                        setSelectedDocId(d.id);
+                        setApproved(new Set());
+                      }}
+                    >
+                      Review
+                    </button>
+                    <button
+                      className="btn btn-danger"
+                      onClick={() => deleteMutation.mutate(d.id)}
+                    >
+                      Delete
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
       {detail && (
         <div className="card" ref={reviewRef}>
           <div
@@ -429,6 +575,7 @@ export default function DocumentsPage() {
           )}
         </div>
       )}
+      </div>
 
       {detail && lineageQuery.data && (
         <div className="card">
@@ -506,87 +653,6 @@ export default function DocumentsPage() {
         </p>
       </div>
 
-      <div className="card">
-        <h2>Documents</h2>
-        {docsQuery.isLoading && <p className="muted">Loading...</p>}
-        {!docsQuery.isLoading && documents.length === 0 && (
-          <p className="muted">No documents uploaded yet.</p>
-        )}
-        {documents.length > 0 && (
-          <div className="data-list">
-            <div className="data-list-scroll">
-              <div
-                className="data-list-header"
-                style={{ gridTemplateColumns: "1fr 150px 120px 130px 190px" }}
-              >
-                <div>File</div>
-                <div>Type</div>
-                <div>As of</div>
-                <div>Status</div>
-                <div>Actions</div>
-              </div>
-              {documents.map((d) => (
-                <div
-                  key={d.id}
-                  className={`data-list-row${selectedDocId === d.id ? " active" : ""}`}
-                  style={{ gridTemplateColumns: "1fr 150px 120px 130px 190px" }}
-                >
-                  <div>
-                    <strong>{d.filename}</strong>
-                    {d.text_source?.startsWith("ocr") && (
-                      <>
-                        {" "}
-                        <span
-                          className="chip-ocr"
-                          title={`Text transcribed by ${d.text_source.slice(4)} — a reading of the page, not a copy of it`}
-                        >
-                          OCR
-                        </span>
-                      </>
-                    )}
-                    <div className="muted" style={{ fontSize: 12 }}>
-                      {formatDateTime(d.uploaded_at)}
-                    </div>
-                  </div>
-                  <div className="muted">{KIND_LABELS[d.kind] ?? d.kind}</div>
-                  <div className="muted">{d.as_of_date ?? "—"}</div>
-                  <div>
-                    <StatusChip status={d.extraction_status} />
-                  </div>
-                  <div style={{ display: "flex", gap: 6 }}>
-                    <button
-                      className="btn"
-                      disabled={extractMutation.isPending}
-                      onClick={() => extractMutation.mutate(d.id)}
-                    >
-                      Extract
-                    </button>
-                    <button
-                      className="btn"
-                      onClick={() => {
-                        // Re-selecting the row already open is not a state
-                        // change, so the effect never fires — scroll here
-                        // too or the button appears dead on a second click.
-                        if (selectedDocId === d.id) scrollToReview();
-                        setSelectedDocId(d.id);
-                        setApproved(new Set());
-                      }}
-                    >
-                      Review
-                    </button>
-                    <button
-                      className="btn btn-danger"
-                      onClick={() => deleteMutation.mutate(d.id)}
-                    >
-                      Delete
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-      </div>
 
       <div className="card">
         <h2>Training cohort</h2>

@@ -217,13 +217,44 @@ export default function SimulatePage() {
 
   return (
     <div className="page">
+      {/* The run controls used to sit at the bottom of a form long enough
+          to scroll past. Editing an event and running it are one loop, so
+          the action belongs where it is always reachable — and the header
+          is the only place on the page that never moves. */}
       <div className="page-header">
         <div>
-          <h1 className="page-title">Scenario Simulator</h1>
+          <div className="page-eyebrow">Plan · Scenario Simulator</div>
+          <h1 className="page-title">
+            {events.length === 0
+              ? "Model a change before you make it"
+              : `${events.length} ${events.length === 1 ? "change" : "changes"} over ${ticks} weeks`}
+          </h1>
           <p className="page-subtitle">
-            Model a workforce change for {orgQuery.data?.name} and forecast its effect on
-            retention risk before you act.
+            {orgQuery.data?.name} — forecast the effect on retention risk before you act.
           </p>
+        </div>
+        <div className="page-actions">
+          <button
+            className="btn"
+            disabled={exportPdfMutation.isPending}
+            onClick={() => exportPdfMutation.mutate()}
+          >
+            {exportPdfMutation.isPending ? "Exporting..." : "Export PDF"}
+          </button>
+          <button
+            className="btn"
+            disabled={diagnoseMutation.isPending}
+            onClick={() => diagnoseMutation.mutate()}
+          >
+            {diagnoseMutation.isPending ? "Diagnosing..." : "Diagnose"}
+          </button>
+          <button
+            className="btn btn-primary"
+            disabled={simulateMutation.isPending || forecastMutation.isPending}
+            onClick={runAll}
+          >
+            {simulateMutation.isPending ? "Running..." : "Run forecast"}
+          </button>
         </div>
       </div>
 
@@ -246,6 +277,7 @@ export default function SimulatePage() {
       <div className="grid-2">
         <div className="card">
           <h2>Build a scenario</h2>
+          <div className="field-group-label">Horizon</div>
           <div className="row" style={{ marginBottom: 14 }}>
             <label>
               Ticks{" "}
@@ -433,29 +465,6 @@ export default function SimulatePage() {
             <button className="btn" onClick={addEvent}>+ Add event</button>
           </div>
 
-          <div className="row" style={{ marginTop: 16 }}>
-            <button
-              className="btn btn-primary"
-              disabled={simulateMutation.isPending || forecastMutation.isPending}
-              onClick={runAll}
-            >
-              {simulateMutation.isPending ? "Running..." : "Run forecast"}
-            </button>
-            <button
-              className="btn"
-              disabled={diagnoseMutation.isPending}
-              onClick={() => diagnoseMutation.mutate()}
-            >
-              {diagnoseMutation.isPending ? "Diagnosing..." : "Diagnose"}
-            </button>
-            <button
-              className="btn"
-              disabled={exportPdfMutation.isPending}
-              onClick={() => exportPdfMutation.mutate()}
-            >
-              {exportPdfMutation.isPending ? "Exporting..." : "Export PDF"}
-            </button>
-          </div>
           {simulateMutation.isError && (
             <p className="error">{(simulateMutation.error as Error).message}</p>
           )}
