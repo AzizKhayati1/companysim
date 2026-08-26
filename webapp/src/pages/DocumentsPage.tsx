@@ -38,10 +38,48 @@ const STATUS_LABELS: Record<string, string> = {
   needs_review: "Needs review",
 };
 
-function statusColor(status: string): string {
-  if (status === "extracted") return "var(--success)";
-  if (status === "needs_review") return "var(--warning)";
-  return "var(--text-3)";
+/** Status as a chip: a tinted fill plus an icon, never colour alone.
+ *
+ * This replaced coloured text for two measured reasons. The old amber
+ * (#e08300) was 2.83:1 as text on white, under the 4.5:1 floor; moving
+ * the hue into the fill lets the label take a darker step that passes.
+ * And the icon means the state still reads in greyscale, or to someone
+ * who cannot separate the hues at all. */
+function StatusChip({ status }: { status: string }) {
+  const label = STATUS_LABELS[status] ?? status;
+  if (status === "extracted") {
+    return (
+      <span className="chip chip-good">
+        <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="2.2"
+             strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+          <path d="m4.5 10.5 3.5 3.5 7.5-8" />
+        </svg>
+        {label}
+      </span>
+    );
+  }
+  if (status === "needs_review") {
+    return (
+      <span className="chip chip-warn">
+        <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="2.1"
+             strokeLinecap="round" aria-hidden="true">
+          <circle cx="10" cy="10" r="7.5" />
+          <path d="M10 6.2v4.4M10 13.6v.1" />
+        </svg>
+        {label}
+      </span>
+    );
+  }
+  return (
+    <span className="chip chip-neutral">
+      <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="2"
+           strokeLinecap="round" aria-hidden="true">
+        <circle cx="10" cy="10" r="7.5" />
+        <path d="M10 6v4l2.5 2" />
+      </svg>
+      {label}
+    </span>
+  );
 }
 
 const FIELD_LABELS: Record<string, string> = {
@@ -512,8 +550,8 @@ export default function DocumentsPage() {
                   </div>
                   <div className="muted">{KIND_LABELS[d.kind] ?? d.kind}</div>
                   <div className="muted">{d.as_of_date ?? "—"}</div>
-                  <div style={{ color: statusColor(d.extraction_status) }}>
-                    {STATUS_LABELS[d.extraction_status] ?? d.extraction_status}
+                  <div>
+                    <StatusChip status={d.extraction_status} />
                   </div>
                   <div style={{ display: "flex", gap: 6 }}>
                     <button

@@ -27,10 +27,8 @@
   height: 100svh;
   position: sticky;
   top: 0;
-  backdrop-filter: blur(24px);
-  -webkit-backdrop-filter: blur(24px);
   background: var(--sidebar-bg);
-  border-right: 1px solid var(--border);
+  border-right: 1px solid var(--sidebar-border);
   display: flex;
   flex-direction: column;
   padding: 20px 14px;
@@ -57,12 +55,12 @@
   font-size: 15px;
   font-weight: 700;
   letter-spacing: -0.01em;
-  color: var(--text-h);
+  color: var(--sidebar-text-strong);
 }
 
 .sidebar-brand-sub {
   font-size: 11px;
-  color: var(--text-2);
+  color: var(--sidebar-muted);
   margin-top: -2px;
 }
 
@@ -79,7 +77,7 @@
   padding: 9px 10px;
   border-radius: 10px;
   cursor: pointer;
-  color: var(--text-h);
+  color: var(--sidebar-text);
   font-size: 13px;
   font-weight: 500;
   white-space: nowrap;
@@ -87,18 +85,19 @@
 }
 
 .sidebar-nav-item:hover {
-  background: var(--surface-2);
+  background: var(--sidebar-hover-bg);
   text-decoration: none;
 }
 
 .sidebar-nav-item.active {
-  background: var(--accent-soft);
-  color: var(--accent);
+  background: var(--sidebar-active-bg);
+  box-shadow: inset 2px 0 0 var(--sidebar-accent);
+  color: var(--sidebar-text-strong);
   font-weight: 700;
 }
 
 .sidebar-nav-item.active .sidebar-nav-icon {
-  color: var(--accent);
+  color: var(--sidebar-accent);
 }
 
 .sidebar-nav-icon {
@@ -108,7 +107,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--text-2);
+  color: var(--sidebar-muted);
 }
 
 .sidebar-nav-item.disabled {
@@ -117,12 +116,12 @@
 }
 
 .sidebar-divider {
-  border-top: 1px solid var(--border);
+  border-top: 1px solid var(--sidebar-border);
   margin: 10px 4px;
 }
 
 .sidebar-footer {
-  border-top: 1px solid var(--border);
+  border-top: 1px solid var(--sidebar-border);
   padding-top: 12px;
   margin-top: 8px;
   display: flex;
@@ -139,7 +138,7 @@
 
 .sidebar-appearance-label {
   font-size: 12.5px;
-  color: var(--text-2);
+  color: var(--sidebar-muted);
   display: flex;
   align-items: center;
   gap: 7px;
@@ -183,12 +182,12 @@
   gap: 9px;
   padding: 8px;
   border-radius: 10px;
-  background: var(--surface-2);
+  background: var(--sidebar-hover-bg);
   color: inherit;
 }
 
 .sidebar-org-card:hover {
-  background: var(--border);
+  background: var(--sidebar-active-bg);
   text-decoration: none;
 }
 
@@ -196,8 +195,8 @@
   width: 28px;
   height: 28px;
   border-radius: 8px;
-  background: var(--accent-soft);
-  color: var(--accent);
+  background: rgba(15, 179, 160, 0.18);
+  color: var(--sidebar-accent);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -213,7 +212,7 @@
 .sidebar-org-name {
   font-size: 12.5px;
   font-weight: 600;
-  color: var(--text-h);
+  color: var(--sidebar-text-strong);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -221,7 +220,7 @@
 
 .sidebar-org-headcount {
   font-size: 11px;
-  color: var(--text-3);
+  color: var(--sidebar-muted);
 }
 
 .app-main {
@@ -890,4 +889,52 @@
   border-radius: 3px;
   color: var(--text-h);
   vertical-align: 2px;
+}
+
+/* ---- status chip ----------------------------------------------------
+   Replaces coloured status TEXT. Two reasons, both measured:
+
+   1. Contrast. As text on a white surface the old --warning (#e08300)
+      measured 2.83:1 — well under the 4.5:1 floor. Moving the hue into a
+      tinted fill lets the label take a darker step of the same hue, which
+      passes, while the surface still reads as "amber".
+   2. Colour is never the only channel. Each chip carries an icon, so the
+      state survives greyscale printing and colour-blindness — the reason
+      status colours are reserved and never reused as series colours.     */
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 9px;
+  border-radius: 7px;
+  font-size: 11.5px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.chip svg {
+  width: 12px;
+  height: 12px;
+  flex: none;
+}
+
+.chip-good {
+  background: var(--success-bg);
+  color: var(--success);
+}
+
+.chip-warn {
+  background: var(--warning-bg);
+  color: var(--warning);
+}
+
+.chip-crit {
+  background: var(--danger-bg);
+  color: var(--danger);
+}
+
+.chip-neutral {
+  background: var(--surface-2);
+  color: var(--text-2);
 }
