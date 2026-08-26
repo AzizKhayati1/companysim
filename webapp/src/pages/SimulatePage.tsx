@@ -14,6 +14,7 @@ import {
 } from "recharts";
 import { api } from "../api/client";
 import DiagnosisResults from "../components/DiagnosisResults";
+import Modal from "../components/Modal";
 import SimulationResults from "../components/SimulationResults";
 import {
   EVENT_TYPE_LABELS,
@@ -83,6 +84,34 @@ const SCENARIO_TEMPLATES: {
   },
 ];
 
+/** Event params as a sentence fragment instead of raw JSON.
+ *
+ * The editor previously printed JSON.stringify(e.params) into a cell —
+ * accurate, and unreadable. Ids are resolved to the names they stand for,
+ * because "dept 73" tells a reviewer nothing they can act on. Unknown
+ * keys still render, humanised, rather than being dropped: a scenario the
+ * UI does not recognise must still be inspectable. */
+function describeParams(
+  params: Record<string, unknown>,
+  depts: DepartmentOut[],
+  emps: { id: number; full_name: string }[],
+): string {
+  const name = (list: { id: number }[], id: unknown, get: (x: never) => string) => {
+    const hit = list.find((x) => x.id === Number(id));
+    return hit ? get(hit as never) : String(id);
+  };
+  return Object.entries(params)
+    .filter(([, v]) => v !== null && v !== undefined && v !== "")
+    .map(([k, v]) => {
+      if (k === "department_id") return name(depts, v, (d: DepartmentOut) => d.name);
+      if (k === "employee_id") return name(emps, v, (e: { full_name: string }) => e.full_name);
+      const label = k.replace(/_/g, " ");
+      if (typeof v === "boolean") return v ? label : `no ${label}`;
+      return `${label} ${v}`;
+    })
+    .join(" · ");
+}
+
 export default function SimulatePage() {
   const { orgId: orgIdStr } = useParams();
   const orgId = Number(orgIdStr);
@@ -140,8 +169,12 @@ export default function SimulatePage() {
       return { baseline, treated };
     },
   });
+  // The report opens over the page rather than appending below it, so
+  // dismissing is free and the scenario keeps its scroll and its state.
+  const [diagnosisOpen, setDiagnosisOpen] = useState(false);
   const diagnoseMutation = useMutation({
     mutationFn: () => api.diagnose(orgId, { ticks, replicates: 1, seed, events }),
+    onSuccess: () => setDiagnosisOpen(true),
   });
   const exportPdfMutation = useMutation({
     mutationFn: async () => {
@@ -300,6 +333,7 @@ export default function SimulatePage() {
             employees; life events model things happening outside work.
           </p>
 
+          <div className="field-group-label">Start from a template</div>
           <div className="row" style={{ marginBottom: 14, flexWrap: "wrap" }}>
             {SCENARIO_TEMPLATES.map((t) => (
               <button
@@ -313,39 +347,66 @@ export default function SimulatePage() {
             ))}
           </div>
 
+          <div className="field-group-label">
+            Timeline{events.length > 0 && ` · ${events.length} ${events.length === 1 ? "change" : "changes"}`}
+          </div>
+
+          {events.length === 0 && (
+            <p className="sim-empty">
+              No changes yet. Start from a template above, or add one below — a scenario with no
+              events forecasts the org as it stands.
+            </p>
+          )}
+
           {events.length > 0 && (
-            <div className="data-list" style={{ marginBottom: 12 }}>
-              <div className="data-list-scroll">
-                <div className="data-list-header" style={{ gridTemplateColumns: "60px 150px 1fr 46px" }}>
-                  <div>Tick</div>
-                  <div>Type</div>
-                  <div>Params</div>
-                  <div></div>
-                </div>
+            <>
+              {/* Events carry a tick, so their position in time is real
+                  information. A table sorts it into a column and makes you
+                  reconstruct the shape; the track shows clustering and gaps
+                  at a glance. */}
+              <div className="sim-track" aria-hidden="true">
+                <div className="sim-track-line" />
                 {events.map((e, i) => (
                   <div
-                    className="data-list-row"
                     key={i}
-                    style={{ gridTemplateColumns: "60px 150px 1fr 46px" }}
-                  >
-                    <div className="data-list-cell">{e.at_tick}</div>
-                    <div className="data-list-cell">{e.type}</div>
-                    <div className="data-list-cell">
-                      <code>{JSON.stringify(e.params)}</code>
+                    className="sim-track-pin"
+                    style={{ left: `${Math.min(100, (e.at_tick / Math.max(ticks, 1)) * 100)}%` }}
+                    title={`${EVENT_TYPE_LABELS[e.type] ?? e.type} at week ${e.at_tick}`}
+                  />
+                ))}
+                <div className="sim-track-scale">
+                  <span>week 0</span>
+                  <span>week {ticks}</span>
+                </div>
+              </div>
+
+              <div className="sim-events">
+                {events.map((e, i) => (
+                  <div className="sim-event" key={i}>
+                    <div className="sim-event-tick">w{e.at_tick}</div>
+                    <div className="sim-event-body">
+                      <div className="sim-event-type">{EVENT_TYPE_LABELS[e.type] ?? e.type}</div>
+                      {describeParams(e.params, depts, emps) && (
+                        <div className="sim-event-params">{describeParams(e.params, depts, emps)}</div>
+                      )}
                     </div>
-                    <div className="data-list-cell actions">
-                      <button
-                        className="btn btn-danger"
-                        onClick={() => setEvents(events.filter((_, j) => j !== i))}
-                      >
-                        &times;
-                      </button>
-                    </div>
+                    <button
+                      className="sim-event-remove"
+                      aria-label={`Remove ${EVENT_TYPE_LABELS[e.type] ?? e.type} at week ${e.at_tick}`}
+                      onClick={() => setEvents(events.filter((_, j) => j !== i))}
+                    >
+                      <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.9"
+                           strokeLinecap="round" aria-hidden="true">
+                        <path d="M6 6l8 8M14 6l-8 8" />
+                      </svg>
+                    </button>
                   </div>
                 ))}
               </div>
-            </div>
+            </>
           )}
+
+          <div className="field-group-label" style={{ marginTop: 18 }}>Add a change</div>
 
           <div className="row">
             <label>
@@ -516,13 +577,44 @@ export default function SimulatePage() {
         </div>
       </div>
 
-      {diagnosis && (
-        <DiagnosisResults
-          diagnosis={diagnosis}
-          depts={depts}
-          teams={teams}
-          onApplyRecommendation={applyRecommendation}
-        />
+      {diagnosis && diagnosisOpen && (
+        <Modal
+          title="Diagnosis"
+          subtitle={`${ticks} weeks · ${events.length} ${events.length === 1 ? "change" : "changes"} · seed ${seed}`}
+          onClose={() => setDiagnosisOpen(false)}
+          footer={
+            <>
+              <button className="btn" onClick={() => setDiagnosisOpen(false)}>Close</button>
+              <button
+                className="btn"
+                disabled={exportPdfMutation.isPending}
+                onClick={() => exportPdfMutation.mutate()}
+              >
+                {exportPdfMutation.isPending ? "Exporting..." : "Export PDF"}
+              </button>
+            </>
+          }
+        >
+          <DiagnosisResults
+            diagnosis={diagnosis}
+            depts={depts}
+            teams={teams}
+            onApplyRecommendation={(report) => {
+              applyRecommendation(report);
+              // Applying writes an event into the scenario behind, so the
+              // report has served its purpose — leaving it up would hide
+              // the change the user just made.
+              setDiagnosisOpen(false);
+            }}
+          />
+        </Modal>
+      )}
+
+      {diagnosis && !diagnosisOpen && (
+        <div className="reopen-strip">
+          <span>A diagnosis from the last run is available.</span>
+          <button className="btn" onClick={() => setDiagnosisOpen(true)}>Show it</button>
+        </div>
       )}
 
       {result && <SimulationResults result={result} events={events} />}
