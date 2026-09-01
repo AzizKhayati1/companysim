@@ -75,6 +75,12 @@ where = ["src"]
 line-length = 100
 target-version = "py311"
 
+[tool.ruff.lint.per-file-ignores]
+# The deck builder pairs a shape's fill mode with its colour on one line
+# (`fill.solid(); fore_color.rgb = X`). Splitting those 33 pairs would
+# double the file's length and separate two halves of one setting.
+"scripts/build_talk_deck.py" = ["E702"]
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 addopts = "-ra"

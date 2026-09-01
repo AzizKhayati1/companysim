@@ -384,7 +384,7 @@ export default function DocumentsPage() {
             <div className="data-list-scroll">
               <div
                 className="data-list-header"
-                style={{ gridTemplateColumns: "1fr 150px 120px 130px 190px" }}
+                style={{ gridTemplateColumns: "minmax(0, 1fr) 140px 110px 150px 216px" }}
               >
                 <div>File</div>
                 <div>Type</div>
@@ -396,7 +396,7 @@ export default function DocumentsPage() {
                 <div
                   key={d.id}
                   className={`data-list-row${selectedDocId === d.id ? " active" : ""}`}
-                  style={{ gridTemplateColumns: "1fr 150px 120px 130px 190px" }}
+                  style={{ gridTemplateColumns: "minmax(0, 1fr) 140px 110px 150px 216px" }}
                 >
                   <div>
                     <strong>{d.filename}</strong>
