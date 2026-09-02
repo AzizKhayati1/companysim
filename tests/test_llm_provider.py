@@ -36,12 +36,11 @@ def _clean_env(monkeypatch):
 # ---- provider selection -------------------------------------------------
 
 
-def test_defaults_to_bedrock():
-    """Bedrock is the deployment target, so it is what an unconfigured
-    process attempts. A Groq default produced a silent, self-concealing
-    failure: AWS credentials set, ignored, and reported as unconfigured."""
-    assert provider.active_provider() == provider.PROVIDER_BEDROCK
-    assert provider.model_id() == provider.DEFAULT_BEDROCK_MODEL
+def test_defaults_to_groq():
+    """The default follows the deployment target, not any property of the
+    code. Both paths stay supported and tested; one env var moves it."""
+    assert provider.active_provider() == provider.PROVIDER_GROQ
+    assert provider.model_id() == provider.DEFAULT_GROQ_MODEL
 
 
 def test_bedrock_is_explicit_too(monkeypatch):
@@ -60,7 +59,7 @@ def test_an_unrecognized_provider_falls_back_to_the_default(monkeypatch):
     # A typo must not silently disable every LLM feature at 3am; the safe
     # reading of a bad value is "the default", not "nothing".
     monkeypatch.setenv("COMPANYSIM_LLM_PROVIDER", "bedrok")
-    assert provider.active_provider() == provider.PROVIDER_BEDROCK
+    assert provider.active_provider() == provider.PROVIDER_GROQ
 
 
 def test_model_id_is_overridable_per_provider(monkeypatch):
@@ -129,28 +128,35 @@ def test_bedrock_without_a_region_is_not_ready(monkeypatch):
 # ---- the diagnosis users actually read ----------------------------------
 
 
-def test_aws_credentials_alone_now_just_work(monkeypatch):
-    """The regression that prompted the default flip: AWS credentials set,
-    provider left alone, and the feature stayed off while claiming it needed
-    a Groq key. Configuring Bedrock is now sufficient on its own."""
-    boto3 = pytest.importorskip("boto3")
-    monkeypatch.setattr(
-        boto3, "Session",
-        lambda *a, **k: types.SimpleNamespace(get_credentials=lambda: object()))
-    monkeypatch.setenv("AWS_ACCESS_KEY_ID", "AKIA")
-    monkeypatch.setenv("AWS_SECRET_ACCESS_KEY", "secret")
-    monkeypatch.setenv("AWS_DEFAULT_REGION", "eu-west-2")
+def test_a_groq_key_alone_is_enough(monkeypatch):
+    """The default case: a key, no provider variable, and it works."""
+    pytest.importorskip("groq")
+    monkeypatch.setenv("GROQ_API_KEY", "gsk_x")
     monkeypatch.setenv("COMPANYSIM_LLM_INGEST", "1")
 
-    assert provider.active_provider() == provider.PROVIDER_BEDROCK
+    assert provider.active_provider() == provider.PROVIDER_GROQ
     assert provider.unavailable_reason("COMPANYSIM_LLM_INGEST") is None
 
 
+def test_unused_aws_credentials_are_named_as_the_likely_fix(monkeypatch):
+    """Someone who configured AWS and never set the provider variable is
+    told so, rather than being told to go and get a Groq key."""
+    pytest.importorskip("groq")
+    monkeypatch.setenv("AWS_ACCESS_KEY_ID", "AKIA")
+    monkeypatch.setenv("AWS_DEFAULT_REGION", "eu-west-2")
+    monkeypatch.setenv("COMPANYSIM_LLM_INGEST", "1")
+
+    reason = provider.unavailable_reason("COMPANYSIM_LLM_INGEST")
+    assert reason is not None
+    assert "COMPANYSIM_LLM_PROVIDER=bedrock" in reason
+
+
 def test_an_unused_groq_key_is_named_as_the_likely_fix(monkeypatch):
-    """The mirror of the old trap: a Groq key configured under the Bedrock
-    default. Left unmentioned, the message reads 'no AWS credentials' to
+    """The mirror: a Groq key configured while the provider is pinned to
+    Bedrock. Left unmentioned, the message reads 'no AWS credentials' to
     someone who never wanted AWS at all."""
     boto3 = pytest.importorskip("boto3")
+    monkeypatch.setenv("COMPANYSIM_LLM_PROVIDER", "bedrock")
     monkeypatch.setattr(
         boto3, "Session",
         lambda *a, **k: types.SimpleNamespace(get_credentials=lambda: None))

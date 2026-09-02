@@ -47,15 +47,22 @@ _PROVIDER_VAR = "COMPANYSIM_LLM_PROVIDER"
 _BEDROCK_MODEL_VAR = "COMPANYSIM_BEDROCK_MODEL_ID"
 _GROQ_MODEL_VAR = "COMPANYSIM_GROQ_MODEL_ID"
 
-# Defaults are starting points, not guarantees. Bedrock model availability
-# varies by region AND by which models an account has been granted, so the
-# right value is discovered per-deployment:
+# Defaults are starting points, not guarantees — both were checked
+# against a live model list rather than remembered.
+#
+# Groq: llama-3.3-70b-versatile, which this shipped with, has been
+# decommissioned and now 404s. Its replacement serves both jobs — it
+# honours response_format json_object, and it accepts image input, which
+# is what lets OCR run on Groq at all.
+DEFAULT_GROQ_MODEL = "qwen/qwen3.8-27b"
+
+# Bedrock: availability varies by region AND by which models an account
+# has been granted, so the right value is discovered per deployment:
 #     aws bedrock list-inference-profiles --region eu-west-2
 # In EU regions Claude is served through cross-region inference profiles,
 # whose ids carry the "eu." prefix — a bare "anthropic.claude-..." id is
-# rejected there with a ValidationException, which is the single most
-# common first-run failure. `scripts/check_llm_provider.py` names it.
-DEFAULT_GROQ_MODEL = "llama-3.3-70b-versatile"
+# rejected there with a ValidationException, the most common first-run
+# failure. `scripts/check_llm_provider.py` names it.
 DEFAULT_BEDROCK_MODEL = "eu.anthropic.claude-sonnet-4-20250514-v1:0"
 
 _TRUTHY = {"1", "true", "yes"}
@@ -103,19 +110,19 @@ class ChatResponse:
 def active_provider() -> str:
     """Which provider this process is configured to use.
 
-    **Defaults to Bedrock.** This started as Groq-default so an existing
-    ``.env`` would keep working after a pull, and that turned out to be the
-    wrong trade: the failure it produces is silent and self-concealing.
-    Someone who configures AWS credentials and does not know a separate
-    provider variable exists gets a process that ignores those credentials
-    entirely, reports itself unconfigured, and — before the message was
-    fixed — advised setting a *Groq* key. Bedrock is now the deployment
-    target, so it is what an unconfigured process should attempt; Groq
-    remains one explicit env var away, which is the right shape for a
-    fallback rather than a default.
+    **Defaults to Groq.** The default has followed the deployment target
+    rather than any property of the code: it was Groq, moved to Bedrock
+    when that became the target, and moved back when Bedrock went away.
+    Both paths stay supported and fully tested, so the default is only a
+    statement about where this is being run — one environment variable
+    moves it either way.
+
+    Whichever is unset, the other's credentials sitting unused is the
+    trap, so :func:`provider_problem` names them explicitly in both
+    directions.
     """
     value = os.environ.get(_PROVIDER_VAR, "").strip().lower()
-    return PROVIDER_GROQ if value == PROVIDER_GROQ else PROVIDER_BEDROCK
+    return PROVIDER_BEDROCK if value == PROVIDER_BEDROCK else PROVIDER_GROQ
 
 
 def model_id() -> str:
@@ -163,7 +170,7 @@ def provider_problem() -> str | None:
             if os.environ.get("GROQ_API_KEY"):
                 hint = (" A GROQ_API_KEY is set but unused — if you meant to "
                         "use Groq, set COMPANYSIM_LLM_PROVIDER=groq.")
-            return ("Provider is 'bedrock' (the default) but boto3 resolved no "
+            return ("Provider is 'bedrock' but boto3 resolved no "
                     "credentials. Set AWS_ACCESS_KEY_ID and "
                     "AWS_SECRET_ACCESS_KEY, or AWS_PROFILE, or attach an IAM "
                     "role." + hint)
@@ -175,9 +182,14 @@ def provider_problem() -> str | None:
         return ("Provider is 'groq' but the groq package is not installed — "
                 'run: pip install -e ".[llm]"')
     if not os.environ.get("GROQ_API_KEY"):
-        return ("Provider is 'groq' but GROQ_API_KEY is not set. Unset "
-                "COMPANYSIM_LLM_PROVIDER to use AWS Bedrock, which is the "
-                "default.")
+        hint = ""
+        # The mirror of the Bedrock branch below: AWS credentials sitting
+        # unused because the provider was never switched.
+        if os.environ.get("AWS_ACCESS_KEY_ID") or os.environ.get("AWS_PROFILE"):
+            hint = (" AWS credentials are set but unused — if you meant to use "
+                    "Bedrock, set COMPANYSIM_LLM_PROVIDER=bedrock.")
+        return ("Provider is 'groq' (the default) but GROQ_API_KEY is not set. "
+                "Get one at https://console.groq.com/keys." + hint)
     return None
 
 

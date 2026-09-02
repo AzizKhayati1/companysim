@@ -131,7 +131,7 @@ instead for employees who actually quit during a diagnose run:
 
 ```bash
 pip install -e ".[llm]"       # adds the groq + boto3 SDKs
-export AWS_DEFAULT_REGION=eu-west-2      # Bedrock is the default provider
+export GROQ_API_KEY=...                  # Groq is the default provider
 export COMPANYSIM_LLM_EXIT_NOTES=1
 ```
 
@@ -154,17 +154,20 @@ the What-if Planner.
 
 ```bash
 pip install -e ".[llm]"       # same llm extra as exit notes
-export AWS_DEFAULT_REGION=eu-west-2      # Bedrock is the default provider
+export GROQ_API_KEY=...                  # Groq is the default provider
 export COMPANYSIM_LLM_CHAT=1
 ```
 
 All three LLM features run through **either [Groq](https://console.groq.com)
 or [AWS Bedrock](https://aws.amazon.com/bedrock/)**, selected at runtime by
 `COMPANYSIM_LLM_PROVIDER` — see [Choosing a provider](#choosing-a-provider)
-below. **Bedrock is the default**, so configuring AWS credentials is enough
-on its own. Groq is one env var away and useful for local work: its free
-tier allows tens of thousands of requests/day, and a key from
-[console.groq.com/keys](https://console.groq.com/keys) needs no credit card.
+below. **Groq is the default**, so a key from
+[console.groq.com/keys](https://console.groq.com/keys) is enough on its own —
+free tier, no credit card. Bedrock is one environment variable away for a
+deployment that must stay inside its own AWS account.
+
+The same provider also serves OCR: photographs and scans are transcribed
+through its vision path, so reading paper needs no second service.
 
 Unlike exit notes, there's no non-LLM fallback for chat — with the flag/key
 missing, or on any API failure, the widget shows a plain, honest
@@ -181,7 +184,7 @@ the verbatim source text it came from.
 
 ```bash
 pip install -e ".[llm]"       # same llm extra as above
-export AWS_DEFAULT_REGION=eu-west-2      # Bedrock is the default provider
+export GROQ_API_KEY=...                  # Groq is the default provider
 export COMPANYSIM_LLM_INGEST=1
 ```
 
@@ -230,9 +233,9 @@ pip install -e ".[llm]"        # both SDKs; or .[bedrock] / .[groq] for one
 cp .env.example .env           # then edit .env — it documents every variable
 ```
 
-| | Groq | AWS Bedrock (default) |
+| | Groq (default) | AWS Bedrock |
 |---|---|---|
-| `COMPANYSIM_LLM_PROVIDER` | `groq` | `bedrock` or unset (**default**) |
+| `COMPANYSIM_LLM_PROVIDER` | `groq` or unset (**default**) | `bedrock` |
 | Extra | `.[groq]` | `.[bedrock]` |
 | Credentials | `GROQ_API_KEY` | boto3's chain: static keys, `AWS_PROFILE`, or an IAM role |
 | Region | n/a | `AWS_DEFAULT_REGION` — **mandatory**, no default |

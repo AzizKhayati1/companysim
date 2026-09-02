@@ -16,7 +16,14 @@ document row at upload, so a page is transcribed exactly once however many
 times it is later re-extracted. Running OCR at extraction time instead
 would re-bill every retry.
 
-Three backends, chosen at runtime:
+Four backends, chosen at runtime:
+
+``groq``
+    A vision model through Groq's OpenAI-compatible chat API, reusing the
+    same key and model extraction already uses. Same trade as Bedrock —
+    it reads for meaning rather than glyph by glyph, so it copes with
+    skew and handwriting and must be told to transcribe rather than
+    summarise.
 
 ``bedrock``
     A vision model through the Converse API. Reuses the credentials,
@@ -43,6 +50,7 @@ import os
 
 from companysim.llm.usage import FEATURE_OCR, LlmCall, record
 
+PROVIDER_GROQ = "groq"
 PROVIDER_BEDROCK = "bedrock"
 PROVIDER_TEXTRACT = "textract"
 PROVIDER_TESSERACT = "tesseract"
@@ -55,6 +63,11 @@ _PROVIDER_VAR = "COMPANYSIM_OCR_PROVIDER"
 # say which backend would have handled the file.
 _BEDROCK_FORMATS = {"png": "png", "jpg": "jpeg", "jpeg": "jpeg",
                     "gif": "gif", "webp": "webp"}
+
+# Groq takes a data: URI, so the payload is the base64 expansion of the
+# file — about 4/3 of its size. Its own limit is on the encoded form.
+_GROQ_FORMATS = {"png": "image/png", "jpg": "image/jpeg", "jpeg": "image/jpeg",
+                 "gif": "image/gif", "webp": "image/webp"}
 
 IMAGE_SUFFIXES = {".png", ".jpg", ".jpeg", ".webp", ".gif", ".tif", ".tiff", ".bmp"}
 
@@ -96,6 +109,10 @@ def _has(module: str) -> bool:
     return True
 
 
+def _groq_ready() -> bool:
+    return bool(os.environ.get("GROQ_API_KEY")) and _has("groq")
+
+
 def _aws_ready() -> bool:
     if not _has("boto3"):
         return False
@@ -130,14 +147,21 @@ def _tesseract_ready() -> bool:
 def active_provider() -> str:
     """Which backend will transcribe a page.
 
-    Unset auto-selects: prefer Bedrock when AWS is already configured,
-    since an extraction deployment holds those credentials anyway and the
-    alternative is asking someone to set up a second service for the same
-    document. Fall back to a local Tesseract when one is installed.
+    Unset auto-selects whichever service is already configured for
+    extraction — Groq or AWS — because a deployment doing extraction
+    already holds those credentials, and asking someone to set up a second
+    service for the same document would be friction with nothing behind
+    it. Falls back to a local Tesseract when one is installed.
+
+    Groq is checked first only because it is the extraction default; an
+    AWS-only deployment reaches Bedrock on the next line.
     """
     value = os.environ.get(_PROVIDER_VAR, "").strip().lower()
-    if value in {PROVIDER_BEDROCK, PROVIDER_TEXTRACT, PROVIDER_TESSERACT, PROVIDER_OFF}:
+    if value in {PROVIDER_GROQ, PROVIDER_BEDROCK, PROVIDER_TEXTRACT,
+                 PROVIDER_TESSERACT, PROVIDER_OFF}:
         return value
+    if _groq_ready():
+        return PROVIDER_GROQ
     if _aws_ready():
         return PROVIDER_BEDROCK
     if _tesseract_ready():
@@ -152,11 +176,18 @@ def ocr_problem() -> str | None:
     provider = active_provider()
     if provider == PROVIDER_OFF:
         return (
-            "No OCR backend is available, so images cannot be read. Configure "
-            "AWS credentials and a region to use the Bedrock or Textract "
-            "backend, or install Tesseract (the binary, plus "
-            "`pip install pytesseract pillow`) for offline OCR."
+            "No OCR backend is available, so images cannot be read. Set a "
+            "GROQ_API_KEY, or configure AWS credentials and a region for the "
+            "Bedrock or Textract backend, or install Tesseract (the binary, "
+            "plus `pip install pytesseract pillow`) for offline OCR."
         )
+    if provider == PROVIDER_GROQ:
+        if not _has("groq"):
+            return ("OCR provider is 'groq' but the groq package is not "
+                    'installed — run: pip install -e ".[llm]"')
+        if not os.environ.get("GROQ_API_KEY"):
+            return "OCR provider is 'groq' but GROQ_API_KEY is not set."
+        return None
     if provider in {PROVIDER_BEDROCK, PROVIDER_TEXTRACT}:
         if not _has("boto3"):
             return f"OCR provider is '{provider}' but boto3 is not installed."
@@ -203,7 +234,9 @@ def image_to_text(data: bytes, suffix: str) -> str:
 
     provider = active_provider()
     fmt = suffix.lower().lstrip(".")
-    if provider == PROVIDER_BEDROCK:
+    if provider == PROVIDER_GROQ:
+        text = _groq_ocr(data, fmt)
+    elif provider == PROVIDER_BEDROCK:
         text = _bedrock_ocr(data, fmt)
     elif provider == PROVIDER_TEXTRACT:
         text = _textract_ocr(data)
@@ -217,6 +250,59 @@ def image_to_text(data: bytes, suffix: str) -> str:
             "focus, the right way up, and fills the frame."
         )
     return text
+
+
+def _groq_ocr(data: bytes, fmt: str) -> str:
+    """Transcribe through Groq's vision path.
+
+    The image travels as a base64 data: URI in an ``image_url`` content
+    block — the OpenAI-compatible shape — rather than as raw bytes the way
+    Converse takes it. That difference is why this is a backend of its own
+    and not a branch inside the Bedrock one.
+    """
+    import base64  # noqa: PLC0415
+    import os as _os  # noqa: PLC0415
+
+    from groq import Groq  # noqa: PLC0415
+
+    from companysim.llm import provider as llm_provider  # noqa: PLC0415
+
+    mime = _GROQ_FORMATS.get(fmt)
+    if mime is None:
+        raise ValueError(
+            f"The Groq backend cannot read '.{fmt}' images (it accepts "
+            f"{', '.join(sorted(set(_GROQ_FORMATS)))}). Convert the file to "
+            "PNG or JPEG, or install Tesseract for offline OCR."
+        )
+
+    model = llm_provider.model_id()
+    encoded = base64.b64encode(data).decode()
+    client = Groq(api_key=_os.environ["GROQ_API_KEY"])
+    response = client.chat.completions.create(
+        model=model,
+        max_tokens=4096,
+        # Transcription is a reading task: the most likely reading of each
+        # glyph every time, never a fluent-sounding invention.
+        temperature=0.0,
+        messages=[{
+            "role": "user",
+            "content": [
+                {"type": "text", "text": _TRANSCRIBE_PROMPT},
+                {"type": "image_url",
+                 "image_url": {"url": f"data:{mime};base64,{encoded}"}},
+            ],
+        }],
+    )
+
+    usage = getattr(response, "usage", None)
+    record(LlmCall(
+        feature=FEATURE_OCR,
+        model=model,
+        prompt_tokens=int(getattr(usage, "prompt_tokens", 0) or 0),
+        completion_tokens=int(getattr(usage, "completion_tokens", 0) or 0),
+        total_tokens=int(getattr(usage, "total_tokens", 0) or 0),
+    ))
+    return response.choices[0].message.content or ""
 
 
 def _bedrock_ocr(data: bytes, fmt: str) -> str:

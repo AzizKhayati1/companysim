@@ -1,5 +1,8 @@
 # Running the LLM features on AWS Bedrock
 
+> **Groq is the default provider.** This guide is for deployments that must
+> stay inside their own AWS account; nothing here is needed otherwise.
+
 Everything needed to move the three LLM features (document extraction, exit
 notes, Ask Vantage chat) from Groq to AWS Bedrock in **eu-west-2 (London)**.
 
@@ -162,8 +165,7 @@ that *does* travel, and it documents every variable.
 Open `.env` and set:
 
 ```ini
-# Bedrock is the default, so this line is optional — set it anyway to make
-# the intent explicit to whoever reads the file next.
+# Required: Groq is the default, so Bedrock has to be asked for.
 COMPANYSIM_LLM_PROVIDER=bedrock
 
 AWS_DEFAULT_REGION=eu-west-2
@@ -177,9 +179,9 @@ COMPANYSIM_LLM_EXIT_NOTES=0
 COMPANYSIM_LLM_CHAT=0
 ```
 
-`GROQ_API_KEY` can be left blank — nothing reads it under the Bedrock
-default. If one is set and Bedrock has no credentials, the status endpoint
-says so explicitly rather than only reporting missing AWS keys.
+`GROQ_API_KEY` can be left blank — nothing reads it once the provider is
+`bedrock`. If one is set and Bedrock has no credentials, the status
+endpoint names it explicitly rather than only reporting missing AWS keys.
 
 **The region is not optional.** Bedrock's endpoint is regional and boto3
 raises `NoRegionError` rather than picking a default, so an otherwise

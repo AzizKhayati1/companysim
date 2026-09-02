@@ -12,6 +12,7 @@ account and no Tesseract binary.
 """
 from __future__ import annotations
 
+import base64
 import types
 
 import pytest
@@ -360,3 +361,93 @@ def test_image_suffixes_match_what_the_door_actually_accepts(client):
     assert set(body["image_suffixes"]) == ocr.IMAGE_SUFFIXES
     for suffix in body["image_suffixes"]:
         assert ocr.suffix_is_image(suffix)
+
+
+# ---- the Groq backend ---------------------------------------------------
+
+
+def _stub_groq_ocr(monkeypatch, text, *, usage=(900, 60, 960)):
+    """Stub groq.Groq the way the real client is shaped, and capture the
+    request so the image encoding can be asserted."""
+    import groq as groq_mod
+    captured: dict = {}
+
+    def create(**kwargs):
+        captured.update(kwargs)
+        msg = types.SimpleNamespace(content=text, tool_calls=None)
+        return types.SimpleNamespace(
+            choices=[types.SimpleNamespace(message=msg)],
+            usage=types.SimpleNamespace(prompt_tokens=usage[0],
+                                        completion_tokens=usage[1],
+                                        total_tokens=usage[2]))
+
+    monkeypatch.setattr(groq_mod, "Groq", lambda api_key: types.SimpleNamespace(
+        chat=types.SimpleNamespace(completions=types.SimpleNamespace(create=create))))
+    monkeypatch.setenv("GROQ_API_KEY", "gsk_test")
+    monkeypatch.setenv("COMPANYSIM_OCR_PROVIDER", "groq")
+    return captured
+
+
+def test_groq_is_auto_selected_when_a_key_is_present(monkeypatch):
+    """A deployment doing extraction already holds this credential, so
+    requiring a second service for the same document would be friction
+    with nothing behind it."""
+    pytest.importorskip("groq")
+    monkeypatch.setenv("GROQ_API_KEY", "gsk_test")
+    assert ocr.active_provider() == ocr.PROVIDER_GROQ
+    assert ocr.is_available() is True
+
+
+def test_groq_transcribes_and_sends_a_data_uri(monkeypatch):
+    """Groq takes the image as a base64 data: URI in an image_url block —
+    a different wire shape from Converse's raw bytes, which is why it is a
+    backend of its own rather than a branch inside the Bedrock one."""
+    pytest.importorskip("groq")
+    captured = _stub_groq_ocr(monkeypatch, LETTER)
+
+    text = ocr.image_to_text(PNG_1x1, ".png")
+    assert "resigning" in text
+
+    content = captured["messages"][0]["content"]
+    assert content[0]["type"] == "text"
+    assert "verbatim" in content[0]["text"]
+    url = content[1]["image_url"]["url"]
+    assert url.startswith("data:image/png;base64,")
+    assert base64.b64decode(url.split(",", 1)[1]) == PNG_1x1
+    assert captured["temperature"] == 0.0
+
+
+def test_groq_jpg_maps_to_the_jpeg_mime_type(monkeypatch):
+    pytest.importorskip("groq")
+    captured = _stub_groq_ocr(monkeypatch, LETTER)
+    ocr.image_to_text(PNG_1x1, ".jpg")
+    assert captured["messages"][0]["content"][1]["image_url"]["url"].startswith(
+        "data:image/jpeg;base64,")
+
+
+def test_groq_refuses_a_format_it_cannot_read(monkeypatch):
+    pytest.importorskip("groq")
+    _stub_groq_ocr(monkeypatch, LETTER)
+    with pytest.raises(ValueError, match="Tesseract"):
+        ocr.image_to_text(PNG_1x1, ".tiff")
+
+
+def test_groq_ocr_tokens_are_metered(monkeypatch):
+    """OCR is billed like any other call, and under its own feature so the
+    meter can separate transcription cost from extraction cost."""
+    pytest.importorskip("groq")
+    _stub_groq_ocr(monkeypatch, LETTER, usage=(1200, 80, 1280))
+    from companysim.llm.usage import FEATURE_OCR, collect
+
+    with collect() as calls:
+        ocr.image_to_text(PNG_1x1, ".png")
+    assert len(calls) == 1
+    assert calls[0].feature == FEATURE_OCR
+    assert calls[0].total_tokens == 1280
+
+
+def test_a_blank_page_refuses_on_groq_too(monkeypatch):
+    pytest.importorskip("groq")
+    _stub_groq_ocr(monkeypatch, ocr.NO_TEXT_SENTINEL)
+    with pytest.raises(ValueError, match="No legible text"):
+        ocr.image_to_text(PNG_1x1, ".png")

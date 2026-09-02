@@ -466,22 +466,21 @@ def test_status_reports_the_running_provider(client, monkeypatch):
     assert body["features"]["ingest"] is True
 
 
-def test_status_explains_an_unconfigured_bedrock_default(client, monkeypatch):
-    """The default is Bedrock, so a machine with only a Groq key configured
-    is now the confusing case — and status has to name the one-line fix
-    rather than just reporting absent AWS credentials."""
-    boto3 = pytest.importorskip("boto3")
-    monkeypatch.setattr(boto3, "Session", lambda *a, **k: types.SimpleNamespace(
-        get_credentials=lambda: None))
+def test_status_explains_an_unconfigured_default(client, monkeypatch):
+    """Groq is the default, so a machine with only AWS configured is the
+    confusing case — status names the one-line fix rather than reporting
+    an absent Groq key to someone who never wanted Groq."""
+    pytest.importorskip("groq")
     monkeypatch.delenv("COMPANYSIM_LLM_PROVIDER", raising=False)
+    monkeypatch.delenv("GROQ_API_KEY", raising=False)
+    monkeypatch.setenv("AWS_ACCESS_KEY_ID", "AKIA")
     monkeypatch.setenv("AWS_DEFAULT_REGION", "eu-west-2")
-    monkeypatch.setenv("GROQ_API_KEY", "gsk_unused")
     monkeypatch.setenv(llm_parser._FLAG_VAR, "1")
 
     body = client.get("/llm/status").json()
-    assert body["provider"] == "bedrock"
+    assert body["provider"] == "groq"
     assert body["provider_ready"] is False
-    assert "COMPANYSIM_LLM_PROVIDER=groq" in body["provider_problem"]
+    assert "COMPANYSIM_LLM_PROVIDER=bedrock" in body["provider_problem"]
     assert body["features"]["ingest"] is False
 
 
