@@ -3,6 +3,13 @@
 `reading-the-paperwork.pptx` — 18 slides for a 24-minute technical and
 commercial talk, plus 11 backup slides that are not part of the run.
 
+**The slides are deliberately sparse and the notes are deliberately not.**
+A slide is looked at, not read: anything longer than a phrase competes with
+you, and the room finishes reading before you finish the sentence. So the
+slides carry a number, a name, or four short labels — about thirty words
+each — and the argument lives in the notes, roughly three words there for
+every one on screen.
+
 Ten demo clips are embedded (see `demos/README.md`). Slide 07 carries the
 main one; the rest sit in the appendix.
 
@@ -29,13 +36,41 @@ OCR clip, 32 seconds, embedded. It is a recording on purpose: a call to a
 cloud model over conference wifi is a two-minute silence waiting to
 happen.
 
-## Speaker notes
+## Speaker notes — read this before rehearsing
 
-Every slide carries them, taken from the outline's "you say" column. They
-are prompts, not a script — rehearse until you are not reading them.
+Every slide's notes are a guideline, not a script. Same six sections in the
+same order every time, so a glance down mid-sentence finds your place in
+about a second rather than landing in a paragraph you then have to re-scan.
 
-The notes also carry the direction that does not fit on a slide: which line
-to say slowly, where to sound amused, and which slide never to cut.
+```
+══  10:50   ·   2:00  ══      where you are, and how long this slide gets
+
+SAY                           the beats, in order — prompts, not wording
+  •  …
+
+THE ONE THING                 if only one sentence survives, this one
+  ►  …
+
+POINT AT                      what to gesture at, and when
+  ·  …
+
+WATCH OUT                     direction: pace, tone, what not to cut
+  !  …
+
+IF ASKED                      the question that is coming, and your answer
+  Q  …
+  A  …
+
+NEXT  →  10 — principle 3     so you never stall on the transition
+```
+
+Not every slide uses every section — an empty one is omitted rather than
+left blank, so what is there is always worth reading.
+
+Rehearse from **SAY** until you no longer need it. **THE ONE THING** is
+what to fall back on when you are running short: say that sentence and move
+on. **IF ASKED** exists so a jury question lands as a prepared answer rather
+than as an interruption.
 
 ## The screenshots
 
