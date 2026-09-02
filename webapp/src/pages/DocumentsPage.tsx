@@ -141,6 +141,16 @@ export default function DocumentsPage() {
   });
   const llmStatus = llmStatusQuery.data;
   const imageSuffixes = llmStatus?.image_suffixes ?? [];
+
+  // Opening the inspector takes 5 of 12 columns away from the list, and
+  // fixed cells do not care: 616px of them left the filename nothing, so
+  // names wrapped to three lines and the date collided with the type.
+  // Type and as-of are what a reviewer can lose there — the filename and
+  // the status are what a row is picked by.
+  const listSplit = detailQuery.data !== undefined && selectedDocId !== null;
+  const listCols = listSplit
+    ? "minmax(0, 1fr) 150px 216px"
+    : "minmax(0, 1fr) 140px 110px 150px 216px";
   const acceptAttr = [".csv", ".txt", ".md", ".pdf", ...imageSuffixes].join(",");
 
   // The review panel sits above the documents table, so a selection made
@@ -384,11 +394,11 @@ export default function DocumentsPage() {
             <div className="data-list-scroll">
               <div
                 className="data-list-header"
-                style={{ gridTemplateColumns: "minmax(0, 1fr) 140px 110px 150px 216px" }}
+                style={{ gridTemplateColumns: listCols }}
               >
                 <div>File</div>
-                <div>Type</div>
-                <div>As of</div>
+                {!listSplit && <div>Type</div>}
+                {!listSplit && <div>As of</div>}
                 <div>Status</div>
                 <div>Actions</div>
               </div>
@@ -396,10 +406,10 @@ export default function DocumentsPage() {
                 <div
                   key={d.id}
                   className={`data-list-row${selectedDocId === d.id ? " active" : ""}`}
-                  style={{ gridTemplateColumns: "minmax(0, 1fr) 140px 110px 150px 216px" }}
+                  style={{ gridTemplateColumns: listCols }}
                 >
-                  <div>
-                    <strong>{d.filename}</strong>
+                  <div style={{ minWidth: 0 }}>
+                    <strong style={{ overflowWrap: "anywhere" }}>{d.filename}</strong>
                     {d.text_source?.startsWith("ocr") && (
                       <>
                         {" "}
@@ -415,8 +425,10 @@ export default function DocumentsPage() {
                       {formatDateTime(d.uploaded_at)}
                     </div>
                   </div>
-                  <div className="muted">{KIND_LABELS[d.kind] ?? d.kind}</div>
-                  <div className="muted">{d.as_of_date ?? "—"}</div>
+                  {!listSplit && (
+                    <div className="muted">{KIND_LABELS[d.kind] ?? d.kind}</div>
+                  )}
+                  {!listSplit && <div className="muted">{d.as_of_date ?? "—"}</div>}
                   <div>
                     <StatusChip status={d.extraction_status} />
                   </div>

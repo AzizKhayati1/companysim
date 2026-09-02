@@ -22,3 +22,6 @@ graphify-out/
 
 # Office lock files, written while a document is open
 ~$*
+
+# Playwright scratch while recording demos
+docs/demos/.work/
