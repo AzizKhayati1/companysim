@@ -19,3 +19,6 @@ models/
 
 # graphify knowledge-graph analysis output (regenerable cache + report)
 graphify-out/
+
+# Office lock files, written while a document is open
+~$*
