@@ -122,6 +122,60 @@ def shot(slide, name, caption=None, top=Inches(2.4), height=Inches(4.35)):
              [(caption, 13, False, DIM, 0)], align=PP_ALIGN.CENTER)
 
 
+DEMOS = ROOT / "docs" / "demos"
+
+
+def video(slide, name, left, top, width):
+    """Embed a clip, with its poster frame ALSO laid in as a real picture
+    underneath.
+
+    Canva's .pptx import does not carry embedded media across. Relying on
+    the poster that `add_movie` stores inside the media shape would mean
+    relying on that shape surviving, which is the thing that does not.
+    Adding the frame as an ordinary picture first costs a few MB and
+    guarantees the slide still shows the right thing in the right place —
+    so the deck degrades to a screenshot deck rather than to blank boxes,
+    and the clip can be dropped back on top by hand.
+    """
+    clip = DEMOS / f"{name}.mp4"
+    poster = DEMOS / "posters" / f"{name}.png"
+    if not clip.exists():
+        placeholder(slide, f"Missing clip: {name}.mp4", top=top)
+        return
+    height = Emu(int(width / 1.6))  # the recordings are 1440x900
+
+    frame = slide.shapes.add_shape(MSO_SHAPE.ROUNDED_RECTANGLE,
+                                   left - Inches(0.06), top - Inches(0.06),
+                                   width + Inches(0.12), height + Inches(0.12))
+    frame.fill.solid()
+    frame.fill.fore_color.rgb = SURFACE
+    frame.line.color.rgb = ACCENT
+    frame.line.width = Pt(1.25)
+    frame.shadow.inherit = False
+
+    if poster.exists():
+        slide.shapes.add_picture(str(poster), left, top, width, height)
+
+    slide.shapes.add_movie(
+        str(clip), left, top, width, height,
+        poster_frame_image=str(poster) if poster.exists() else None,
+        mime_type="video/mp4")
+
+
+def demo_slide(name, eyebrow, title, points, clock=None, dur=None, idx=None, notes=""):
+    """Title and what-to-watch-for on the left, the clip on the right."""
+    s = new_slide(notes)
+    eyebrow_title(s, eyebrow, title)
+    if clock:
+        timing(s, clock, dur, idx)
+    runs = []
+    for pt in points:
+        runs.append((f"—   {pt}", 15, False, TEXT, 12))
+    text(s, MARGIN, Inches(2.5), Inches(4.0), Inches(4.2), runs)
+    video(s, name, Inches(5.25), Inches(2.45), Inches(7.15))
+    return s
+
+
 def placeholder(slide, instruction, detail=None, top=Inches(2.5), height=Inches(3.6)):
     """A slot the presenter fills. Deliberately loud — a placeholder that
     looks finished is one that ships to a jury unfilled."""
@@ -271,22 +325,24 @@ text(s, MARGIN, Inches(5.0), CONTENT_W, Inches(0.9),
        "follows.", 16, False, MUTED, 0)])
 
 # ══════════════════════════════════════════════════════════════════════
-# 07 — Demo (placeholder)
+# 07 — Demo (a real recording of the running app)
 # ══════════════════════════════════════════════════════════════════════
-s = new_slide("Narrate what is happening, not what you are clicking. Pause on the evidence span: "
-              "every proposed change carries the exact sentence it came from, so approving is a "
-              "decision rather than an act of faith.\n\n"
-              "RECORD THIS IN ADVANCE. A live call to a cloud model on conference wifi is a "
-              "two-minute silence waiting to happen. Keep it under 2:00.")
-eyebrow_title(s, "Act II", "Demo — a resignation letter, start to finish")
-timing(s, "7:00", "2:30", "07")
-placeholder(s, "Embed your screen recording here",
-            "Four beats, in order:\n"
-            "1.  Upload a photographed letter — the row appears, marked OCR\n"
-            "2.  Extract — a staged proposal with the source sentence beside it\n"
-            "3.  Approve one field, leave another unticked — apply\n"
-            "4.  The training-cohort panel turns usable\n\n"
-            "Insert → Video → This Device. Set it to start automatically.")
+s = demo_slide(
+    "03-photographed-paper-ocr", "Act II",
+    "Demo — a photograph of paper, start to finish",
+    ["Upload a photographed review — the row appears, marked OCR",
+     "Transcribed once on upload, however often it is re-extracted",
+     "Then the identical route a typed file takes: extract, stage, review",
+     "Facts from a photo are staged at 0.7x confidence, automatically"],
+    clock="7:00", dur="2:30", idx="07",
+    notes="Narrate what is happening, not what you are clicking. The moment worth "
+          "pausing on is that nothing downstream is special-cased for paper — only the "
+          "confidence differs, and it differs at the one point every extraction path "
+          "funnels through.\n\n"
+          "This is a recording, not a live run: a call to a cloud model on conference "
+          "wifi is a two-minute silence waiting to happen.\n\n"
+          "Three more clips sit in the appendix if the room wants the roster, the "
+          "letter or the refusal.")
 
 # ══════════════════════════════════════════════════════════════════════
 # 08 — Principle 1
@@ -570,19 +626,66 @@ text(s, MARGIN, Inches(4.35), CONTENT_W * 0.88, Inches(2.0),
       ("rather than detectable.", 40, True, ACCENT, 0)])
 
 # ══════════════════════════════════════════════════════════════════════
-# Appendix — spare screenshots, hidden from the main flow
+# Appendix — one clip per capability, not part of the 24-minute run
 # ══════════════════════════════════════════════════════════════════════
-for name, title, caption in [
-        ("simulator", "Appendix — Scenario Simulator",
-         "Build a scenario, forecast it, diagnose it. Run controls sit in the header."),
+CLIPS = [
+    ("01-roster-csv-deterministic-parsing", "Roster CSV — deterministic parsing",
+     ["No model involved; a roster needs no API key at all",
+      "Each row compared against the current roster",
+      "Only fields that actually differ are staged",
+      "A byte-identical row proposes nothing"]),
+    ("02-resignation-letter-llm-extraction", "Resignation letter — LLM extraction",
+     ["Free prose, read by the language model",
+      "Contributes the quit label and its date",
+      "Never a feature — the schema has no field for one",
+      "The note text flows on to exit-note analysis"]),
+    ("04-honest-refusal-of-an-involuntary-exit", "Honest refusal — a redundancy notice",
+     ["An employer-initiated exit is not a resignation",
+      "Refused as a quit label, with the reason stored",
+      "Nothing was written — that is the success case",
+      "Accepting it would teach the model that reorgs are voluntary"]),
+    ("05-review-queue-filter-and-evidence", "The review queue",
+     ["142 documents, and the handful needing a decision",
+      "A segmented filter rather than scrolling to find them",
+      "List and inspector side by side",
+      "Every proposal carries the sentence it came from"]),
+    ("06-scenario-simulator-forecast", "Scenario simulator",
+     ["A template drops events onto the timeline",
+      "Position in time is real information, so it is drawn",
+      "Baseline against the scenario",
+      "Effect measured within the targeted cohort"]),
+    ("07-diagnosis-report-modal", "Diagnosis report",
+     ["Opens over the page, not below it",
+      "Top drivers and the affected cohort",
+      "A recommendation that can be applied to the scenario",
+      "Dismissing costs nothing — the scenario keeps its state"]),
+    ("08-retention-risk-ranking", "Retention risk",
+     ["Who the model ranks highest",
+      "Each score traces to its drivers",
+      "Never a number on its own"]),
+    ("09-turnover-model-and-promotion-gate", "Turnover model and promotion gate",
+     ["Promoted only if AUC does not regress",
+      "Every decision appended to an audit log",
+      "Document-sourced examples counted separately"]),
+    ("10-token-usage-meter", "Token usage meter",
+     ["Total, today and this week",
+      "Split by feature, so OCR is separable from extraction",
+      "The model that actually served each call"]),
+]
+
+for _name, _title, _points in CLIPS:
+    demo_slide(_name, "Backup · not in the main flow", _title, _points,
+               notes="Backup clip — not part of the 24-minute run. Use only if asked.")
+
+# The two screens no clip covers.
+for _name, _title, _cap in [
         ("dashboard", "Appendix — Dashboard", "Organisation overview and headline risk."),
         ("exitnotes", "Appendix — Exit Notes Insights",
-         "Where ingested resignation letters land — and where the lexicon limitation shows."),
-        ("model", "Appendix — Turnover Model",
-         "The promotion gate and its audit log. Document-sourced examples are counted separately.")]:
-    s = new_slide("Backup slide — not in the 24-minute run. Use only if asked.")
-    eyebrow_title(s, "Backup · not in the main flow", title)
-    shot(s, name, caption)
+         "Where ingested resignation letters land — and where the lexicon limitation shows.")]:
+    _s = new_slide("Backup slide — not in the 24-minute run. Use only if asked.")
+    eyebrow_title(_s, "Backup · not in the main flow", _title)
+    shot(_s, _name, _cap)
+
 
 prs.save(OUT)
 print(f"wrote {OUT}")
